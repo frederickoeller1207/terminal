@@ -81,7 +81,8 @@ function ladeListen() {
     historieListe.innerHTML = "";
     const daten = snapshot.val();
     for (const kind in daten) {
-      const eintraege = daten[kind];
+      const eintraegeObj = daten[kind];
+      const eintraege = Object.values(eintraegeObj);
       const div = document.createElement("div");
       div.innerHTML = `<b>${kind}</b><ul style="margin-top: 6px;">${eintraege.map(e => `<li>${e}</li>`).join("")}</ul>`;
       historieListe.appendChild(div);
