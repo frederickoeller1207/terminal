@@ -5,7 +5,7 @@
   <title>Admin – Mäusegruppe</title>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-    import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+    import { getDatabase, ref, set, onValue, remove, get, push } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",
@@ -23,6 +23,7 @@
     const kinderListe = document.getElementById("kinder-liste");
     const spielzeugListe = document.getElementById("spielzeug-liste");
     const ausleihenListe = document.getElementById("ausleihen-liste");
+    const historieListe = document.getElementById("historie-liste");
 
     document.getElementById("add-kind-btn").onclick = () => {
       const name = document.getElementById("kind-name").value.trim();
@@ -77,10 +78,44 @@
           ausleihenListe.appendChild(div);
         });
       });
+
+      onValue(ref(db, "historie"), (snapshot) => {
+        historieListe.innerHTML = "";
+        snapshot.forEach(childSnap => {
+          const name = childSnap.key;
+          const eintraege = childSnap.val();
+          const box = document.createElement("div");
+          box.innerHTML = `<b>${name}</b>`;
+          for (const key in eintraege) {
+            const eintrag = eintraege[key];
+            const zeile = document.createElement("div");
+            const aus = new Date(eintrag.ausgeliehen).toLocaleString("de-DE");
+            const zr = new Date(eintrag.zurückgegeben).toLocaleString("de-DE");
+            zeile.textContent = `• ${eintrag.spielzeug} (Nr. ${eintrag.nummer}) ausgeliehen am ${aus}, zurückgegeben am ${zr}`;
+            box.appendChild(zeile);
+          }
+          historieListe.appendChild(box);
+        });
+      });
     }
 
-    window.zurueckgeben = function(name) {
-      remove(ref(db, "ausleihen/" + name));
+    window.zurueckgeben = async function(name) {
+      const ausleiheRef = ref(db, "ausleihen/" + name);
+      const snapshot = await get(ausleiheRef);
+      if (!snapshot.exists()) return;
+
+      const daten = snapshot.val();
+      const historieRef = ref(db, "historie/" + name);
+      const neueHistorie = {
+        spielzeug: daten.spielzeug,
+        nummer: daten.nummer,
+        ausgeliehen: daten.zeit,
+        zurückgegeben: new Date().toISOString()
+      };
+
+      const neueRef = push(historieRef);
+      await set(neueRef, neueHistorie);
+      await remove(ausleiheRef);
     };
 
     window.loescheKind = function(name) {
@@ -137,6 +172,11 @@
   <div class="section">
     <h2>Aktuelle Ausleihen</h2>
     <div class="liste" id="ausleihen-liste"></div>
+  </div>
+
+  <div class="section">
+    <h2>Historie</h2>
+    <div class="liste" id="historie-liste"></div>
   </div>
 </body>
 </html>
