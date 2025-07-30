@@ -43,13 +43,15 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
+    // Kind hinzufügen
     window.addKind = () => {
       const name = document.getElementById('kindName').value.trim();
       if (!name) return alert("Name eingeben!");
-      set(ref(db, 'kinder/' + name), { ausgeliehen: false });
+      set(ref(db, 'kinder/' + name), { aktiv: true });
       document.getElementById('kindName').value = "";
     };
 
+    // Spielzeug hinzufügen
     window.addToy = () => {
       const nr = document.getElementById('spielzeugNr').value.trim();
       const name = document.getElementById('spielzeugName').value.trim();
@@ -59,10 +61,12 @@
       document.getElementById('spielzeugName').value = "";
     };
 
+    // Rückgabe
     window.zurueckgeben = (name) => {
       remove(ref(db, "kinder/" + name + "/ausgeliehen"));
     };
 
+    // Ausleihen anzeigen
     const el = document.getElementById("ausleihen");
     const kinderRef = ref(db, "kinder");
 
