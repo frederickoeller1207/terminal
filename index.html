@@ -265,7 +265,12 @@ setTimeout(() => popup.remove(), 3000);
     }
 
     function sendeAnfrage(name, betrag, grund) {
-      const zeit = new Date().toISOString();
+      const now = new Date();
+const tag = String(now.getDate()).padStart(2, '0');
+const monat = String(now.getMonth() + 1).padStart(2, '0');
+const stunde = String(now.getHours()).padStart(2, '0');
+const minute = String(now.getMinutes()).padStart(2, '0');
+const zeit = `${tag}.${monat} – ${stunde}:${minute}`;
       const anfrageRef = ref1(db1, `anfragen/${Date.now()}_${name}`);
       set1(anfrageRef, { name, betrag, grund, zeit });
       view.innerHTML = `<h2>Anfrage gesendet! (${betrag} Mausdollar für: ${grund})</h2>`;
