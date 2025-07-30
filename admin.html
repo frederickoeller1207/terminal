@@ -52,34 +52,27 @@
     .delete:hover {
       text-decoration: underline;
     }
-    ul {
-      margin: 0;
-      padding-left: 20px;
-      font-size: 14px;
+    .flex {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 8px;
     }
-    h3 {
-      margin-top: 20px;
-      font-size: 17px;
-      color: #333;
-    }
-    #anfrage-liste div {
-      margin-bottom: 10px;
-    }
-    #anfrage-liste button {
-      margin-left: 10px;
-      margin-top: 5px;
-      padding: 4px 8px;
-      border-radius: 8px;
-      border: none;
+    .color-button {
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 3px 6px;
+      margin: 0 2px;
+      font-size: 16px;
       cursor: pointer;
-      font-size: 14px;
     }
   </style>
   <script type="module">
     import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
     import { getDatabase as getDB1, ref as ref1, set, onValue, remove, get, push } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
     import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-    import { getDatabase as getDB2, ref as ref2, get as get2, update as update2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+    import { getDatabase as getDB2, ref as ref2, get as get2, update as update2, onValue as onVal2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
 
     const app1 = initApp1({
       apiKey: "AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",
@@ -103,197 +96,107 @@
     }, "app2");
     const db2 = getDB2(app2);
 
-    const kinderListe = document.getElementById("kinder-liste");
-    const spielzeugListe = document.getElementById("spielzeug-liste");
-    const ausleihenListe = document.getElementById("ausleihen-liste");
-    const historieListe = document.getElementById("historie-liste");
+    const farben = ["⚪", "🔴", "🟡", "🟢", "⚫", "🟣"];
+    function farbeToColor(f) {
+      if (f === "🔴") return "red";
+      if (f === "🟡") return "orange";
+      if (f === "🟢") return "green";
+      if (f === "⚫") return "black";
+      if (f === "🟣") return "purple";
+      return "gray";
+    }
 
-    document.getElementById("add-kind-btn").onclick = () => {
-      const name = document.getElementById("kind-name").value.trim();
-      let link = document.getElementById("checkout-link").value.trim();
-      if (!name) return alert("Name fehlt.");
-      if (link && !link.startsWith("http")) link = "https://" + link;
-      set(ref1(db1, `kinder/${name}`), { link: link || null });
-      document.getElementById("kind-name").value = "";
-      document.getElementById("checkout-link").value = "";
-    };
-
-    document.getElementById("add-spielzeug-btn").onclick = () => {
-      const nummer = document.getElementById("spielzeug-nummer").value.trim();
-      const name = document.getElementById("spielzeug-name").value.trim();
-      if (!nummer || !name) return alert("Nummer oder Name fehlt.");
-      set(ref1(db1, `spielzeuge/${nummer}`), name);
-      document.getElementById("spielzeug-nummer").value = "";
-      document.getElementById("spielzeug-name").value = "";
-    };
+    window.addEventListener("DOMContentLoaded", () => {
+      ladeMausdollarAnfragen();
+      ladeKinderKonten();
+      ladeListen();
+    });
 
     function ladeMausdollarAnfragen() {
-      const bereich = document.createElement("div");
-      bereich.className = "section";
-      bereich.innerHTML = `<h2>Mausdollar-Anfragen</h2><div id="anfrage-liste"></div>`;
-      document.body.prepend(bereich);
-      const liste = document.getElementById("anfrage-liste");
+      const container = document.createElement("div");
+      container.className = "section";
+      container.innerHTML = "<h2>Mausdollar Anfragen</h2>";
+      document.body.prepend(container);
 
-      onValue(ref1(db1, "anfragen"), async (snapshot) => {
-        liste.innerHTML = "";
-        snapshot.forEach((snap) => {
-          const key = snap.key;
-          const { name, betrag, grund } = snap.val();
+      onValue(ref1(db1, "anfragen"), (snapshot) => {
+        container.innerHTML = "<h2>Mausdollar Anfragen</h2>";
+        snapshot.forEach(childSnap => {
+          const id = childSnap.key;
+          const data = childSnap.val();
+          const zeile = document.createElement("div");
+          zeile.className = "flex";
+          zeile.innerHTML = `${data.name} möchte ${data.betrag} Punkt(e) wegen ${data.grund}`;
 
-          const div = document.createElement("div");
-          div.innerHTML = `<b>${name}</b> möchte <b>${betrag}</b> Punkt(e) für <i>${grund}</i>.`;
-
-          const best = document.createElement("button");
-          best.textContent = "✅ Bestätigen";
-          best.onclick = async () => {
-            const kinderRef = ref2(db2, `kinder/${name}`);
-            const kinderSnap = await get2(kinderRef);
-            const daten = kinderSnap.val() || { punkte: 0, farbe: "⚪" };
-            const neuePunkte = daten.punkte + betrag;
-            await update2(kinderRef, { punkte: neuePunkte });
-            await remove(ref1(db1, "anfragen/" + key));
+          const bestätigen = document.createElement("button");
+          bestätigen.textContent = "✔️";
+          bestätigen.onclick = async () => {
+            const kindRef = ref2(db2, `kinder/${data.name}`);
+            const kindSnap = await get2(kindRef);
+            const val = kindSnap.val() || { punkte: 0, farbe: "⚪" };
+            await update2(kindRef, { punkte: val.punkte + data.betrag });
+            remove(ref1(db1, "anfragen/" + id));
           };
 
-          const ablehn = document.createElement("button");
-          ablehn.textContent = "❌ Ablehnen";
-          ablehn.onclick = () => remove(ref1(db1, "anfragen/" + key));
+          const ablehnen = document.createElement("button");
+          ablehnen.textContent = "❌";
+          ablehnen.onclick = () => remove(ref1(db1, "anfragen/" + id));
 
-          div.appendChild(best);
-          div.appendChild(ablehn);
-          liste.appendChild(div);
+          zeile.appendChild(bestätigen);
+          zeile.appendChild(ablehnen);
+          container.appendChild(zeile);
         });
       });
     }
 
-    function ladeListen() {
+    function ladeKinderKonten() {
+      const bereich = document.createElement("div");
+      bereich.className = "section";
+      bereich.innerHTML = "<h2>MausCity Konten</h2>";
+      document.body.insertBefore(bereich, document.body.children[1]);
+
+      const eigeneKinder = new Set();
+
       onValue(ref1(db1, "kinder"), (snapshot) => {
-        kinderListe.innerHTML = "";
+        eigeneKinder.clear();
+        snapshot.forEach(childSnap => {
+          eigeneKinder.add(childSnap.key);
+        });
+      });
+
+      onVal2(ref2(db2, "kinder"), (snapshot) => {
+        bereich.innerHTML = "<h2>MausCity Konten</h2>";
         snapshot.forEach(childSnap => {
           const name = childSnap.key;
+          if (!eigeneKinder.has(name)) return;
           const data = childSnap.val();
-          const div = document.createElement("div");
-          div.innerHTML = `${name} – Link: ${data.link || "kein Link"} <span class="delete" onclick="loescheKind('${name}')">x</span>`;
-          kinderListe.appendChild(div);
-        });
-      });
+          const zeile = document.createElement("div");
+          zeile.className = "flex";
 
-      onValue(ref1(db1, "spielzeuge"), (snapshot) => {
-        spielzeugListe.innerHTML = "";
-        snapshot.forEach(childSnap => {
-          const nummer = childSnap.key;
-          const name = childSnap.val();
-          const div = document.createElement("div");
-          div.innerHTML = `${nummer}: ${name} <span class="delete" onclick="loescheSpielzeug('${nummer}')">x</span>`;
-          spielzeugListe.appendChild(div);
-        });
-      });
+          const span = document.createElement("span");
+          span.textContent = `${name} (${data.punkte})`;
+          span.style.color = farbeToColor(data.farbe);
 
-      onValue(ref1(db1, "ausleihen"), (snapshot) => {
-        ausleihenListe.innerHTML = "";
-        snapshot.forEach(childSnap => {
-          const name = childSnap.key;
-          const daten = childSnap.val();
-          const div = document.createElement("div");
-          div.innerHTML = `<b>${name}</b> hat <i>${daten.spielzeug}</i> ausgeliehen 
-            <button onclick="zurueckgeben('${name}')">Zurückgeben</button>`;
-          ausleihenListe.appendChild(div);
-        });
-      });
+          const plus = document.createElement("button");
+          plus.textContent = "+";
+          plus.onclick = () => update2(ref2(db2, `kinder/${name}`), { punkte: data.punkte + 1 });
 
-      onValue(ref1(db1, "historie"), async (snapshot) => {
-        historieListe.innerHTML = "";
-        const alleEintraege = {};
-        snapshot.forEach(childSnap => {
-          const kind = childSnap.key;
-          const eintraege = childSnap.val();
-          for (const key in eintraege) {
-            const eintrag = eintraege[key];
-            const nummer = eintrag.nummer;
-            if (!alleEintraege[nummer]) alleEintraege[nummer] = [];
-            alleEintraege[nummer].push({ ...eintrag, kind });
-          }
-        });
+          const minus = document.createElement("button");
+          minus.textContent = "–";
+          minus.onclick = () => update2(ref2(db2, `kinder/${name}`), { punkte: data.punkte - 1 });
 
-        const sortierteNummern = Object.keys(alleEintraege).sort((a, b) => Number(a) - Number(b));
-        for (const nummer of sortierteNummern) {
-          const box = document.createElement("div");
-          const nameRef = ref1(db1, "spielzeuge/" + nummer);
-          const nameSnap = await get(nameRef);
-          const name = nameSnap.exists() ? nameSnap.val() : "Unbekannt";
-          box.innerHTML = `<h3>${nummer}: ${name}</h3>`;
-          alleEintraege[nummer].sort((a, b) => new Date(b.zurückgegeben) - new Date(a.zurückgegeben));
-          for (const eintrag of alleEintraege[nummer]) {
-            const aus = new Date(eintrag.ausgeliehen).toLocaleString("de-DE");
-            const zr = new Date(eintrag.zurückgegeben).toLocaleString("de-DE");
-            const zeile = document.createElement("div");
-            zeile.textContent = `• ${eintrag.kind}: von ${aus} bis ${zr}`;
-            box.appendChild(zeile);
-          }
-          historieListe.appendChild(box);
-        }
+          zeile.appendChild(span);
+          zeile.appendChild(plus);
+          zeile.appendChild(minus);
+
+          farben.forEach(f => {
+            const btn = document.createElement("button");
+            btn.textContent = f;
+            btn.className = "color-button";
+            btn.onclick = () => update2(ref2(db2, `kinder/${name}`), { farbe: f });
+            zeile.appendChild(btn);
+          });
+
+          bereich.appendChild(zeile);
+        });
       });
     }
-
-    window.zurueckgeben = async function(name) {
-      const ausleiheRef = ref1(db1, "ausleihen/" + name);
-      const snapshot = await get(ausleiheRef);
-      if (!snapshot.exists()) return;
-      const daten = snapshot.val();
-      const historieRef = ref1(db1, "historie/" + name);
-      const neueHistorie = {
-        spielzeug: daten.spielzeug,
-        nummer: daten.nummer,
-        ausgeliehen: daten.zeit,
-        zurückgegeben: new Date().toISOString()
-      };
-      const neueRef = push(historieRef);
-      await set(neueRef, neueHistorie);
-      await remove(ausleiheRef);
-    };
-
-    window.loescheKind = function(name) {
-      if (confirm(`Soll ${name} wirklich gelöscht werden?`)) {
-        remove(ref1(db1, "kinder/" + name));
-      }
-    };
-
-    window.loescheSpielzeug = function(nummer) {
-      if (confirm(`Soll Spielzeug ${nummer} wirklich gelöscht werden?`)) {
-        remove(ref1(db1, "spielzeuge/" + nummer));
-      }
-    };
-
-    ladeMausdollarAnfragen();
-    ladeListen();
-  </script>
-</head>
-<body>
-  <h1>Adminbereich</h1>
-
-  <div class="section">
-    <h2>Kinder hinzufügen</h2>
-    <input id="kind-name" placeholder="Name des Kindes" />
-    <input id="checkout-link" placeholder="Checkout-Link" />
-    <button id="add-kind-btn">Hinzufügen</button>
-    <div class="liste" id="kinder-liste"></div>
-  </div>
-
-  <div class="section">
-    <h2>Spielzeuge hinzufügen</h2>
-    <input id="spielzeug-nummer" placeholder="Nummer" />
-    <input id="spielzeug-name" placeholder="Spielzeugname" />
-    <button id="add-spielzeug-btn">Hinzufügen</button>
-    <div class="liste" id="spielzeug-liste"></div>
-  </div>
-
-  <div class="section">
-    <h2>Aktuelle Ausleihen</h2>
-    <div class="liste" id="ausleihen-liste"></div>
-  </div>
-
-  <div class="section">
-    <h2>Historie</h2>
-    <div class="liste" id="historie-liste"></div>
-  </div>
-</body>
-</html>
