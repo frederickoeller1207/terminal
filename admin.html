@@ -1,0 +1,88 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Mäusegruppe Admin</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 1em; background: #f9f9f9; }
+    h1 { font-size: 1.5em; }
+    .block { margin-bottom: 2em; }
+    input, button, select { margin: 0.3em 0; padding: 0.5em; }
+    .item { background: #fff; border: 1px solid #ccc; margin: 0.3em 0; padding: 0.5em; }
+  </style>
+</head>
+<body>
+  <h1>Mäusegruppe Admin</h1>
+
+  <div class="block">
+    <h2>Neues Kind hinzufügen</h2>
+    <input type="text" id="kindName" placeholder="Name">
+    <button onclick="addKind()">Hinzufügen</button>
+  </div>
+
+  <div class="block">
+    <h2>Neues Spielzeug hinzufügen</h2>
+    <input type="text" id="spielzeugNr" placeholder="Nummer (z. B. 001)">
+    <input type="text" id="spielzeugName" placeholder="Bezeichnung (z. B. Springseil)">
+    <button onclick="addToy()">Hinzufügen</button>
+  </div>
+
+  <div class="block">
+    <h2>Aktuelle Ausleihen</h2>
+    <div id="ausleihen"></div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      databaseURL: "https://gesamt-dae4e-default-rtdb.europe-west1.firebasedatabase.app"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function addKind() {
+      const name = document.getElementById('kindName').value.trim();
+      if (!name) return alert("Name eingeben!");
+      db.ref('kinder/' + name).set({ ausgeliehen: false });
+      document.getElementById('kindName').value = "";
+    }
+
+    function addToy() {
+      const nr = document.getElementById('spielzeugNr').value.trim();
+      const name = document.getElementById('spielzeugName').value.trim();
+      if (!nr || !name) return alert("Beides eingeben!");
+      db.ref('spielzeuge/' + nr).set(name);
+      document.getElementById('spielzeugNr').value = "";
+      document.getElementById('spielzeugName').value = "";
+    }
+
+    function ladeAusleihen() {
+      const el = document.getElementById("ausleihen");
+      el.innerHTML = "";
+      db.ref("kinder").once("value").then(snapshot => {
+        snapshot.forEach(child => {
+          const name = child.key;
+          const data = child.val();
+          if (data.ausgeliehen) {
+            const div = document.createElement("div");
+            div.className = "item";
+            div.innerHTML = `<b>${name}</b> hat <i>${data.ausgeliehen}</i> ausgeliehen 
+              <button onclick="zurueckgeben('${name}')">Zurückgeben</button>`;
+            el.appendChild(div);
+          }
+        });
+      });
+    }
+
+    function zurueckgeben(name) {
+      db.ref("kinder/" + name + "/ausgeliehen").remove();
+      ladeAusleihen();
+    }
+
+    setInterval(ladeAusleihen, 3000);
+    ladeAusleihen();
+  </script>
+</body>
+</html>
