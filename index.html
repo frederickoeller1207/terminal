@@ -17,12 +17,19 @@
       font-weight: 600;
       text-align: center;
     }
-    .menu {
-      margin-bottom: 30px;
+    .menu, #home-btn {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 12px;
+      margin-bottom: 30px;
+    }
+    #home-btn {
+      font-size: 20px;
+      cursor: pointer;
+      user-select: none;
+      color: #007aff;
+      margin-top: -10px;
     }
     button {
       background-color: #ffffff;
@@ -50,11 +57,12 @@
 </head>
 <body>
   <h1 id="title">Mäusegruppe Terminal</h1>
-  <div class="menu">
+  <div id="menu" class="menu">
     <button id="btn-ausleihe">Spielzeug Ausleihe</button>
     <button id="btn-checkout">Checkout</button>
     <button id="btn-mausdollar">Mausdollar hinzufügen</button>
   </div>
+  <div id="home-btn" style="display:none;">🏠 Zurück</div>
   <div id="view"></div>
 
   <script type="module">
@@ -63,7 +71,6 @@
     import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
     import { getDatabase as getDB2, ref as ref2, update as update2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
 
-    // Datenbank 1: Admin + Ausleihe
     const config1 = {
       apiKey: "AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",
       authDomain: "gesamt-dae4e.firebaseapp.com",
@@ -73,10 +80,6 @@
       messagingSenderId: "844023612743",
       appId: "1:844023612743:web:0821aa894541f89a7df862"
     };
-    const app1 = initApp1(config1, "app1");
-    const db1 = getDB1(app1);
-
-    // Datenbank 2: MausCityBank
     const config2 = {
       apiKey: "AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg",
       authDomain: "punkte-45c20.firebaseapp.com",
@@ -86,19 +89,35 @@
       messagingSenderId: "931713539549",
       appId: "1:931713539549:web:e348bf38369639f1906a34"
     };
+
+    const app1 = initApp1(config1, "app1");
+    const db1 = getDB1(app1);
     const app2 = initApp2(config2, "app2");
     const db2 = getDB2(app2);
 
     const view = document.getElementById("view");
+    const menu = document.getElementById("menu");
+    const homeBtn = document.getElementById("home-btn");
 
-    document.getElementById("btn-ausleihe").onclick = loadAusleihe;
-    document.getElementById("btn-checkout").onclick = loadCheckout;
-    document.getElementById("btn-mausdollar").onclick = mausdollarAnfrage;
+    const resetView = () => {
+      view.innerHTML = "";
+      menu.style.display = "flex";
+      homeBtn.style.display = "none";
+      document.getElementById("title").textContent = "Mäusegruppe Terminal";
+    };
 
-    function loadAusleihe() {
-      view.innerHTML = "<h2>Spielzeug Ausleihe</h2>";
+    const openView = (title) => {
+      view.innerHTML = "";
+      menu.style.display = "none";
+      homeBtn.style.display = "block";
+      document.getElementById("title").textContent = title;
+    };
+
+    homeBtn.onclick = resetView;
+
+    document.getElementById("btn-ausleihe").onclick = () => {
+      openView("Spielzeug Ausleihe");
       onVal1(ref1(db1, "kinder"), snapshot => {
-        view.innerHTML = "<h2>Spielzeug Ausleihe</h2>";
         snapshot.forEach(childSnap => {
           const name = childSnap.key;
           const btn = document.createElement("button");
@@ -107,7 +126,7 @@
           view.appendChild(btn);
         });
       });
-    }
+    };
 
     async function ausleihen(name) {
       const ausleiheSnap = await get1(ref1(db1, `ausleihen/${name}`));
@@ -136,10 +155,9 @@
       }
     }
 
-    function loadCheckout() {
-      view.innerHTML = "<h2>Checkout</h2>";
+    document.getElementById("btn-checkout").onclick = () => {
+      openView("Checkout");
       onVal1(ref1(db1, "kinder"), snapshot => {
-        view.innerHTML = "<h2>Checkout</h2>";
         snapshot.forEach(childSnap => {
           const name = childSnap.key;
           const link = childSnap.val().link;
@@ -152,10 +170,10 @@
           view.appendChild(btn);
         });
       });
-    }
+    };
 
-    function mausdollarAnfrage() {
-      view.innerHTML = "<h2>Mausdollar hinzufügen</h2>";
+    document.getElementById("btn-mausdollar").onclick = () => {
+      openView("Mausdollar hinzufügen");
       const kinder = [];
       onVal1(ref1(db1, "kinder"), snapshot => {
         snapshot.forEach(childSnap => {
@@ -168,10 +186,10 @@
           view.appendChild(btn);
         });
       });
-    }
+    };
 
     function waehleBetrag(name) {
-      view.innerHTML = `<h2>${name}: Wie viele Mausdollar?</h2>`;
+      openView(`${name}: Wähle Betrag`);
       for (let i = 1; i <= 5; i++) {
         const btn = document.createElement("button");
         btn.textContent = `${i}`;
@@ -181,7 +199,7 @@
     }
 
     function waehleGrund(name, betrag) {
-      view.innerHTML = `<h2>${name}: Wähle einen Grund</h2>`;
+      openView(`${name}: Grund wählen`);
       const gruende = ["Quiz", "Kurze Hilfe", "Malwettbewerb", "Tischdienst"];
       gruende.forEach(g => {
         const btn = document.createElement("button");
@@ -210,6 +228,8 @@
       set1(anfrageRef, { name, betrag, grund, zeit });
       view.innerHTML = `<h2>Anfrage gesendet! (${betrag} Mausdollar für: ${grund})</h2>`;
     }
+
+    resetView(); // Initialer Zustand
   </script>
 </body>
 </html>
