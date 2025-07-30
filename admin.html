@@ -207,3 +207,114 @@ function ladeMausdollarAnfragen() {
         });
       });
     }
+window.zurueckgeben = async function(name) {
+      const ausleiheRef = ref1(db1, "ausleihen/" + name);
+      const snapshot = await get(ausleiheRef);
+      if (!snapshot.exists()) return;
+      const daten = snapshot.val();
+      const historieRef = ref1(db1, "historie/" + name);
+      const neueHistorie = {
+        spielzeug: daten.spielzeug,
+        nummer: daten.nummer,
+        ausgeliehen: daten.zeit,
+        zurückgegeben: new Date().toISOString()
+      };
+      const neueRef = push(historieRef);
+      await set(neueRef, neueHistorie);
+      await remove(ausleiheRef);
+    };
+
+    window.loescheKind = function(name) {
+      if (confirm(`Soll ${name} wirklich gelöscht werden?`)) {
+        remove(ref1(db1, "kinder/" + name));
+      }
+    };
+
+    window.loescheSpielzeug = function(nummer) {
+      if (confirm(`Soll Spielzeug ${nummer} wirklich gelöscht werden?`)) {
+        remove(ref1(db1, "spielzeuge/" + nummer));
+      }
+    };
+
+    // ERWEITERUNG: Code-Schutz & Bearbeitung
+    document.getElementById("add-kind-btn").onclick = () => {
+      const name = document.getElementById("kind-name").value.trim();
+      let link = document.getElementById("checkout-link").value.trim();
+      let code = document.getElementById("checkout-code").value.trim();
+      if (!name) return alert("Name fehlt.");
+      if (!/^\d{3}$/.test(code)) return alert("Code muss genau 3 Ziffern haben.");
+      if (link && !link.startsWith("http")) link = "https://" + link;
+      set(ref1(db1, `kinder/${name}`), { link: link || null, code: code });
+      document.getElementById("kind-name").value = "";
+      document.getElementById("checkout-link").value = "";
+      document.getElementById("checkout-code").value = "";
+    };
+
+    onValue(ref1(db1, "kinder"), (snapshot) => {
+      const kinderListe = document.getElementById("kinder-liste");
+      kinderListe.innerHTML = "";
+      snapshot.forEach(childSnap => {
+        const name = childSnap.key;
+        const data = childSnap.val();
+        const div = document.createElement("div");
+
+        const linkInput = document.createElement("input");
+        linkInput.value = data.link || "";
+        linkInput.placeholder = "Link bearbeiten";
+        linkInput.onchange = () => {
+          update2(ref1(db1, "kinder/" + name), { ...data, link: linkInput.value });
+        };
+
+        const codeInput = document.createElement("input");
+        codeInput.value = data.code || "";
+        codeInput.placeholder = "Code (3 Ziffern)";
+        codeInput.onchange = () => {
+          if (!/^\d{3}$/.test(codeInput.value)) return alert("Code muss genau 3 Ziffern sein");
+          update2(ref1(db1, "kinder/" + name), { ...data, code: codeInput.value });
+        };
+
+        const loeschen = document.createElement("span");
+        loeschen.className = "delete";
+        loeschen.textContent = "x";
+        loeschen.onclick = () => window.loescheKind(name);
+
+        div.appendChild(document.createTextNode(name + ": "));
+        div.appendChild(linkInput);
+        div.appendChild(codeInput);
+        div.appendChild(loeschen);
+        kinderListe.appendChild(div);
+      });
+    });
+  </script>
+</head>
+<body>
+  <h1>Adminbereich</h1>
+
+  <div class="section">
+    <h2>Kinder hinzufügen</h2>
+    <input id="kind-name" placeholder="Name des Kindes" />
+    <input id="checkout-link" placeholder="Checkout-Link" />
+    <input id="checkout-code" placeholder="3-stelliger Code" maxlength="3" />
+    <button id="add-kind-btn">Hinzufügen</button>
+    <div class="liste" id="kinder-liste"></div>
+  </div>
+
+  <div class="section">
+    <h2>Spielzeuge hinzufügen</h2>
+    <input id="spielzeug-nummer" placeholder="Nummer" />
+    <input id="spielzeug-name" placeholder="Spielzeugname" />
+    <button id="add-spielzeug-btn">Hinzufügen</button>
+    <div class="liste" id="spielzeug-liste"></div>
+  </div>
+
+  <div class="section">
+    <h2>Aktuelle Ausleihen</h2>
+    <div class="liste" id="ausleihen-liste"></div>
+  </div>
+
+  <div class="section">
+    <h2>Historie</h2>
+    <div class="liste" id="historie-liste"></div>
+  </div>
+</body>
+</html>
