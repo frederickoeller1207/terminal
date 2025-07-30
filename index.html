@@ -20,59 +20,62 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     const terminal = document.getElementById("terminal");
+    const overlay = document.getElementById("overlay");
 
-    // Kinder aus Firebase laden
     onValue(ref(db, "kinder"), (snapshot) => {
       terminal.innerHTML = "";
       snapshot.forEach(childSnapshot => {
         const name = childSnapshot.key;
         const btn = document.createElement("button");
         btn.textContent = name;
-        btn.onclick = () => openMenu(name);
+        btn.onclick = () => ausleihen(name);
         terminal.appendChild(btn);
       });
     });
 
-    async function openMenu(name) {
-      const menu = confirm(`${name} – Spielzeug ausleihen oder Checkout?\nOK = Ausleihen, Abbrechen = Checkout`);
+    async function ausleihen(name) {
       const ausleiheRef = ref(db, `ausleihen/${name}`);
-      const vorhandene = await get(ausleiheRef);
-
-      if (menu) {
-        // Prüfen ob Kind schon etwas ausgeliehen hat
-        if (vorhandene.exists() && vorhandene.val().bestätigt !== true) {
-          alert("Bitte gib das ausgeliehene Spielzeug zurück, bevor du ein neues ausleihst.");
-          return;
-        }
-
-        // Spielzeuge abrufen
-        const spielzeugeSnap = await get(ref(db, "spielzeuge"));
-        const spielzeuge = spielzeugeSnap.exists() ? spielzeugeSnap.val() : {};
-        const nummer = prompt("Gib die Spielzeugnummer ein:");
-        if (nummer && spielzeuge[nummer]) {
-          await set(ausleiheRef, {
-            spielzeug: spielzeuge[nummer],
-            nummer: nummer,
-            zeit: new Date().toISOString(),
-            bestätigt: false
-          });
-          alert(`${spielzeuge[nummer]} ausgeliehen.`);
-        } else {
-          alert("Ungültige Nummer.");
-        }
-      } else {
-        if (vorhandene.exists() && vorhandene.val().bestätigt === false) {
-          alert("Du musst das Spielzeug zuerst zurückgeben.");
-        } else {
-          const url = `https://script.google.com/macros/s/AKfycbwdV40MbHe_ND7iPRakAPnTkIKY1_tTIx8-QMebPJ5NoQUu-pyHZFlBm3KcCisRGZkhVA/exec?name=${encodeURIComponent(name)}`;
-          window.location.href = url;
-        }
+      const vorhanden = await get(ausleiheRef);
+      if (vorhanden.exists() && vorhanden.val().bestätigt !== true) {
+        showMessage("Bitte gib das ausgeliehene Spielzeug zuerst zurück.");
+        return;
       }
+
+      const spielzeugeSnap = await get(ref(db, "spielzeuge"));
+      const spielzeuge = spielzeugeSnap.exists() ? spielzeugeSnap.val() : {};
+      const nummer = prompt("Gib die Spielzeugnummer ein:");
+      if (!nummer || !spielzeuge[nummer]) {
+        showMessage("Ungültige Nummer.");
+        return;
+      }
+
+      await set(ausleiheRef, {
+        spielzeug: spielzeuge[nummer],
+        nummer: nummer,
+        zeit: new Date().toISOString(),
+        bestätigt: false
+      });
+
+      showMessage(`${spielzeuge[nummer]} wurde erfolgreich ausgeliehen.`);
+    }
+
+    function showMessage(text) {
+      overlay.textContent = text;
+      overlay.style.display = "block";
+      setTimeout(() => {
+        overlay.style.display = "none";
+      }, 3000);
     }
   </script>
   <style>
-    body { font-family: sans-serif; padding: 20px; }
-    h1 { margin-bottom: 20px; }
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background: #f4f4f4;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
     button {
       display: block;
       margin: 8px 0;
@@ -81,10 +84,25 @@
       width: 100%;
       max-width: 300px;
     }
+    #overlay {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #222;
+      color: #fff;
+      padding: 15px 25px;
+      border-radius: 10px;
+      display: none;
+      font-size: 16px;
+      z-index: 9999;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+    }
   </style>
 </head>
 <body>
   <h1>Mäusegruppe Terminal</h1>
   <div id="terminal"></div>
+  <div id="overlay"></div>
 </body>
 </html>
