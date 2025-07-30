@@ -47,7 +47,7 @@
     window.addKind = () => {
       const name = document.getElementById('kindName').value.trim();
       if (!name) return alert("Name eingeben!");
-      set(ref(db, 'kinder/' + name), { aktiv: true });
+      set(ref(db, 'kinder/' + name), true);  // 👈 Wichtig: Nur true
       document.getElementById('kindName').value = "";
     };
 
@@ -61,27 +61,25 @@
       document.getElementById('spielzeugName').value = "";
     };
 
-    // Rückgabe
+    // Rückgabe-Funktion
     window.zurueckgeben = (name) => {
-      remove(ref(db, "kinder/" + name + "/ausgeliehen"));
+      remove(ref(db, "ausleihen/" + name));
     };
 
     // Ausleihen anzeigen
     const el = document.getElementById("ausleihen");
-    const kinderRef = ref(db, "kinder");
+    const ausleihenRef = ref(db, "ausleihen");
 
-    onValue(kinderRef, snapshot => {
+    onValue(ausleihenRef, snapshot => {
       el.innerHTML = "";
       snapshot.forEach(child => {
         const name = child.key;
         const data = child.val();
-        if (data.ausgeliehen) {
-          const div = document.createElement("div");
-          div.className = "item";
-          div.innerHTML = `<b>${name}</b> hat <i>${data.ausgeliehen}</i> ausgeliehen 
-            <button onclick="zurueckgeben('${name}')">Zurückgeben</button>`;
-          el.appendChild(div);
-        }
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerHTML = `<b>${name}</b> hat <i>${data.spielzeug} (${data.nummer})</i> ausgeliehen 
+          <button onclick="zurueckgeben('${name}')">Zurückgeben</button>`;
+        el.appendChild(div);
       });
     });
   </script>
