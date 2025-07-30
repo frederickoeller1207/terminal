@@ -5,7 +5,7 @@
   <title>Mäusegruppe Terminal</title>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-    import { getDatabase, ref, set, get, child, onValue } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+    import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",
@@ -24,7 +24,7 @@
 
     // Kinder aus Firebase laden
     onValue(ref(db, "kinder"), (snapshot) => {
-      terminal.innerHTML = ""; // Zurücksetzen
+      terminal.innerHTML = "";
       snapshot.forEach(childSnapshot => {
         const name = childSnapshot.key;
         const btn = document.createElement("button");
@@ -42,13 +42,15 @@
       if (menu) {
         const nummer = prompt("Gib die Spielzeugnummer ein:");
         if (nummer && spielzeuge[nummer]) {
+          const spielzeug = spielzeuge[nummer];
           await set(ref(db, `ausleihen/${name}`), {
-            spielzeug: spielzeuge[nummer],
+            spielzeug: spielzeug,
             nummer: nummer,
             zeit: new Date().toISOString(),
             bestätigt: false
           });
-          alert(`${spielzeuge[nummer]} ausgeliehen.`);
+          await set(ref(db, `kinder/${name}/ausgeliehen`), spielzeug);
+          alert(`${spielzeug} ausgeliehen.`);
         } else {
           alert("Ungültige Nummer.");
         }
