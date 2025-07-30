@@ -117,7 +117,6 @@
       container.className = "section";
       container.innerHTML = "<h2>Mausdollar Anfragen</h2>";
       document.body.prepend(container);
-
       onValue(ref1(db1, "anfragen"), (snapshot) => {
         container.innerHTML = "<h2>Mausdollar Anfragen</h2>";
         snapshot.forEach(childSnap => {
@@ -126,7 +125,6 @@
           const zeile = document.createElement("div");
           zeile.className = "flex";
           zeile.innerHTML = `${data.name} möchte ${data.betrag} Punkt(e) wegen ${data.grund}`;
-
           const bestätigen = document.createElement("button");
           bestätigen.textContent = "✔️";
           bestätigen.onclick = async () => {
@@ -136,31 +134,27 @@
             await update2(kindRef, { punkte: val.punkte + data.betrag });
             remove(ref1(db1, "anfragen/" + id));
           };
-
           const ablehnen = document.createElement("button");
           ablehnen.textContent = "❌";
           ablehnen.onclick = () => remove(ref1(db1, "anfragen/" + id));
-
           zeile.appendChild(bestätigen);
           zeile.appendChild(ablehnen);
           container.appendChild(zeile);
         });
       });
     }
-function ladeKinderKonten() {
+
+    function ladeKinderKonten() {
       const bereich = document.createElement("div");
       bereich.className = "section";
       bereich.innerHTML = "<h2>MausCity Konten</h2>";
       document.body.insertBefore(bereich, document.body.children[1]);
-
-      const eigeneKinder = new Set();
-
+const eigeneKinder = new Set();
       onValue(ref1(db1, "kinder"), (snapshot) => {
         eigeneKinder.clear();
         snapshot.forEach(childSnap => {
           eigeneKinder.add(childSnap.key);
         });
-
         onVal2(ref2(db2, "kinder"), (snapshot2) => {
           bereich.innerHTML = "<h2>MausCity Konten</h2>";
           snapshot2.forEach(childSnap2 => {
@@ -169,23 +163,18 @@ function ladeKinderKonten() {
             const data = childSnap2.val();
             const zeile = document.createElement("div");
             zeile.className = "flex";
-
             const span = document.createElement("span");
             span.textContent = `${name} (${data.punkte})`;
             span.style.color = farbeToColor(data.farbe);
-
             const plus = document.createElement("button");
             plus.textContent = "+";
             plus.onclick = () => update2(ref2(db2, `kinder/${name}`), { punkte: data.punkte + 1 });
-
             const minus = document.createElement("button");
             minus.textContent = "–";
             minus.onclick = () => update2(ref2(db2, `kinder/${name}`), { punkte: data.punkte - 1 });
-
             zeile.appendChild(span);
             zeile.appendChild(plus);
             zeile.appendChild(minus);
-
             farben.forEach(f => {
               const btn = document.createElement("button");
               btn.textContent = f;
@@ -193,7 +182,6 @@ function ladeKinderKonten() {
               btn.onclick = () => update2(ref2(db2, `kinder/${name}`), { farbe: f });
               zeile.appendChild(btn);
             });
-
             bereich.appendChild(zeile);
           });
         });
@@ -205,17 +193,17 @@ function ladeKinderKonten() {
       const spielzeugListe = document.getElementById("spielzeug-liste");
       const ausleihenListe = document.getElementById("ausleihen-liste");
       const historieListe = document.getElementById("historie-liste");
-
       document.getElementById("add-kind-btn").onclick = () => {
         const name = document.getElementById("kind-name").value.trim();
         let link = document.getElementById("checkout-link").value.trim();
-        if (!name) return alert("Name fehlt.");
+        const code = document.getElementById("security-code").value.trim();
+        if (!name || !code) return alert("Name und Sicherheitscode sind erforderlich.");
         if (link && !link.startsWith("http")) link = "https://" + link;
-        set(ref1(db1, `kinder/${name}`), { link: link || null });
+        set(ref1(db1, `kinder/${name}`), { link: link || null, code });
         document.getElementById("kind-name").value = "";
         document.getElementById("checkout-link").value = "";
+        document.getElementById("security-code").value = "";
       };
-
       document.getElementById("add-spielzeug-btn").onclick = () => {
         const nummer = document.getElementById("spielzeug-nummer").value.trim();
         const name = document.getElementById("spielzeug-name").value.trim();
@@ -224,18 +212,16 @@ function ladeKinderKonten() {
         document.getElementById("spielzeug-nummer").value = "";
         document.getElementById("spielzeug-name").value = "";
       };
-
       onValue(ref1(db1, "kinder"), (snapshot) => {
         kinderListe.innerHTML = "";
         snapshot.forEach(childSnap => {
           const name = childSnap.key;
           const data = childSnap.val();
           const div = document.createElement("div");
-          div.innerHTML = `${name} – Link: ${data.link || "kein Link"} <span class="delete" onclick="loescheKind('${name}')">x</span>`;
+          div.innerHTML = `${name} – Link: ${data.link || "kein Link"} – Code: ${data.code || "kein Code"} <span class="delete" onclick="loescheKind('${name}')">x</span>`;
           kinderListe.appendChild(div);
         });
       });
-
       onValue(ref1(db1, "spielzeuge"), (snapshot) => {
         spielzeugListe.innerHTML = "";
         snapshot.forEach(childSnap => {
@@ -246,7 +232,6 @@ function ladeKinderKonten() {
           spielzeugListe.appendChild(div);
         });
       });
-
       onValue(ref1(db1, "ausleihen"), (snapshot) => {
         ausleihenListe.innerHTML = "";
         snapshot.forEach(childSnap => {
@@ -258,7 +243,6 @@ function ladeKinderKonten() {
           ausleihenListe.appendChild(div);
         });
       });
-
       onValue(ref1(db1, "historie"), async (snapshot) => {
         historieListe.innerHTML = "";
         const alleEintraege = {};
@@ -272,7 +256,6 @@ function ladeKinderKonten() {
             alleEintraege[nummer].push({ ...eintrag, kind });
           }
         });
-
         const sortierteNummern = Object.keys(alleEintraege).sort((a, b) => Number(a) - Number(b));
         for (const nummer of sortierteNummern) {
           const box = document.createElement("div");
@@ -325,15 +308,14 @@ function ladeKinderKonten() {
 </head>
 <body>
   <h1>Adminbereich</h1>
-
   <div class="section">
     <h2>Kinder hinzufügen</h2>
     <input id="kind-name" placeholder="Name des Kindes" />
     <input id="checkout-link" placeholder="Checkout-Link" />
+    <input id="security-code" placeholder="3-stelliger Code" />
     <button id="add-kind-btn">Hinzufügen</button>
     <div class="liste" id="kinder-liste"></div>
   </div>
-
   <div class="section">
     <h2>Spielzeuge hinzufügen</h2>
     <input id="spielzeug-nummer" placeholder="Nummer" />
@@ -341,12 +323,10 @@ function ladeKinderKonten() {
     <button id="add-spielzeug-btn">Hinzufügen</button>
     <div class="liste" id="spielzeug-liste"></div>
   </div>
-
   <div class="section">
     <h2>Aktuelle Ausleihen</h2>
     <div class="liste" id="ausleihen-liste"></div>
   </div>
-
   <div class="section">
     <h2>Historie</h2>
     <div class="liste" id="historie-liste"></div>
