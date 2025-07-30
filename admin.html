@@ -80,23 +80,46 @@
         });
       });
 
-      onValue(ref(db, "historie"), (snapshot) => {
+      // NEUE HISTORIE-DARSTELLUNG
+      onValue(ref(db, "historie"), async (snapshot) => {
         historieListe.innerHTML = "";
+        const alleEintraege = {};
+
         snapshot.forEach(childSnap => {
-          const name = childSnap.key;
+          const kind = childSnap.key;
           const eintraege = childSnap.val();
-          const box = document.createElement("div");
-          box.innerHTML = `<b>${name}</b>`;
           for (const key in eintraege) {
             const eintrag = eintraege[key];
-            const zeile = document.createElement("div");
+            const nummer = eintrag.nummer;
+            if (!alleEintraege[nummer]) alleEintraege[nummer] = [];
+            alleEintraege[nummer].push({
+              ...eintrag,
+              kind: kind
+            });
+          }
+        });
+
+        const sortierteNummern = Object.keys(alleEintraege).sort((a, b) => Number(a) - Number(b));
+
+        for (const nummer of sortierteNummern) {
+          const box = document.createElement("div");
+          const nameRef = ref(db, "spielzeuge/" + nummer);
+          const nameSnap = await get(nameRef);
+          const name = nameSnap.exists() ? nameSnap.val() : "Unbekannt";
+
+          box.innerHTML = `<h3>${nummer}: ${name}</h3>`;
+          alleEintraege[nummer].sort((a, b) => new Date(b.zurückgegeben) - new Date(a.zurückgegeben));
+
+          for (const eintrag of alleEintraege[nummer]) {
             const aus = new Date(eintrag.ausgeliehen).toLocaleString("de-DE");
             const zr = new Date(eintrag.zurückgegeben).toLocaleString("de-DE");
-            zeile.textContent = `• ${eintrag.spielzeug} (Nr. ${eintrag.nummer}) ausgeliehen am ${aus}, zurückgegeben am ${zr}`;
+            const zeile = document.createElement("div");
+            zeile.textContent = `• ${eintrag.kind}: von ${aus} bis ${zr}`;
             box.appendChild(zeile);
           }
+
           historieListe.appendChild(box);
-        });
+        }
       });
     }
 
@@ -135,64 +158,61 @@
   </script>
   <style>
     body {
-      font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
-      background-color: #f2f2f7;
-      margin: 0;
+      font-family: 'SF Pro Display', sans-serif;
       padding: 20px;
+      background: #f4f4f4;
       font-size: 15px;
-      color: #1c1c1e;
     }
-    h1 {
-      font-size: 24px;
-      font-weight: 600;
-      margin-bottom: 20px;
-    }
-    h2 {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 10px;
-    }
+    h1 { margin-bottom: 10px; font-size: 24px; }
+    h2 { font-size: 18px; margin-top: 0; }
     input {
-      padding: 10px;
-      margin: 4px 0;
-      border-radius: 10px;
+      margin: 4px;
+      padding: 6px;
+      font-size: 14px;
       border: 1px solid #ccc;
-      font-size: 15px;
-      width: 100%;
-      box-sizing: border-box;
+      border-radius: 8px;
     }
     button {
+      padding: 8px 14px;
+      margin-top: 6px;
+      font-size: 14px;
       background-color: #007aff;
       color: white;
       border: none;
       border-radius: 10px;
-      padding: 10px 16px;
-      font-size: 15px;
-      margin-top: 10px;
       cursor: pointer;
-      transition: background-color 0.2s ease-in-out;
     }
     button:hover {
       background-color: #005bb5;
     }
     .section {
-      background: #fff;
-      border-radius: 16px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-      padding: 20px;
       margin-bottom: 30px;
+      background: #fff;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
     }
     .liste div {
-      margin: 8px 0;
+      margin: 6px 0;
     }
     .delete {
       color: red;
-      font-weight: bold;
-      margin-left: 10px;
       cursor: pointer;
+      margin-left: 10px;
+      font-weight: bold;
     }
     .delete:hover {
       text-decoration: underline;
+    }
+    ul {
+      margin: 0;
+      padding-left: 20px;
+      font-size: 14px;
+    }
+    h3 {
+      margin-top: 20px;
+      font-size: 17px;
+      color: #333;
     }
   </style>
 </head>
