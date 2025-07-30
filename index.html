@@ -22,18 +22,29 @@
 
     const view = document.getElementById("view");
     const title = document.getElementById("title");
+    const homeBtn = document.getElementById("home-btn");
+    const menuDiv = document.querySelector(".menu");
 
     document.getElementById("btn-ausleihe").onclick = loadAusleihe;
     document.getElementById("btn-checkout").onclick = loadCheckout;
+    homeBtn.onclick = resetView;
 
     function resetView() {
-      title.textContent = "Mäusegruppe Terminal";
+      title.innerHTML = "Mäusegruppe Terminal";
+      menuDiv.style.display = "block";
+      homeBtn.style.display = "none";
       view.innerHTML = "";
+    }
+
+    function showTitle(t) {
+      title.innerHTML = `${t} <span id="home-btn" style="cursor:pointer;">🏠</span>`;
+      document.getElementById("home-btn").onclick = resetView;
+      menuDiv.style.display = "none";
     }
 
     function loadAusleihe() {
       resetView();
-      title.textContent = "Spielzeug Ausleihe";
+      showTitle("Spielzeug Ausleihe");
 
       onValue(ref(db, "kinder"), (snapshot) => {
         view.innerHTML = "";
@@ -80,7 +91,7 @@
 
     function loadCheckout() {
       resetView();
-      title.textContent = "Checkout";
+      showTitle("Checkout");
 
       onValue(ref(db, "kinder"), (snapshot) => {
         view.innerHTML = "";
@@ -101,6 +112,9 @@
         });
       });
     }
+
+    // Startseite initial anzeigen
+    resetView();
   </script>
   <style>
     body { font-family: sans-serif; padding: 20px; }
