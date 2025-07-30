@@ -147,7 +147,8 @@
         });
       });
     }
-function ladeKinderKonten() {
+
+    function ladeKinderKonten() {
       const bereich = document.createElement("div");
       bereich.className = "section";
       bereich.innerHTML = "<h2>MausCity Konten</h2>";
@@ -199,8 +200,98 @@ function ladeKinderKonten() {
         });
       });
     }
+function ladeListen() {
+      const kinderListe = document.getElementById("kinder-liste");
+      const spielzeugListe = document.getElementById("spielzeug-liste");
+      const ausleihenListe = document.getElementById("ausleihen-liste");
+      const historieListe = document.getElementById("historie-liste");
 
-    // Der Rest (ladeListen, Rückgabe, löschen usw.)
+      document.getElementById("add-kind-btn").onclick = () => {
+        const name = document.getElementById("kind-name").value.trim();
+        let link = document.getElementById("checkout-link").value.trim();
+        if (!name) return alert("Name fehlt.");
+        if (link && !link.startsWith("http")) link = "https://" + link;
+        set(ref1(db1, `kinder/${name}`), { link: link || null });
+        document.getElementById("kind-name").value = "";
+        document.getElementById("checkout-link").value = "";
+      };
+
+      document.getElementById("add-spielzeug-btn").onclick = () => {
+        const nummer = document.getElementById("spielzeug-nummer").value.trim();
+        const name = document.getElementById("spielzeug-name").value.trim();
+        if (!nummer || !name) return alert("Nummer oder Name fehlt.");
+        set(ref1(db1, `spielzeuge/${nummer}`), name);
+        document.getElementById("spielzeug-nummer").value = "";
+        document.getElementById("spielzeug-name").value = "";
+      };
+
+      onValue(ref1(db1, "kinder"), (snapshot) => {
+        kinderListe.innerHTML = "";
+        snapshot.forEach(childSnap => {
+          const name = childSnap.key;
+          const data = childSnap.val();
+          const div = document.createElement("div");
+          div.innerHTML = `${name} – Link: ${data.link || "kein Link"} <span class="delete" onclick="loescheKind('${name}')">x</span>`;
+          kinderListe.appendChild(div);
+        });
+      });
+
+      onValue(ref1(db1, "spielzeuge"), (snapshot) => {
+        spielzeugListe.innerHTML = "";
+        snapshot.forEach(childSnap => {
+          const nummer = childSnap.key;
+          const name = childSnap.val();
+          const div = document.createElement("div");
+          div.innerHTML = `${nummer}: ${name} <span class="delete" onclick="loescheSpielzeug('${nummer}')">x</span>`;
+          spielzeugListe.appendChild(div);
+        });
+      });
+
+      onValue(ref1(db1, "ausleihen"), (snapshot) => {
+        ausleihenListe.innerHTML = "";
+        snapshot.forEach(childSnap => {
+          const name = childSnap.key;
+          const daten = childSnap.val();
+          const div = document.createElement("div");
+          div.innerHTML = `<b>${name}</b> hat <i>${daten.spielzeug}</i> ausgeliehen 
+            <button onclick="zurueckgeben('${name}')">Zurückgeben</button>`;
+          ausleihenListe.appendChild(div);
+        });
+      });
+
+      onValue(ref1(db1, "historie"), async (snapshot) => {
+        historieListe.innerHTML = "";
+        const alleEintraege = {};
+        snapshot.forEach(childSnap => {
+          const kind = childSnap.key;
+          const eintraege = childSnap.val();
+          for (const key in eintraege) {
+            const eintrag = eintraege[key];
+            const nummer = eintrag.nummer;
+            if (!alleEintraege[nummer]) alleEintraege[nummer] = [];
+            alleEintraege[nummer].push({ ...eintrag, kind });
+          }
+        });
+
+        const sortierteNummern = Object.keys(alleEintraege).sort((a, b) => Number(a) - Number(b));
+        for (const nummer of sortierteNummern) {
+          const box = document.createElement("div");
+          const nameRef = ref1(db1, "spielzeuge/" + nummer);
+          const nameSnap = await get(nameRef);
+          const name = nameSnap.exists() ? nameSnap.val() : "Unbekannt";
+          box.innerHTML = `<h3>${nummer}: ${name}</h3>`;
+          alleEintraege[nummer].sort((a, b) => new Date(b.zurückgegeben) - new Date(a.zurückgegeben));
+          for (const eintrag of alleEintraege[nummer]) {
+            const aus = new Date(eintrag.ausgeliehen).toLocaleString("de-DE");
+            const zr = new Date(eintrag.zurückgegeben).toLocaleString("de-DE");
+            const zeile = document.createElement("div");
+            zeile.textContent = `• ${eintrag.kind}: von ${aus} bis ${zr}`;
+            box.appendChild(zeile);
+          }
+          historieListe.appendChild(box);
+        }
+      });
+    }
 
     window.zurueckgeben = async function(name) {
       const ausleiheRef = ref1(db1, "ausleihen/" + name);
