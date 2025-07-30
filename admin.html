@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Admin – Mäusegruppe</title>
+  <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600&display=swap" rel="stylesheet">
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
     import { getDatabase, ref, set, onValue, remove, get, push } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
@@ -133,17 +134,62 @@
     ladeListen();
   </script>
   <style>
-    body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
-    h1 { margin-bottom: 10px; }
-    input { margin: 4px; padding: 6px; }
-    button { padding: 6px 12px; margin-top: 6px; }
-    .section { margin-bottom: 30px; background: #fff; padding: 15px; border-radius: 6px; box-shadow: 0 0 5px #ccc; }
-    .liste div { margin: 4px 0; }
+    body {
+      font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f2f2f7;
+      margin: 0;
+      padding: 20px;
+      font-size: 15px;
+      color: #1c1c1e;
+    }
+    h1 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+    h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    input {
+      padding: 10px;
+      margin: 4px 0;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #007aff;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 15px;
+      margin-top: 10px;
+      cursor: pointer;
+      transition: background-color 0.2s ease-in-out;
+    }
+    button:hover {
+      background-color: #005bb5;
+    }
+    .section {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+    .liste div {
+      margin: 8px 0;
+    }
     .delete {
       color: red;
-      cursor: pointer;
-      margin-left: 10px;
       font-weight: bold;
+      margin-left: 10px;
+      cursor: pointer;
     }
     .delete:hover {
       text-decoration: underline;
