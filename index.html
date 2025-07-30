@@ -135,6 +135,14 @@
     };
 
     homeBtn.onclick = resetView;
+async function checkSicherheitscode(name, callback) {
+      const snap = await get1(ref1(db1, `kinder/${name}`));
+      const code = snap.exists() ? snap.val().code : null;
+      if (!code) return alert("Kein Sicherheitscode hinterlegt.");
+      const eingabe = prompt(`Bitte Sicherheitscode für ${name} eingeben:`);
+      if (eingabe === code) callback();
+      else alert("Falscher Code.");
+    }
 
     document.getElementById("btn-ausleihe").onclick = () => {
       openView("Spielzeug Ausleihe");
@@ -143,7 +151,7 @@
           const name = childSnap.key;
           const btn = document.createElement("button");
           btn.textContent = name;
-          btn.onclick = () => ausleihen(name);
+          btn.onclick = () => checkSicherheitscode(name, () => ausleihen(name));
           view.appendChild(btn);
         });
       });
@@ -184,10 +192,10 @@
           const link = childSnap.val().link;
           const btn = document.createElement("button");
           btn.textContent = name;
-          btn.onclick = () => {
+          btn.onclick = () => checkSicherheitscode(name, () => {
             if (link) window.location.href = link;
             else alert("Kein Link hinterlegt.");
-          };
+          });
           view.appendChild(btn);
         });
       });
@@ -203,7 +211,7 @@
         kinder.forEach(name => {
           const btn = document.createElement("button");
           btn.textContent = name;
-          btn.onclick = () => waehleBetrag(name);
+          btn.onclick = () => checkSicherheitscode(name, () => waehleBetrag(name));
           view.appendChild(btn);
         });
       });
