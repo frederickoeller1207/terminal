@@ -265,8 +265,16 @@ const eigeneKinder = new Set();
           box.innerHTML = `<h3>${nummer}: ${name}</h3>`;
           alleEintraege[nummer].sort((a, b) => new Date(b.zurückgegeben) - new Date(a.zurückgegeben));
           for (const eintrag of alleEintraege[nummer]) {
-            const aus = new Date(eintrag.ausgeliehen).toLocaleString("de-DE");
-            const zr = new Date(eintrag.zurückgegeben).toLocaleString("de-DE");
+            function formatZeit(datum) {
+  const date = new Date(datum);
+  const tag = String(date.getDate()).padStart(2, '0');
+  const monat = String(date.getMonth() + 1).padStart(2, '0');
+  const stunde = String(date.getHours()).padStart(2, '0');
+  const minute = String(date.getMinutes()).padStart(2, '0');
+  return `${tag}.${monat} – ${stunde}:${minute}`;
+}
+const aus = formatZeit(eintrag.ausgeliehen);
+const zr = formatZeit(eintrag.zurückgegeben);
             const zeile = document.createElement("div");
             zeile.textContent = `• ${eintrag.kind}: von ${aus} bis ${zr}`;
             box.appendChild(zeile);
