@@ -147,8 +147,7 @@
         });
       });
     }
-
-    function ladeKinderKonten() {
+function ladeKinderKonten() {
       const bereich = document.createElement("div");
       bereich.className = "section";
       bereich.innerHTML = "<h2>MausCity Konten</h2>";
@@ -161,46 +160,47 @@
         snapshot.forEach(childSnap => {
           eigeneKinder.add(childSnap.key);
         });
-      });
 
-      onVal2(ref2(db2, "kinder"), (snapshot) => {
-        bereich.innerHTML = "<h2>MausCity Konten</h2>";
-        snapshot.forEach(childSnap => {
-          const name = childSnap.key;
-          if (!eigeneKinder.has(name)) return;
-          const data = childSnap.val();
-          const zeile = document.createElement("div");
-          zeile.className = "flex";
+        onVal2(ref2(db2, "kinder"), (snapshot2) => {
+          bereich.innerHTML = "<h2>MausCity Konten</h2>";
+          snapshot2.forEach(childSnap2 => {
+            const name = childSnap2.key;
+            if (!eigeneKinder.has(name)) return;
+            const data = childSnap2.val();
+            const zeile = document.createElement("div");
+            zeile.className = "flex";
 
-          const span = document.createElement("span");
-          span.textContent = `${name} (${data.punkte})`;
-          span.style.color = farbeToColor(data.farbe);
+            const span = document.createElement("span");
+            span.textContent = `${name} (${data.punkte})`;
+            span.style.color = farbeToColor(data.farbe);
 
-          const plus = document.createElement("button");
-          plus.textContent = "+";
-          plus.onclick = () => update2(ref2(db2, `kinder/${name}`), { punkte: data.punkte + 1 });
+            const plus = document.createElement("button");
+            plus.textContent = "+";
+            plus.onclick = () => update2(ref2(db2, `kinder/${name}`), { punkte: data.punkte + 1 });
 
-          const minus = document.createElement("button");
-          minus.textContent = "–";
-          minus.onclick = () => update2(ref2(db2, `kinder/${name}`), { punkte: data.punkte - 1 });
+            const minus = document.createElement("button");
+            minus.textContent = "–";
+            minus.onclick = () => update2(ref2(db2, `kinder/${name}`), { punkte: data.punkte - 1 });
 
-          zeile.appendChild(span);
-          zeile.appendChild(plus);
-          zeile.appendChild(minus);
+            zeile.appendChild(span);
+            zeile.appendChild(plus);
+            zeile.appendChild(minus);
 
-          farben.forEach(f => {
-            const btn = document.createElement("button");
-            btn.textContent = f;
-            btn.className = "color-button";
-            btn.onclick = () => update2(ref2(db2, `kinder/${name}`), { farbe: f });
-            zeile.appendChild(btn);
+            farben.forEach(f => {
+              const btn = document.createElement("button");
+              btn.textContent = f;
+              btn.className = "color-button";
+              btn.onclick = () => update2(ref2(db2, `kinder/${name}`), { farbe: f });
+              zeile.appendChild(btn);
+            });
+
+            bereich.appendChild(zeile);
           });
-
-          bereich.appendChild(zeile);
         });
       });
     }
-function ladeListen() {
+
+    function ladeListen() {
       const kinderListe = document.getElementById("kinder-liste");
       const spielzeugListe = document.getElementById("spielzeug-liste");
       const ausleihenListe = document.getElementById("ausleihen-liste");
