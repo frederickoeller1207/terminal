@@ -5,7 +5,7 @@
   <title>Mäusegruppe Terminal</title>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-    import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+    import { getDatabase, ref, set, get, child, onValue } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",
@@ -22,9 +22,9 @@
 
     const terminal = document.getElementById("terminal");
 
-    // Kinder aus Firebase laden
+    // Kinder aus dem Pfad "kinder" laden
     onValue(ref(db, "kinder"), (snapshot) => {
-      terminal.innerHTML = "";
+      terminal.innerHTML = ""; // Zurücksetzen
       snapshot.forEach(childSnapshot => {
         const name = childSnapshot.key;
         const btn = document.createElement("button");
@@ -42,15 +42,13 @@
       if (menu) {
         const nummer = prompt("Gib die Spielzeugnummer ein:");
         if (nummer && spielzeuge[nummer]) {
-          const spielzeug = spielzeuge[nummer];
           await set(ref(db, `ausleihen/${name}`), {
-            spielzeug: spielzeug,
+            spielzeug: spielzeuge[nummer],
             nummer: nummer,
             zeit: new Date().toISOString(),
             bestätigt: false
           });
-          await set(ref(db, `kinder/${name}/ausgeliehen`), spielzeug);
-          alert(`${spielzeug} ausgeliehen.`);
+          alert(`${spielzeuge[nummer]} ausgeliehen.`);
         } else {
           alert("Ungültige Nummer.");
         }
@@ -66,7 +64,7 @@
     }
   </script>
   <style>
-    body { font-family: sans-serif; padding: 20px; }
+    body { font-family: sans-serif; padding: 20px; background: #f2f2f2; }
     h1 { margin-bottom: 20px; }
     button {
       display: block;
@@ -75,6 +73,9 @@
       font-size: 18px;
       width: 100%;
       max-width: 300px;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
     }
   </style>
 </head>
