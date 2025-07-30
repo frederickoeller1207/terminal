@@ -1,19 +1,72 @@
-!DOCTYPE html>  <html lang="de">  
+<!DOCTYPE html>
+<html lang="de">  
 <head>  
   <meta charset="UTF-8" />  
   <title>Mäusegruppe Terminal</title>  
+  <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600&display=swap" rel="stylesheet">
   <style>  
-    body { font-family: sans-serif; padding: 20px; }  
-    h1 { margin-bottom: 20px; }  
-    .menu { margin-bottom: 20px; }  
-    button {  
-      display: block;  
-      margin: 8px 0;  
-      padding: 12px 20px;  
-      font-size: 18px;  
-      width: 100%;  
-      max-width: 300px;  
-    }  
+    body {
+      font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f9f9fb;
+      padding: 20px;
+      color: #1c1c1e;
+    }
+
+    h1 {
+      margin-bottom: 30px;
+      font-size: 28px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .menu {
+      margin-bottom: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    button {
+      background-color: #ffffff;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      padding: 14px 24px;
+      font-size: 17px;
+      font-weight: 500;
+      color: #000;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      cursor: pointer;
+      width: 90%;
+      max-width: 320px;
+      transition: all 0.2s ease, transform 0.1s ease;
+      transform: scale(1);
+      touch-action: manipulation;
+    }
+
+    button:hover {
+      background-color: #f0f0f5;
+    }
+
+    button:active {
+      background-color: #e0e0e5;
+      transform: scale(0.97);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1) inset;
+    }
+
+    #view {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    #home-btn {
+      font-size: 20px;
+      margin-left: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
   </style>  
 </head>  
 <body>  
@@ -22,7 +75,8 @@
     <button id="btn-ausleihe">Spielzeug Ausleihe</button>  
     <button id="btn-checkout">Checkout</button>  
   </div>  
-  <div id="view"></div>    <script type="module">  
+  <div id="view"></div>    
+  <script type="module">  
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";  
     import { getDatabase, ref, get, onValue, set } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";  
   
@@ -49,12 +103,12 @@
   
       function resetView() {  
         title.innerHTML = "Mäusegruppe Terminal";  
-        menuDiv.style.display = "block";  
+        menuDiv.style.display = "flex";  
         view.innerHTML = "";  
       }  
   
       function showTitle(t) {  
-        title.innerHTML = `${t} <span id="home-btn" style="cursor:pointer;">🏠</span>`;  
+        title.innerHTML = `${t} <span id="home-btn">🏠</span>`;  
         document.getElementById("home-btn").onclick = resetView;  
         menuDiv.style.display = "none";  
       }  
@@ -130,7 +184,8 @@
         });  
       }  
   
-      resetView(); // Startansicht laden  
+      resetView();  
     });  
-  </script>  </body>  
+  </script>  
+</body>  
 </html>
