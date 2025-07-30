@@ -67,6 +67,14 @@
       font-size: 16px;
       cursor: pointer;
     }
+    .edit-link {
+      margin-left: 6px;
+      cursor: pointer;
+      color: #007aff;
+    }
+    .edit-link:hover {
+      text-decoration: underline;
+    }
   </style>
   <script type="module">
     import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
@@ -111,172 +119,3 @@
       ladeKinderKonten();
       ladeListen();
     });
-function ladeMausdollarAnfragen() {
-      const container = document.createElement("div");
-      container.className = "section";
-      container.innerHTML = "<h2>Mausdollar Anfragen</h2>";
-      document.body.prepend(container);
-
-      onValue(ref1(db1, "anfragen"), (snapshot) => {
-        container.innerHTML = "<h2>Mausdollar Anfragen</h2>";
-        snapshot.forEach(childSnap => {
-          const id = childSnap.key;
-          const data = childSnap.val();
-          const zeile = document.createElement("div");
-          zeile.className = "flex";
-          zeile.innerHTML = `${data.name} möchte ${data.betrag} Punkt(e) wegen ${data.grund}`;
-
-          const bestätigen = document.createElement("button");
-          bestätigen.textContent = "✔️";
-          bestätigen.onclick = async () => {
-            const kindRef = ref2(db2, `kinder/${data.name}`);
-            const kindSnap = await get2(kindRef);
-            const val = kindSnap.val() || { punkte: 0, farbe: "⚪" };
-            await update2(kindRef, { punkte: val.punkte + data.betrag });
-            remove(ref1(db1, "anfragen/" + id));
-          };
-
-          const ablehnen = document.createElement("button");
-          ablehnen.textContent = "❌";
-          ablehnen.onclick = () => remove(ref1(db1, "anfragen/" + id));
-
-          zeile.appendChild(bestätigen);
-          zeile.appendChild(ablehnen);
-          container.appendChild(zeile);
-        });
-      });
-    }
-
-    function ladeKinderKonten() {
-      const bereich = document.createElement("div");
-      bereich.className = "section";
-      bereich.innerHTML = "<h2>MausCity Konten</h2>";
-      document.body.insertBefore(bereich, document.body.children[1]);
-
-      const eigeneKinder = new Set();
-
-      onValue(ref1(db1, "kinder"), (snapshot) => {
-        eigeneKinder.clear();
-        snapshot.forEach(childSnap => {
-          eigeneKinder.add(childSnap.key);
-        });
-
-        onVal2(ref2(db2, "kinder"), (snapshot2) => {
-          bereich.innerHTML = "<h2>MausCity Konten</h2>";
-          snapshot2.forEach(childSnap2 => {
-            const name = childSnap2.key;
-            if (!eigeneKinder.has(name)) return;
-            const data = childSnap2.val();
-            const zeile = document.createElement("div");
-            zeile.className = "flex";
-
-            const span = document.createElement("span");
-            span.textContent = `${name} (${data.punkte})`;
-            span.style.color = farbeToColor(data.farbe);
-
-            const plus = document.createElement("button");
-            plus.textContent = "+";
-            plus.onclick = () => update2(ref2(db2, `kinder/${name}`), { punkte: data.punkte + 1 });
-
-            const minus = document.createElement("button");
-            minus.textContent = "–";
-            minus.onclick = () => update2(ref2(db2, `kinder/${name}`), { punkte: data.punkte - 1 });
-
-            zeile.appendChild(span);
-            zeile.appendChild(plus);
-            zeile.appendChild(minus);
-
-            farben.forEach(f => {
-              const btn = document.createElement("button");
-              btn.textContent = f;
-              btn.className = "color-button";
-              btn.onclick = () => update2(ref2(db2, `kinder/${name}`), { farbe: f });
-              zeile.appendChild(btn);
-            });
-
-            bereich.appendChild(zeile);
-          });
-        });
-      });
-    }
-
-    function ladeListen() {
-      const kinderListe = document.getElementById("kinder-liste");
-
-      document.getElementById("add-kind-btn").onclick = () => {
-        const name = document.getElementById("kind-name").value.trim();
-        let link = document.getElementById("checkout-link").value.trim();
-        let code = document.getElementById("kind-code").value.trim();
-        if (!name) return alert("Name fehlt.");
-        if (link && !link.startsWith("http")) link = "https://" + link;
-        if (!/^\d{3}$/.test(code)) return alert("Code muss aus genau 3 Ziffern bestehen.");
-        set(ref1(db1, `kinder/${name}`), { link: link || null, code });
-        document.getElementById("kind-name").value = "";
-        document.getElementById("checkout-link").value = "";
-        document.getElementById("kind-code").value = "";
-      };
-
-      onValue(ref1(db1, "kinder"), (snapshot) => {
-        kinderListe.innerHTML = "";
-        snapshot.forEach(childSnap => {
-          const name = childSnap.key;
-          const data = childSnap.val();
-          const div = document.createElement("div");
-
-          const linkInput = document.createElement("input");
-          linkInput.value = data.link || "";
-          linkInput.placeholder = "Checkout-Link";
-
-          const codeInput = document.createElement("input");
-          codeInput.value = data.code || "";
-          codeInput.placeholder = "Code (3 Ziffern)";
-          codeInput.style.width = "100px";
-
-          const speichernBtn = document.createElement("button");
-          speichernBtn.textContent = "Speichern";
-          speichernBtn.onclick = () => {
-            const neuerLink = linkInput.value.trim();
-            const neuerCode = codeInput.value.trim();
-            if (!/^\d{3}$/.test(neuerCode)) return alert("Code muss 3 Ziffern haben.");
-            const finalLink = neuerLink && !neuerLink.startsWith("http") ? "https://" + neuerLink : neuerLink;
-            update(ref1(db1, "kinder/" + name), { link: finalLink || null, code: neuerCode });
-          };
-
-          const löschen = document.createElement("span");
-          löschen.textContent = "x";
-          löschen.className = "delete";
-          löschen.onclick = () => {
-            if (confirm(`Soll ${name} wirklich gelöscht werden?`)) {
-              remove(ref1(db1, "kinder/" + name));
-            }
-          };
-
-          div.textContent = name + ": ";
-          div.appendChild(linkInput);
-          div.appendChild(codeInput);
-          div.appendChild(speichernBtn);
-          div.appendChild(löschen);
-          kinderListe.appendChild(div);
-        });
-      });
-    }
-  </script>
-</head>
-<body>
-  <h1>Adminbereich</h1>
-
-  <div class="section">
-    <h2>Kinder hinzufügen</h2>
-    <input id="kind-name" placeholder="Name des Kindes" />
-    <input id="checkout-link" placeholder="Checkout-Link" />
-    <input id="kind-code" placeholder="Code (z. B. 123)" />
-    <button id="add-kind-btn">Hinzufügen</button>
-    <div class="liste" id="kinder-liste"></div>
-  </div>
-
-  <div class="section">
-    <h2>MausCity Konten & Mausdollar Anfragen</h2>
-    <!-- wird per JS befüllt -->
-  </div>
-</body>
-</html>
