@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Mäusegruppe Terminal</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+    import { getDatabase, ref, set, get, child, onValue } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",
+      authDomain: "gesamt-dae4e.firebaseapp.com",
+      databaseURL: "https://gesamt-dae4e-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "gesamt-dae4e",
+      storageBucket: "gesamt-dae4e.appspot.com",
+      messagingSenderId: "844023612743",
+      appId: "1:844023612743:web:0821aa894541f89a7df862"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const terminal = document.getElementById("terminal");
+
+    // Kinder aus Firebase laden
+    onValue(ref(db, "kinder"), (snapshot) => {
+      terminal.innerHTML = ""; // Zurücksetzen
+      snapshot.forEach(childSnapshot => {
+        const name = childSnapshot.key;
+        const btn = document.createElement("button");
+        btn.textContent = name;
+        btn.onclick = () => openMenu(name);
+        terminal.appendChild(btn);
+      });
+    });
+
+    async function openMenu(name) {
+      const menu = confirm(`${name} – Spielzeug ausleihen oder Checkout?\nOK = Ausleihen, Abbrechen = Checkout`);
+      const spielzeugeSnap = await get(ref(db, "spielzeuge"));
+      const spielzeuge = spielzeugeSnap.exists() ? spielzeugeSnap.val() : {};
+
+      if (menu) {
+        const nummer = prompt("Gib die Spielzeugnummer ein:");
+        if (nummer && spielzeuge[nummer]) {
+          await set(ref(db, `ausleihen/${name}`), {
+            spielzeug: spielzeuge[nummer],
+            nummer: nummer,
+            zeit: new Date().toISOString(),
+            bestätigt: false
+          });
+          alert(`${spielzeuge[nummer]} ausgeliehen.`);
+        } else {
+          alert("Ungültige Nummer.");
+        }
+      } else {
+        const ausleiheSnap = await get(ref(db, `ausleihen/${name}`));
+        if (ausleiheSnap.exists() && ausleiheSnap.val().bestätigt === false) {
+          alert("Du musst das Spielzeug zuerst zurückgeben.");
+        } else {
+          const url = `https://script.google.com/macros/s/AKfycbwdV40MbHe_ND7iPRakAPnTkIKY1_tTIx8-QMebPJ5NoQUu-pyHZFlBm3KcCisRGZkhVA/exec?name=${encodeURIComponent(name)}`;
+          window.location.href = url;
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    h1 { margin-bottom: 20px; }
+    button {
+      display: block;
+      margin: 8px 0;
+      padding: 12px 20px;
+      font-size: 18px;
+      width: 100%;
+      max-width: 300px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Mäusegruppe Terminal</h1>
+  <div id="terminal"></div>
+</body>
+</html>
