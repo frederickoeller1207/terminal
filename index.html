@@ -174,10 +174,24 @@ async function checkSicherheitscode(name, callback) {
           zeit: new Date().toISOString(),
           bestätigt: false
         });
-        const msg = document.createElement("div");
-        msg.textContent = `${spielzeuge[nummer]} erfolgreich ausgeliehen.`;
-        msg.style = "margin-top: 20px; font-weight: bold;";
-        view.appendChild(msg);
+        const popup = document.createElement("div");
+popup.textContent = `${spielzeuge[nummer]} erfolgreich ausgeliehen.`;
+popup.style = `
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #ffffff;
+  color: #000;
+  padding: 20px 30px;
+  border-radius: 12px;
+  font-size: 18px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 9999;
+  text-align: center;
+`;
+document.body.appendChild(popup);
+setTimeout(() => popup.remove(), 3000);
         setTimeout(() => msg.remove(), 3000);
       } else {
         alert("Ungültige Nummer.");
