@@ -5,7 +5,7 @@
   <title>Admin – Mäusegruppe</title>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-    import { getDatabase, ref, set, push, onValue } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+    import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",
@@ -22,11 +22,13 @@
 
     const kinderListe = document.getElementById("kinder-liste");
     const spielzeugListe = document.getElementById("spielzeug-liste");
+    const ausleihenListe = document.getElementById("ausleihen-liste");
 
     document.getElementById("add-kind-btn").onclick = () => {
       const name = document.getElementById("kind-name").value.trim();
-      const link = document.getElementById("checkout-link").value.trim();
+      let link = document.getElementById("checkout-link").value.trim();
       if (!name) return alert("Name fehlt.");
+      if (link && !link.startsWith("http")) link = "https://" + link;
       set(ref(db, `kinder/${name}`), { link: link || null });
       document.getElementById("kind-name").value = "";
       document.getElementById("checkout-link").value = "";
@@ -48,7 +50,7 @@
           const name = childSnap.key;
           const data = childSnap.val();
           const div = document.createElement("div");
-          div.textContent = `${name} – Link: ${data.link || "kein Link"}`;
+          div.innerHTML = `${name} – Link: ${data.link || "kein Link"} <span class="delete" onclick="loescheKind('${name}')">x</span>`;
           kinderListe.appendChild(div);
         });
       });
@@ -59,21 +61,58 @@
           const nummer = childSnap.key;
           const name = childSnap.val();
           const div = document.createElement("div");
-          div.textContent = `${nummer}: ${name}`;
+          div.innerHTML = `${nummer}: ${name} <span class="delete" onclick="loescheSpielzeug('${nummer}')">x</span>`;
           spielzeugListe.appendChild(div);
+        });
+      });
+
+      onValue(ref(db, "ausleihen"), (snapshot) => {
+        ausleihenListe.innerHTML = "";
+        snapshot.forEach(childSnap => {
+          const name = childSnap.key;
+          const daten = childSnap.val();
+          const div = document.createElement("div");
+          div.innerHTML = `<b>${name}</b> hat <i>${daten.spielzeug}</i> ausgeliehen 
+            <button onclick="zurueckgeben('${name}')">Zurückgeben</button>`;
+          ausleihenListe.appendChild(div);
         });
       });
     }
 
+    window.zurueckgeben = function(name) {
+      remove(ref(db, "ausleihen/" + name));
+    };
+
+    window.loescheKind = function(name) {
+      if (confirm(`Soll ${name} wirklich gelöscht werden?`)) {
+        remove(ref(db, "kinder/" + name));
+      }
+    };
+
+    window.loescheSpielzeug = function(nummer) {
+      if (confirm(`Soll Spielzeug ${nummer} wirklich gelöscht werden?`)) {
+        remove(ref(db, "spielzeuge/" + nummer));
+      }
+    };
+
     ladeListen();
   </script>
   <style>
-    body { font-family: sans-serif; padding: 20px; }
+    body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
     h1 { margin-bottom: 10px; }
     input { margin: 4px; padding: 6px; }
     button { padding: 6px 12px; margin-top: 6px; }
-    .section { margin-bottom: 30px; }
+    .section { margin-bottom: 30px; background: #fff; padding: 15px; border-radius: 6px; box-shadow: 0 0 5px #ccc; }
     .liste div { margin: 4px 0; }
+    .delete {
+      color: red;
+      cursor: pointer;
+      margin-left: 10px;
+      font-weight: bold;
+    }
+    .delete:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -93,6 +132,11 @@
     <input id="spielzeug-name" placeholder="Spielzeugname" />
     <button id="add-spielzeug-btn">Hinzufügen</button>
     <div class="liste" id="spielzeug-liste"></div>
+  </div>
+
+  <div class="section">
+    <h2>Aktuelle Ausleihen</h2>
+    <div class="liste" id="ausleihen-liste"></div>
   </div>
 </body>
 </html>
