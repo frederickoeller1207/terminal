@@ -147,3 +147,118 @@
         });
       });
     }
+function ladeKinderKonten() {
+      const bereich = document.createElement("div");
+      bereich.className = "section";
+      bereich.innerHTML = "<h2>MausCity Konten</h2>";
+      document.body.insertBefore(bereich, document.body.children[1]);
+
+      const eigeneKinder = new Set();
+
+      onValue(ref1(db1, "kinder"), (snapshot) => {
+        eigeneKinder.clear();
+        snapshot.forEach(childSnap => {
+          eigeneKinder.add(childSnap.key);
+        });
+      });
+
+      onVal2(ref2(db2, "kinder"), (snapshot) => {
+        bereich.innerHTML = "<h2>MausCity Konten</h2>";
+        snapshot.forEach(childSnap => {
+          const name = childSnap.key;
+          if (!eigeneKinder.has(name)) return;
+          const data = childSnap.val();
+          const zeile = document.createElement("div");
+          zeile.className = "flex";
+
+          const span = document.createElement("span");
+          span.textContent = `${name} (${data.punkte})`;
+          span.style.color = farbeToColor(data.farbe);
+
+          const plus = document.createElement("button");
+          plus.textContent = "+";
+          plus.onclick = () => update2(ref2(db2, `kinder/${name}`), { punkte: data.punkte + 1 });
+
+          const minus = document.createElement("button");
+          minus.textContent = "–";
+          minus.onclick = () => update2(ref2(db2, `kinder/${name}`), { punkte: data.punkte - 1 });
+
+          zeile.appendChild(span);
+          zeile.appendChild(plus);
+          zeile.appendChild(minus);
+
+          farben.forEach(f => {
+            const btn = document.createElement("button");
+            btn.textContent = f;
+            btn.className = "color-button";
+            btn.onclick = () => update2(ref2(db2, `kinder/${name}`), { farbe: f });
+            zeile.appendChild(btn);
+          });
+
+          bereich.appendChild(zeile);
+        });
+      });
+    }
+
+    // Der Rest (ladeListen, Rückgabe, löschen usw.)
+
+    window.zurueckgeben = async function(name) {
+      const ausleiheRef = ref1(db1, "ausleihen/" + name);
+      const snapshot = await get(ausleiheRef);
+      if (!snapshot.exists()) return;
+      const daten = snapshot.val();
+      const historieRef = ref1(db1, "historie/" + name);
+      const neueHistorie = {
+        spielzeug: daten.spielzeug,
+        nummer: daten.nummer,
+        ausgeliehen: daten.zeit,
+        zurückgegeben: new Date().toISOString()
+      };
+      const neueRef = push(historieRef);
+      await set(neueRef, neueHistorie);
+      await remove(ausleiheRef);
+    };
+
+    window.loescheKind = function(name) {
+      if (confirm(`Soll ${name} wirklich gelöscht werden?`)) {
+        remove(ref1(db1, "kinder/" + name));
+      }
+    };
+
+    window.loescheSpielzeug = function(nummer) {
+      if (confirm(`Soll Spielzeug ${nummer} wirklich gelöscht werden?`)) {
+        remove(ref1(db1, "spielzeuge/" + nummer));
+      }
+    };
+  </script>
+</head>
+<body>
+  <h1>Adminbereich</h1>
+
+  <div class="section">
+    <h2>Kinder hinzufügen</h2>
+    <input id="kind-name" placeholder="Name des Kindes" />
+    <input id="checkout-link" placeholder="Checkout-Link" />
+    <button id="add-kind-btn">Hinzufügen</button>
+    <div class="liste" id="kinder-liste"></div>
+  </div>
+
+  <div class="section">
+    <h2>Spielzeuge hinzufügen</h2>
+    <input id="spielzeug-nummer" placeholder="Nummer" />
+    <input id="spielzeug-name" placeholder="Spielzeugname" />
+    <button id="add-spielzeug-btn">Hinzufügen</button>
+    <div class="liste" id="spielzeug-liste"></div>
+  </div>
+
+  <div class="section">
+    <h2>Aktuelle Ausleihen</h2>
+    <div class="liste" id="ausleihen-liste"></div>
+  </div>
+
+  <div class="section">
+    <h2>Historie</h2>
+    <div class="liste" id="historie-liste"></div>
+  </div>
+</body>
+</html>
