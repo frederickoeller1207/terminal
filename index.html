@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="de">
+<!DOCTYPE html><html lang="de">
 <head>
   <meta charset="UTF-8" />
   <title>Admin – Mäusegruppe</title>
@@ -71,153 +70,31 @@
     import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
     import { getDatabase as getDB1, ref as ref1, set, onValue, remove, get, push } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
     import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-    import { getDatabase as getDB2, ref as ref2, get as get2, update as update2, onValue as onVal2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+    import { getDatabase as getDB2, ref as ref2, get as get2, update as update2, onValue as onVal2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";const app1 = initApp1({
+  apiKey: "AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",
+  authDomain: "gesamt-dae4e.firebaseapp.com",
+  databaseURL: "https://gesamt-dae4e-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "gesamt-dae4e",
+  storageBucket: "gesamt-dae4e.appspot.com",
+  messagingSenderId: "844023612743",
+  appId: "1:844023612743:web:0821aa894541f89a7df862"
+}, "app1");
+const db1 = getDB1(app1);
 
-    const app1 = initApp1({
-      apiKey: "AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",
-      authDomain: "gesamt-dae4e.firebaseapp.com",
-      databaseURL: "https://gesamt-dae4e-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "gesamt-dae4e",
-      storageBucket: "gesamt-dae4e.appspot.com",
-      messagingSenderId: "844023612743",
-      appId: "1:844023612743:web:0821aa894541f89a7df862"
-    }, "app1");
-    const db1 = getDB1(app1);
+const app2 = initApp2({
+  apiKey: "AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg",
+  authDomain: "punkte-45c20.firebaseapp.com",
+  databaseURL: "https://punkte-45c20-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "punkte-45c20",
+  storageBucket: "punkte-45c20.appspot.com",
+  messagingSenderId: "931713539549",
+  appId: "1:931713539549:web:e348bf38369639f1906a34"
+}, "app2");
+const db2 = getDB2(app2);
 
-    const app2 = initApp2({
-      apiKey: "AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg",
-      authDomain: "punkte-45c20.firebaseapp.com",
-      databaseURL: "https://punkte-45c20-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "punkte-45c20",
-      storageBucket: "punkte-45c20.appspot.com",
-      messagingSenderId: "931713539549",
-      appId: "1:931713539549:web:e348bf38369639f1906a34"
-    }, "app2");
-    const db2 = getDB2(app2);
+window.addEventListener("DOMContentLoaded", () => {
+  ladeMausdollarAnfragen();
+  ladeListen();
+  ladeKinderKonten();
+});
 
-    window.addEventListener("DOMContentLoaded", () => {
-      ladeMausdollarAnfragen();
-      ladeListen();
-      ladeKinderKonten();
-    });
-
-    function ladeMausdollarAnfragen() {
-      const bereich = document.createElement("div");
-      bereich.className = "section";
-      bereich.innerHTML = `<h2>Mausdollar-Anfragen</h2><div id="anfrage-liste"></div>`;
-      document.body.prepend(bereich);
-      const liste = document.getElementById("anfrage-liste");
-
-      onValue(ref1(db1, "anfragen"), async (snapshot) => {
-        liste.innerHTML = "";
-        snapshot.forEach((snap) => {
-          const key = snap.key;
-          const { name, betrag, grund } = snap.val();
-
-          const div = document.createElement("div");
-          div.innerHTML = `<b>${name}</b> möchte <b>${betrag}</b> Punkt(e) für <i>${grund}</i>.`;
-
-          const best = document.createElement("button");
-          best.textContent = "✅ Bestätigen";
-          best.onclick = async () => {
-            const kinderRef = ref2(db2, `kinder/${name}`);
-            const kinderSnap = await get2(kinderRef);
-            const daten = kinderSnap.val() || { punkte: 0, farbe: "⚪" };
-            await update2(kinderRef, { punkte: daten.punkte + betrag });
-            await remove(ref1(db1, "anfragen/" + key));
-          };
-
-          const ablehn = document.createElement("button");
-          ablehn.textContent = "❌ Ablehnen";
-          ablehn.onclick = () => remove(ref1(db1, "anfragen/" + key));
-
-          div.appendChild(best);
-          div.appendChild(ablehn);
-          liste.appendChild(div);
-        });
-      });
-    }
-
-    function ladeKinderKonten() {
-      const bereich = document.createElement("div");
-      bereich.className = "section";
-      bereich.innerHTML = `<h2>MausCity Kinderkonto</h2><div id="kinder-konten"></div>`;
-      document.body.appendChild(bereich);
-      const liste = document.getElementById("kinder-konten");
-
-      onVal2(ref2(db2, "kinder"), (snapshot) => {
-        liste.innerHTML = "";
-        snapshot.forEach(childSnap => {
-          const name = childSnap.key;
-          const { punkte = 0, farbe = "⚪" } = childSnap.val();
-          const row = document.createElement("div");
-          row.className = "flex-row";
-
-          const nameSpan = document.createElement("span");
-          nameSpan.textContent = `${name} (${punkte}) – ${farbe}`;
-          nameSpan.style.marginRight = "10px";
-          nameSpan.style.minWidth = "200px";
-
-          const plus = document.createElement("button");
-          plus.textContent = "+";
-          plus.onclick = () => update2(ref2(db2, "kinder/" + name), { punkte: punkte + 1 });
-
-          const minus = document.createElement("button");
-          minus.textContent = "–";
-          minus.onclick = () => update2(ref2(db2, "kinder/" + name), { punkte: punkte - 1 });
-
-          const farben = ["⚪", "🔴", "🟡", "🟢", "⚫", "🟣"];
-          const farbwahl = document.createElement("div");
-          farbwahl.className = "flex-row";
-          farben.forEach(f => {
-            const fbtn = document.createElement("div");
-            fbtn.textContent = f;
-            fbtn.className = "color-btn";
-            fbtn.onclick = () => update2(ref2(db2, "kinder/" + name), { farbe: f });
-            farbwahl.appendChild(fbtn);
-          });
-
-          row.appendChild(nameSpan);
-          row.appendChild(plus);
-          row.appendChild(minus);
-          row.appendChild(farbwahl);
-          liste.appendChild(row);
-        });
-      });
-    }
-
-    function ladeListen() {
-      // alte Ladefunktionen (wie gehabt) – nicht entfernt
-    }
-  </script>
-</head>
-<body>
-  <h1>Adminbereich</h1>
-
-  <div class="section">
-    <h2>Kinder hinzufügen</h2>
-    <input id="kind-name" placeholder="Name des Kindes" />
-    <input id="checkout-link" placeholder="Checkout-Link" />
-    <button id="add-kind-btn">Hinzufügen</button>
-    <div class="liste" id="kinder-liste"></div>
-  </div>
-
-  <div class="section">
-    <h2>Spielzeuge hinzufügen</h2>
-    <input id="spielzeug-nummer" placeholder="Nummer" />
-    <input id="spielzeug-name" placeholder="Spielzeugname" />
-    <button id="add-spielzeug-btn">Hinzufügen</button>
-    <div class="liste" id="spielzeug-liste"></div>
-  </div>
-
-  <div class="section">
-    <h2>Aktuelle Ausleihen</h2>
-    <div class="liste" id="ausleihen-liste"></div>
-  </div>
-
-  <div class="section">
-    <h2>Historie</h2>
-    <div class="liste" id="historie-liste"></div>
-  </div>
-</body>
-</html>
