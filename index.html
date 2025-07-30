@@ -40,6 +40,12 @@
       const spielzeuge = spielzeugeSnap.exists() ? spielzeugeSnap.val() : {};
 
       if (menu) {
+        const vorhandene = await get(ref(db, `ausleihen/${name}`));
+        if (vorhandene.exists()) {
+          alert("Du hast bereits ein Spielzeug ausgeliehen. Bitte gib es zuerst zurück.");
+          return;
+        }
+
         const nummer = prompt("Gib die Spielzeugnummer ein:");
         if (nummer && spielzeuge[nummer]) {
           await set(ref(db, `ausleihen/${name}`), {
