@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Mäusegruppe Terminal</title>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-    import { getDatabase, ref, get, onValue } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+    import { getDatabase, ref, get, onValue, set } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",
@@ -20,98 +20,108 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const main = document.getElementById("main");
+    const view = document.getElementById("view");
+    const title = document.getElementById("title");
 
-    function showStart() {
-      main.innerHTML = `
-        <h1>Mäusegruppe Terminal</h1>
-        <button onclick="showAusleihe()">🎒 Spielzeug Ausleihe</button>
-        <button onclick="showCheckout()">📤 Checkout</button>
-      `;
+    document.getElementById("btn-ausleihe").onclick = loadAusleihe;
+    document.getElementById("btn-checkout").onclick = loadCheckout;
+
+    function resetView() {
+      title.textContent = "Mäusegruppe Terminal";
+      view.innerHTML = "";
     }
 
-    window.showAusleihe = () => {
-      main.innerHTML = "<h2>Spielzeug Ausleihe</h2>";
-      const container = document.createElement("div");
-      main.appendChild(container);
+    function loadAusleihe() {
+      resetView();
+      title.textContent = "Spielzeug Ausleihe";
 
-      onValue(ref(db, "kinder"), snapshot => {
-        container.innerHTML = "";
-        snapshot.forEach(child => {
-          const name = child.key;
+      onValue(ref(db, "kinder"), (snapshot) => {
+        view.innerHTML = "";
+        snapshot.forEach(childSnap => {
+          const name = childSnap.key;
           const btn = document.createElement("button");
           btn.textContent = name;
-          btn.onclick = () => openAusleihe(name);
-          container.appendChild(btn);
+          btn.onclick = () => ausleihen(name);
+          view.appendChild(btn);
         });
       });
-    };
+    }
 
-    async function openAusleihe(name) {
-      const ausleiheSnap = await get(ref(db, "ausleihen/" + name));
-      if (ausleiheSnap.exists()) {
-        alert("Bitte gib dein aktuelles Spielzeug zurück, bevor du ein neues ausleihst.");
+    async function ausleihen(name) {
+      const ausleiheSnap = await get(ref(db, `ausleihen/${name}`));
+      if (ausleiheSnap.exists() && ausleiheSnap.val().bestätigt === false) {
+        alert("Bitte gib das ausgeliehene Spielzeug zurück, bevor du ein neues ausleihst.");
         return;
       }
 
+      const nummer = prompt(`${name}, gib bitte die Spielzeugnummer ein:`);
+      if (!nummer) return;
+
       const spielzeugeSnap = await get(ref(db, "spielzeuge"));
       const spielzeuge = spielzeugeSnap.exists() ? spielzeugeSnap.val() : {};
-      const nummer = prompt("Gib die Spielzeugnummer ein:");
 
-      if (nummer && spielzeuge[nummer]) {
-        await set(ref(db, "ausleihen/" + name), {
+      if (spielzeuge[nummer]) {
+        await set(ref(db, `ausleihen/${name}`), {
           spielzeug: spielzeuge[nummer],
           nummer: nummer,
           zeit: new Date().toISOString(),
           bestätigt: false
         });
-        alert(`${spielzeuge[nummer]} wurde erfolgreich ausgeliehen.`);
+
+        const msg = document.createElement("div");
+        msg.textContent = `${spielzeuge[nummer]} erfolgreich ausgeliehen.`;
+        msg.style = "margin-top: 20px; font-weight: bold;";
+        view.appendChild(msg);
+        setTimeout(() => msg.remove(), 3000);
       } else {
         alert("Ungültige Nummer.");
       }
     }
 
-    window.showCheckout = () => {
-      main.innerHTML = "<h2>Checkout</h2>";
-      const container = document.createElement("div");
-      main.appendChild(container);
+    function loadCheckout() {
+      resetView();
+      title.textContent = "Checkout";
 
-      onValue(ref(db, "kinder"), snapshot => {
-        container.innerHTML = "";
-        snapshot.forEach(child => {
-          const name = child.key;
-          const data = child.val();
-          const link = data.checkoutLink || "#";
+      onValue(ref(db, "kinder"), (snapshot) => {
+        view.innerHTML = "";
+        snapshot.forEach(childSnap => {
+          const name = childSnap.key;
+          const link = childSnap.val().link;
+
           const btn = document.createElement("button");
           btn.textContent = name;
-          btn.onclick = () => window.location.href = link;
-          container.appendChild(btn);
+          btn.onclick = () => {
+            if (link) {
+              window.location.href = link;
+            } else {
+              alert("Kein Link hinterlegt.");
+            }
+          };
+          view.appendChild(btn);
         });
       });
-    };
-
-    showStart();
+    }
   </script>
   <style>
-    body {
-      font-family: sans-serif;
-      padding: 20px;
-      background: #f4f4f4;
-    }
-    h1, h2 {
-      margin-bottom: 20px;
-    }
+    body { font-family: sans-serif; padding: 20px; }
+    h1 { margin-bottom: 20px; }
+    .menu { margin-bottom: 20px; }
     button {
       display: block;
-      margin: 10px 0;
+      margin: 8px 0;
       padding: 12px 20px;
-      font-size: 16px;
+      font-size: 18px;
       width: 100%;
       max-width: 300px;
     }
   </style>
 </head>
 <body>
-  <div id="main"></div>
+  <h1 id="title">Mäusegruppe Terminal</h1>
+  <div class="menu">
+    <button id="btn-ausleihe">Spielzeug Ausleihe</button>
+    <button id="btn-checkout">Checkout</button>
+  </div>
+  <div id="view"></div>
 </body>
 </html>
