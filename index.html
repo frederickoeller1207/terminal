@@ -213,13 +213,17 @@
             text-align: center;
           `;
           document.body.appendChild(popup);
-          setTimeout(() => popup.remove(), 3000);
+          setTimeout(() => {
+            popup.remove();
+            resetView();
+          }, 3000);
         } else {
           alert("Ungültige Nummer.");
         }
       });
     }
-document.getElementById("btn-checkout").onclick = () => {
+
+    document.getElementById("btn-checkout").onclick = () => {
       openView("Checkout");
       onVal1(ref1(db1, "kinder"), snapshot => {
         snapshot.forEach(childSnap => {
@@ -274,8 +278,7 @@ document.getElementById("btn-checkout").onclick = () => {
 
       const eigenerInput = document.createElement("input");
       eigenerInput.placeholder = "Eigener Grund";
-      eigenerInput.type = "text";
-      eigenerInput.autofocus = true;
+      eigenerInput.type = "text"; // kein autofocus!
       view.appendChild(eigenerInput);
 
       const absendenBtn = document.createElement("button");
@@ -285,7 +288,6 @@ document.getElementById("btn-checkout").onclick = () => {
         if (g) sendeAnfrage(name, betrag, g);
       };
       view.appendChild(absendenBtn);
-      eigenerInput.focus();
     }
 
     function sendeAnfrage(name, betrag, grund) {
