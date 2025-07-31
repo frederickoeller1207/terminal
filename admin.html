@@ -111,7 +111,8 @@
       ladeKinderKonten();
       ladeListen();
     });
-function ladeMausdollarAnfragen() {
+
+    function ladeMausdollarAnfragen() {
       const container = document.createElement("div");
       container.className = "section";
       container.innerHTML = "<h2>Mausdollar Anfragen</h2>";
@@ -142,8 +143,7 @@ function ladeMausdollarAnfragen() {
         });
       });
     }
-
-    function ladeKinderKonten() {
+function ladeKinderKonten() {
       const bereich = document.createElement("div");
       bereich.className = "section";
       bereich.innerHTML = "<h2>MausCity Konten</h2>";
@@ -187,19 +187,66 @@ function ladeMausdollarAnfragen() {
       });
     }
 
-    function loescheHistorienEintrag(kind, key) {
-      if (confirm(`Diesen Eintrag für ${kind} wirklich löschen?`)) {
-        remove(ref1(db1, `historie/${kind}/${key}`));
-      }
-    }
-
     function ladeListen() {
       const kinderListe = document.getElementById("kinder-liste");
       const spielzeugListe = document.getElementById("spielzeug-liste");
       const ausleihenListe = document.getElementById("ausleihen-liste");
       const historieListe = document.getElementById("historie-liste");
 
-      // Rest wie gehabt...
+      document.getElementById("add-kind-btn").onclick = () => {
+        const name = document.getElementById("kind-name").value.trim();
+        let link = document.getElementById("checkout-link").value.trim();
+        const code = document.getElementById("security-code").value.trim();
+        if (!name || !code) return alert("Name und Sicherheitscode sind erforderlich.");
+        if (link && !link.startsWith("http")) link = "https://" + link;
+        set(ref1(db1, `kinder/${name}`), { link: link || null, code });
+        document.getElementById("kind-name").value = "";
+        document.getElementById("checkout-link").value = "";
+        document.getElementById("security-code").value = "";
+      };
+
+      document.getElementById("add-spielzeug-btn").onclick = () => {
+        const nummer = document.getElementById("spielzeug-nummer").value.trim();
+        const name = document.getElementById("spielzeug-name").value.trim();
+        if (!nummer || !name) return alert("Nummer oder Name fehlt.");
+        set(ref1(db1, `spielzeuge/${nummer}`), name);
+        document.getElementById("spielzeug-nummer").value = "";
+        document.getElementById("spielzeug-name").value = "";
+      };
+
+      onValue(ref1(db1, "kinder"), (snapshot) => {
+        kinderListe.innerHTML = "";
+        snapshot.forEach(childSnap => {
+          const name = childSnap.key;
+          const data = childSnap.val();
+          const div = document.createElement("div");
+          div.innerHTML = `${name} – Link: ${data.link || "kein Link"} – Code: ${data.code || "kein Code"} <span class="delete" onclick="loescheKind('${name}')">x</span>`;
+          kinderListe.appendChild(div);
+        });
+      });
+
+      onValue(ref1(db1, "spielzeuge"), (snapshot) => {
+        spielzeugListe.innerHTML = "";
+        snapshot.forEach(childSnap => {
+          const nummer = childSnap.key;
+          const name = childSnap.val();
+          const div = document.createElement("div");
+          div.innerHTML = `${nummer}: ${name} <span class="delete" onclick="loescheSpielzeug('${nummer}')">x</span>`;
+          spielzeugListe.appendChild(div);
+        });
+      });
+
+      onValue(ref1(db1, "ausleihen"), (snapshot) => {
+        ausleihenListe.innerHTML = "";
+        snapshot.forEach(childSnap => {
+          const name = childSnap.key;
+          const daten = childSnap.val();
+          const div = document.createElement("div");
+          div.innerHTML = `<b>${name}</b> hat <i>${daten.spielzeug}</i> ausgeliehen 
+            <button onclick="zurueckgeben('${name}')">Zurückgeben</button>`;
+          ausleihenListe.appendChild(div);
+        });
+      });
 
       onValue(ref1(db1, "historie"), async (snapshot) => {
         historieListe.innerHTML = "";
@@ -223,24 +270,23 @@ function ladeMausdollarAnfragen() {
           box.innerHTML = `<h3>${nummer}: ${name}</h3>`;
           alleEintraege[nummer].sort((a, b) => new Date(b.zurückgegeben) - new Date(a.zurückgegeben));
           for (const eintrag of alleEintraege[nummer]) {
-            const zeile = document.createElement("div");
+            function formatZeit(datum) {
+              const date = new Date(datum);
+              const tag = String(date.getDate()).padStart(2, '0');
+              const monat = String(date.getMonth() + 1).padStart(2, '0');
+              const stunde = String(date.getHours()).padStart(2, '0');
+              const minute = String(date.getMinutes()).padStart(2, '0');
+              return `${tag}.${monat} – ${stunde}:${minute}`;
+            }
             const aus = formatZeit(eintrag.ausgeliehen);
             const zr = formatZeit(eintrag.zurückgegeben);
-            zeile.innerHTML = `• ${eintrag.kind}: von ${aus} bis ${zr} <span class="delete" onclick="loescheHistorienEintrag('${eintrag.kind}', '${eintrag.key}')">x</span>`;
+            const zeile = document.createElement("div");
+            zeile.innerHTML = `• ${eintrag.kind}: von ${aus} bis ${zr} <span class="delete" onclick="loescheHistorie('${eintrag.kind}', '${eintrag.key}')">x</span>`;
             box.appendChild(zeile);
           }
           historieListe.appendChild(box);
         }
       });
-    }
-
-    function formatZeit(datum) {
-      const date = new Date(datum);
-      const tag = String(date.getDate()).padStart(2, '0');
-      const monat = String(date.getMonth() + 1).padStart(2, '0');
-      const stunde = String(date.getHours()).padStart(2, '0');
-      const minute = String(date.getMinutes()).padStart(2, '0');
-      return `${tag}.${monat} – ${stunde}:${minute}`;
     }
 
     window.zurueckgeben = async function(name) {
@@ -269,6 +315,12 @@ function ladeMausdollarAnfragen() {
     window.loescheSpielzeug = function(nummer) {
       if (confirm(`Soll Spielzeug ${nummer} wirklich gelöscht werden?`)) {
         remove(ref1(db1, "spielzeuge/" + nummer));
+      }
+    };
+
+    window.loescheHistorie = function(name, key) {
+      if (confirm(`Eintrag von ${name} wirklich löschen?`)) {
+        remove(ref1(db1, `historie/${name}/${key}`));
       }
     };
   </script>
