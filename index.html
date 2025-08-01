@@ -1,336 +1,306 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8" />
-  <title>Mäusegruppe Terminal</title>
-  <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600&display=swap" rel="stylesheet">
-  <style>
-    body {
-      font-family: 'SF Pro Display', sans-serif;
-      background-color: #f9f9fb;
-      padding: 16px;
-      color: #1c1c1e;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      min-height: 100vh;
-    }
-    h1 {
-      margin-bottom: 30px;
-      font-size: 26px;
-      font-weight: 600;
-      text-align: center;
-    }
-    #home-btn {
-      display: flex;
-      justify-content: center;
-      font-size: 18px;
-      color: #007aff;
-      cursor: pointer;
-      margin-bottom: 20px;
-    }
-    .menu {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 30px;
-    }
-    #view {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-    }
-    button {
-      background-color: #ffffff;
-      border: 1px solid #ccc;
-      border-radius: 12px;
-      padding: 18px 24px;
-      font-size: 20px;
-      font-weight: 600;
-      color: #000;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-      cursor: pointer;
-      width: 95%;
-      max-width: 340px;
-      text-align: center;
-      transition: all 0.2s ease, transform 0.1s ease;
-    }
-    button:hover {
-      background-color: #f0f0f5;
-    }
-    button:active {
-      background-color: #e0e0e5;
-      transform: scale(0.97);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1) inset;
-    }
-    input {
-      width: 95%;
-      max-width: 340px;
-      font-size: 16px;
-      padding: 12px;
-      margin-top: 12px;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-    }
-  </style>
-</head>
-<body>
-  <h1 id="title">Mäusegruppe Terminal</h1>
-  <div id="menu" class="menu">
-    <button id="btn-ausleihe">Spielzeug Ausleihe</button>
-    <button id="btn-checkout">Checkout</button>
-    <button id="btn-mausdollar">Mausdollar hinzufügen</button>
-  </div>
-  <div id="home-btn" style="display:none;">🏠 Zurück</div>
-  <div id="view"></div>
-  <script type="module">
-    import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-    import { getDatabase as getDB1, ref as ref1, get as get1, onValue as onVal1, set as set1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
-    import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-    import { getDatabase as getDB2, ref as ref2, update as update2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+<html lang="de">  
+<head>  
+  <meta charset="UTF-8" />  
+  <title>Mäusegruppe Terminal</title>  
+  <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600&display=swap" rel="stylesheet">  
+  <style>  
+    body {  
+      font-family: 'SF Pro Display', sans-serif;  
+      background-color: #f9f9fb;  
+      padding: 16px;  
+      color: #1c1c1e;  
+      margin: 0;  
+      display: flex;  
+      flex-direction: column;  
+      justify-content: center;  
+      min-height: 100vh;  
+    }  
+    h1 {  
+      margin-bottom: 30px;  
+      font-size: 26px;  
+      font-weight: 600;  
+      text-align: center;  
+    }  
+    #home-btn {  
+      display: flex;  
+      justify-content: center;  
+      font-size: 18px;  
+      color: #007aff;  
+      cursor: pointer;  
+      margin-bottom: 20px;  
+    }  
+    .menu {  
+      display: flex;  
+      flex-direction: column;  
+      align-items: center;  
+      gap: 16px;  
+      margin-bottom: 30px;  
+    }  
+    #view {  
+      display: flex;  
+      flex-direction: column;  
+      align-items: center;  
+      gap: 16px;  
+    }  
+    button {  
+      background-color: #ffffff;  
+      border: 1px solid #ccc;  
+      border-radius: 12px;  
+      padding: 18px 24px;  
+      font-size: 20px;  
+      font-weight: 600;  
+      color: #000;  
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);  
+      cursor: pointer;  
+      width: 95%;  
+      max-width: 340px;  
+      text-align: center;  
+      transition: all 0.2s ease, transform 0.1s ease;  
+    }  
+    button:hover {  
+      background-color: #f0f0f5;  
+    }  
+    button:active {  
+      background-color: #e0e0e5;  
+      transform: scale(0.97);  
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1) inset;  
+    }  
+    input {  
+      width: 95%;  
+      max-width: 340px;  
+      font-size: 16px;  
+      padding: 12px;  
+      margin-top: 12px;  
+      border: 1px solid #ccc;  
+      border-radius: 10px;  
+    }  
+  </style>  
+</head>  
+<body>  
+  <h1 id="title">Mäusegruppe Terminal</h1>  
+  <div id="menu" class="menu">  
+    <button id="btn-ausleihe">Spielzeug Ausleihe</button>  
+    <button id="btn-checkout">Checkout</button>  
+    <button id="btn-mausdollar">Mausdollar hinzufügen</button>  
+  </div>  
+  <div id="home-btn" style="display:none;">🏠 Zurück</div>  
+  <div id="view"></div>  
+  <script type="module">  
+    import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";  
+    import { getDatabase as getDB1, ref as ref1, get as get1, onValue as onVal1, set as set1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";  
+    import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";  
+    import { getDatabase as getDB2, ref as ref2, update as update2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";  const config1 = {  
+  apiKey: "AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",  
+  authDomain: "gesamt-dae4e.firebaseapp.com",  
+  databaseURL: "https://gesamt-dae4e-default-rtdb.europe-west1.firebasedatabase.app",  
+  projectId: "gesamt-dae4e",  
+  storageBucket: "gesamt-dae4e.appspot.com",  
+  messagingSenderId: "844023612743",  
+  appId: "1:844023612743:web:0821aa894541f89a7df862"  
+};  
+const config2 = {  
+  apiKey: "AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg",  
+  authDomain: "punkte-45c20.firebaseapp.com",  
+  databaseURL: "https://punkte-45c20-default-rtdb.europe-west1.firebasedatabase.app",  
+  projectId: "punkte-45c20",  
+  storageBucket: "punkte-45c20.appspot.com",  
+  messagingSenderId: "931713539549",  
+  appId: "1:931713539549:web:e348bf38369639f1906a34"  
+};  
 
-    const config1 = {
-      apiKey: "AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",
-      authDomain: "gesamt-dae4e.firebaseapp.com",
-      databaseURL: "https://gesamt-dae4e-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "gesamt-dae4e",
-      storageBucket: "gesamt-dae4e.appspot.com",
-      messagingSenderId: "844023612743",
-      appId: "1:844023612743:web:0821aa894541f89a7df862"
-    };
-    const config2 = {
-      apiKey: "AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg",
-      authDomain: "punkte-45c20.firebaseapp.com",
-      databaseURL: "https://punkte-45c20-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "punkte-45c20",
-      storageBucket: "punkte-45c20.appspot.com",
-      messagingSenderId: "931713539549",
-      appId: "1:931713539549:web:e348bf38369639f1906a34"
-    };
+const app1 = initApp1(config1, "app1");  
+const db1 = getDB1(app1);  
+const app2 = initApp2(config2, "app2");  
+const db2 = getDB2(app2);  
 
-    const app1 = initApp1(config1, "app1");
-    const db1 = getDB1(app1);
-    const app2 = initApp2(config2, "app2");
-    const db2 = getDB2(app2);
+const view = document.getElementById("view");  
+const menu = document.getElementById("menu");  
+const homeBtn = document.getElementById("home-btn");  
 
-    const view = document.getElementById("view");
-    const menu = document.getElementById("menu");
-    const homeBtn = document.getElementById("home-btn");
+const resetView = () => {  
+  view.innerHTML = "";  
+  menu.style.display = "flex";  
+  homeBtn.style.display = "none";  
+  document.getElementById("title").textContent = "Mäusegruppe Terminal";  
+};  
 
-    const resetView = () => {
-      view.innerHTML = "";
-      menu.style.display = "flex";
-      homeBtn.style.display = "none";
-      document.getElementById("title").textContent = "Mäusegruppe Terminal";
-    };
+const openView = (title) => {  
+  view.innerHTML = "";  
+  menu.style.display = "none";  
+  homeBtn.style.display = "flex";  
+  document.getElementById("title").textContent = title;  
+};  
 
-    const openView = (title) => {
-      view.innerHTML = "";
-      menu.style.display = "none";
-      homeBtn.style.display = "flex";
-      document.getElementById("title").textContent = title;
-    };
+homeBtn.onclick = resetView;  
 
-    homeBtn.onclick = resetView;
+function eingabeMitZahl(title, callback) {  
+  openView(title);  
+  const input = document.createElement("input");  
+  input.type = "number";  
+  input.inputMode = "numeric";  
+  input.autofocus = true;  
+  const btn = document.createElement("button");  
+  btn.textContent = "OK";  
+  btn.onclick = () => {  
+    const val = input.value.trim();  
+    if (val) callback(val);  
+  };  
+  view.appendChild(input);  
+  view.appendChild(btn);  
+  input.focus();  
+}  
 
-    function eingabeMitZahl(title, callback) {
-      openView(title);
-      const input = document.createElement("input");
-      input.type = "number";
-      input.inputMode = "numeric";
-      input.autofocus = true;
-      const btn = document.createElement("button");
-      btn.textContent = "OK";
-      btn.onclick = () => {
-        const val = input.value.trim();
-        if (val) callback(val);
-      };
-      view.appendChild(input);
-      view.appendChild(btn);
-      input.focus();
-    }
+async function checkSicherheitscode(name, callback) {  
+  const snap = await get1(ref1(db1, `kinder/${name}`));  
+  const code = snap.exists() ? snap.val().code : null;  
+  if (!code) return alert("Kein Sicherheitscode hinterlegt.");  
+  eingabeMitZahl(`Bitte Sicherheitscode für ${name} eingeben:`, (eingabe) => {  
+    if (eingabe === code) callback();  
+    else alert("Falscher Code.");  
+  });  
+}  
 
-    async function checkSicherheitscode(name, callback) {
-      const snap = await get1(ref1(db1, `kinder/${name}`));
-      const code = snap.exists() ? snap.val().code : null;
-      if (!code) return alert("Kein Sicherheitscode hinterlegt.");
-      eingabeMitZahl(`Bitte Sicherheitscode für ${name} eingeben:`, (eingabe) => {
-        if (eingabe === code) callback();
-        else alert("Falscher Code.");
-      });
-    }
+document.getElementById("btn-ausleihe").onclick = () => {  
+  openView("Spielzeug Ausleihe");  
+  onVal1(ref1(db1, "kinder"), snapshot => {  
+    snapshot.forEach(childSnap => {  
+      const name = childSnap.key;  
+      const btn = document.createElement("button");  
+      btn.textContent = name;  
+      btn.onclick = () => checkSicherheitscode(name, () => ausleihen(name));  
+      view.appendChild(btn);  
+    });  
+  });  
+};  
 
-    function zeigeKinderButtons(kinder, handler) {
-      kinder.forEach(name => {
-        const btn = document.createElement("button");
-        btn.textContent = name;
-        btn.onclick = () => checkSicherheitscode(name, () => handler(name));
-        view.appendChild(btn);
-      });
-    }
+function frageSpielzeugnummer(name, callback) {  
+  eingabeMitZahl(`${name}, gib bitte die Spielzeugnummer ein:`, callback);  
+}  
 
-    function kinderButtonsMitUmschalter(allKinder, handler) {
-      const normale = allKinder.filter(n => !n.toLowerCase().startsWith("x"));
-      const andere = allKinder.filter(n => n.toLowerCase().startsWith("x"));
-      zeigeKinderButtons(normale, handler);
+async function ausleihen(name) {  
+  const ausleiheSnap = await get1(ref1(db1, `ausleihen/${name}`));  
+  if (ausleiheSnap.exists() && ausleiheSnap.val().bestätigt === false) {  
+    alert("Bitte gib das ausgeliehene Spielzeug zurück.");  
+    return;  
+  }  
+  frageSpielzeugnummer(name, async (nummer) => {  
+    const spielzeugeSnap = await get1(ref1(db1, "spielzeuge"));  
+    const spielzeuge = spielzeugeSnap.exists() ? spielzeugeSnap.val() : {};  
+    if (spielzeuge[nummer]) {  
+      await set1(ref1(db1, `ausleihen/${name}`), {  
+        spielzeug: spielzeuge[nummer],  
+        nummer: nummer,  
+        zeit: new Date().toISOString(),  
+        bestätigt: false  
+      });  
+      const popup = document.createElement("div");  
+      popup.textContent = `${spielzeuge[nummer]} erfolgreich ausgeliehen.`;  
+      popup.style = `  
+        position: fixed;  
+        top: 50%;  
+        left: 50%;  
+        transform: translate(-50%, -50%);  
+        background: #ffffff;  
+        color: #000;  
+        padding: 20px 30px;  
+        border-radius: 12px;  
+        font-size: 18px;  
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);  
+        z-index: 9999;  
+        text-align: center;  
+      `;  
+      document.body.appendChild(popup);  
+      setTimeout(() => {  
+        popup.remove();  
+        resetView();  
+      }, 3000);  
+    } else {  
+      alert("Ungültige Nummer.");  
+    }  
+  });  
+}  
 
-      if (andere.length > 0) {
-        const toggleBtn = document.createElement("button");
-        toggleBtn.textContent = "Kinder aus anderen Gruppen anzeigen";
-        let sichtbar = false;
-        let fremdeButtons = [];
+document.getElementById("btn-checkout").onclick = () => {  
+  openView("Checkout");  
+  onVal1(ref1(db1, "kinder"), snapshot => {  
+    snapshot.forEach(childSnap => {  
+      const name = childSnap.key;  
+      const link = childSnap.val().link;  
+      const btn = document.createElement("button");  
+      btn.textContent = name;  
+      btn.onclick = () => checkSicherheitscode(name, () => {  
+        if (link) window.location.href = link;  
+        else alert("Kein Link hinterlegt.");  
+      });  
+      view.appendChild(btn);  
+    });  
+  });  
+};  
 
-        toggleBtn.onclick = () => {
-          sichtbar = !sichtbar;
-          toggleBtn.textContent = sichtbar
-            ? "Kinder aus anderen Gruppen verbergen"
-            : "Kinder aus anderen Gruppen anzeigen";
-          if (sichtbar) {
-            fremdeButtons = andere.map(name => {
-              const btn = document.createElement("button");
-              btn.textContent = name;
-              btn.onclick = () => checkSicherheitscode(name, () => handler(name));
-              view.appendChild(btn);
-              return btn;
-            });
-          } else {
-            fremdeButtons.forEach(b => b.remove());
-            fremdeButtons = [];
-          }
-        };
+document.getElementById("btn-mausdollar").onclick = () => {  
+  openView("Mausdollar hinzufügen");  
+  const kinder = [];  
+  onVal1(ref1(db1, "kinder"), snapshot => {  
+    snapshot.forEach(childSnap => {  
+      kinder.push(childSnap.key);  
+    });  
+    kinder.forEach(name => {  
+      const btn = document.createElement("button");  
+      btn.textContent = name;  
+      btn.onclick = () => checkSicherheitscode(name, () => waehleBetrag(name));  
+      view.appendChild(btn);  
+    });  
+  });  
+};  
 
-        view.appendChild(toggleBtn);
-      }
-    }
+function waehleBetrag(name) {  
+  openView(`${name}: Wähle Betrag`);  
+  for (let i = 1; i <= 5; i++) {  
+    const btn = document.createElement("button");  
+    btn.textContent = `${i}`;  
+    btn.onclick = () => waehleGrund(name, i);  
+    view.appendChild(btn);  
+  }  
+}  
 
-    document.getElementById("btn-ausleihe").onclick = () => {
-      openView("Spielzeug Ausleihe");
-      onVal1(ref1(db1, "kinder"), snapshot => {
-        const namen = [];
-        snapshot.forEach(childSnap => namen.push(childSnap.key));
-        kinderButtonsMitUmschalter(namen, ausleihen);
-      });
-    };
+function waehleGrund(name, betrag) {  
+  openView(`${name}: Grund wählen`);  
+  const gruende = ["Quiz", "Kurze Hilfe", "Malwettbewerb", "Tischdienst"];  
+  gruende.forEach(g => {  
+    const btn = document.createElement("button");  
+    btn.textContent = g;  
+    btn.onclick = () => sendeAnfrage(name, betrag, g);  
+    view.appendChild(btn);  
+  });  
 
-    function frageSpielzeugnummer(name, callback) {
-      eingabeMitZahl(`${name}, gib bitte die Spielzeugnummer ein:`, callback);
-    }
+  const eigenerInput = document.createElement("input");  
+  eigenerInput.placeholder = "Eigener Grund";  
+  eigenerInput.type = "text"; // kein autofocus!  
+  view.appendChild(eigenerInput);  
 
-    async function ausleihen(name) {
-      const ausleiheSnap = await get1(ref1(db1, `ausleihen/${name}`));
-      if (ausleiheSnap.exists() && ausleiheSnap.val().bestätigt === false) {
-        alert("Bitte gib das ausgeliehene Spielzeug zurück.");
-        return;
-      }
-      frageSpielzeugnummer(name, async (nummer) => {
-        const spielzeugeSnap = await get1(ref1(db1, "spielzeuge"));
-        const spielzeuge = spielzeugeSnap.exists() ? spielzeugeSnap.val() : {};
-        if (spielzeuge[nummer]) {
-          await set1(ref1(db1, `ausleihen/${name}`), {
-            spielzeug: spielzeuge[nummer],
-            nummer: nummer,
-            zeit: new Date().toISOString(),
-            bestätigt: false
-          });
-          const popup = document.createElement("div");
-          popup.textContent = `${spielzeuge[nummer]} erfolgreich ausgeliehen.`;
-          popup.style = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #ffffff;
-            color: #000;
-            padding: 20px 30px;
-            border-radius: 12px;
-            font-size: 18px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            z-index: 9999;
-            text-align: center;
-          `;
-          document.body.appendChild(popup);
-          setTimeout(() => {
-            popup.remove();
-            resetView();
-          }, 3000);
-        } else {
-          alert("Ungültige Nummer.");
-        }
-      });
-    }
+  const absendenBtn = document.createElement("button");  
+  absendenBtn.textContent = "Absenden";  
+  absendenBtn.onclick = () => {  
+    const g = eigenerInput.value.trim();  
+    if (g) sendeAnfrage(name, betrag, g);  
+  };  
+  view.appendChild(absendenBtn);  
+}  
 
-    document.getElementById("btn-checkout").onclick = () => {
-      openView("Checkout");
-      onVal1(ref1(db1, "kinder"), snapshot => {
-        const kinder = [];
-        snapshot.forEach(childSnap => kinder.push(childSnap.key));
-        kinderButtonsMitUmschalter(kinder, (name) => {
-          const link = snapshot.child(name).val().link;
-          if (link) window.location.href = link;
-          else alert("Kein Link hinterlegt.");
-        });
-      });
-    };
+function sendeAnfrage(name, betrag, grund) {  
+  const now = new Date();  
+  const tag = String(now.getDate()).padStart(2, '0');  
+  const monat = String(now.getMonth() + 1).padStart(2, '0');  
+  const stunde = String(now.getHours()).padStart(2, '0');  
+  const minute = String(now.getMinutes()).padStart(2, '0');  
+  const zeit = `${tag}.${monat} – ${stunde}:${minute}`;  
+  const anfrageRef = ref1(db1, `anfragen/${Date.now()}_${name}`);  
+  set1(anfrageRef, { name, betrag, grund, zeit });  
+  view.innerHTML = `<h2>Anfrage gesendet! (${betrag} Mausdollar für: ${grund})</h2>`;  
+}  
 
-    document.getElementById("btn-mausdollar").onclick = () => {
-      openView("Mausdollar hinzufügen");
-      const kinder = [];
-      onVal1(ref1(db1, "kinder"), snapshot => {
-        snapshot.forEach(childSnap => kinder.push(childSnap.key));
-        kinderButtonsMitUmschalter(kinder, waehleBetrag);
-      });
-    };
+resetView(); // Start
 
-    function waehleBetrag(name) {
-      openView(`${name}: Wähle Betrag`);
-      for (let i = 1; i <= 5; i++) {
-        const btn = document.createElement("button");
-        btn.textContent = `${i}`;
-        btn.onclick = () => waehleGrund(name, i);
-        view.appendChild(btn);
-      }
-    }
-
-    function waehleGrund(name, betrag) {
-      openView(`${name}: Grund wählen`);
-      const gruende = ["Quiz", "Kurze Hilfe", "Malwettbewerb", "Tischdienst"];
-      gruende.forEach(g => {
-        const btn = document.createElement("button");
-        btn.textContent = g;
-        btn.onclick = () => sendeAnfrage(name, betrag, g);
-        view.appendChild(btn);
-      });
-
-      const eigenerInput = document.createElement("input");
-      eigenerInput.placeholder = "Eigener Grund";
-      eigenerInput.type = "text";
-      view.appendChild(eigenerInput);
-
-      const absendenBtn = document.createElement("button");
-      absendenBtn.textContent = "Absenden";
-      absendenBtn.onclick = () => {
-        const g = eigenerInput.value.trim();
-        if (g) sendeAnfrage(name, betrag, g);
-      };
-      view.appendChild(absendenBtn);
-    }
-
-    function sendeAnfrage(name, betrag, grund) {
-      const now = new Date();
-      const tag = String(now.getDate()).padStart(2, '0');
-      const monat = String(now.getMonth() + 1).padStart(2, '0');
-      const stunde = String(now.getHours()).padStart(2, '0');
-      const minute = String(now.getMinutes()).padStart(2, '0');
-      const zeit = `${tag}.${monat} – ${stunde}:${minute}`;
-      const anfrageRef = ref1(db1, `anfragen/${Date.now()}_${name}`);
-      set1(anfrageRef, { name, betrag, grund, zeit });
-      view.innerHTML = `<h2>Anfrage gesendet! (${betrag} Mausdollar für: ${grund})</h2>`;
-    }
-
-    resetView();
-  </script>
-</body>
+  </script>  
+</body>  
 </html>
