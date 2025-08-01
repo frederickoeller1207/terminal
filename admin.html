@@ -118,7 +118,58 @@
       ladeKontoLoeschen();
     });
 
-    function ladeMausdollarAnfragen() {
+    // ✅ ERSETZT: ladeKontoLoeschen mit logging & Fehlerhandling
+    function ladeKontoLoeschen() {
+      const liste = document.getElementById("konto-loeschen-liste");
+      onVal2(ref2(db2, "kinder"), snapshot => {
+        liste.innerHTML = "";
+        snapshot.forEach(child => {
+          const name = child.key;
+          const div = document.createElement("div");
+          div.innerHTML = `${name} <span class="delete" onclick="loescheKonto('${name}')">x</span>`;
+          liste.appendChild(div);
+        });
+      });
+    }
+
+    window.loescheKonto = function(name) {
+      if (confirm(`Konto von ${name} wirklich löschen?`)) {
+        remove2(ref2(db2, "kinder/" + name)).then(() => {
+          console.log(`Konto ${name} gelöscht`);
+        }).catch(err => {
+          console.error(`Fehler beim Löschen von ${name}:`, err);
+        });
+      }
+    };
+
+    // ✅ ERSETZT: Hinzufügen (aber nur Bankkonto, wenn Checkbox aktiv)
+    window.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("add-kind-btn").onclick = () => {
+        const name = document.getElementById("kind-name").value.trim();
+        let link = document.getElementById("checkout-link").value.trim();
+        const code = document.getElementById("security-code").value.trim();
+        const istGruppenkonto = document.getElementById("ist-gruppen")?.checked;
+        const istAuslandskonto = document.getElementById("ist-ausland")?.checked;
+
+        if (!name || !code) return alert("Name und Sicherheitscode sind erforderlich.");
+        if (link && !link.startsWith("http")) link = "https://" + link;
+
+        set(ref1(db1, `kinder/${name}`), { link: link || null, code });
+
+        if (istGruppenkonto) {
+          set2(ref2(db2, `kinder/${name}`), { punkte: 0, farbe: "⚪" });
+        } else if (istAuslandskonto) {
+          set2(ref2(db2, `kinder/${name}`), { punkte: 0 });
+        }
+
+        document.getElementById("kind-name").value = "";
+        document.getElementById("checkout-link").value = "";
+        document.getElementById("security-code").value = "";
+        if (document.getElementById("ist-gruppen")) document.getElementById("ist-gruppen").checked = false;
+        if (document.getElementById("ist-ausland")) document.getElementById("ist-ausland").checked = false;
+      };
+    });
+        function ladeMausdollarAnfragen() {
       const container = document.createElement("div");
       container.className = "section";
       container.innerHTML = "<h2>Mausdollar Anfragen</h2>";
@@ -193,53 +244,12 @@
         });
       });
     }
-function ladeKontoLoeschen() {
-      const liste = document.getElementById("konto-loeschen-liste");
-      onVal2(ref2(db2, "kinder"), snapshot => {
-        liste.innerHTML = "";
-        snapshot.forEach(child => {
-          const name = child.key;
-          const div = document.createElement("div");
-          div.innerHTML = `${name} <span class="delete" onclick="loescheKonto('${name}')">x</span>`;
-          liste.appendChild(div);
-        });
-      });
-    }
-
-    window.loescheKonto = function(name) {
-      if (confirm(`Konto von ${name} wirklich löschen?`)) {
-        remove2(ref2(db2, "kinder/" + name));
-      }
-    };
 
     function ladeListen() {
       const kinderListe = document.getElementById("kinder-liste");
       const spielzeugListe = document.getElementById("spielzeug-liste");
       const ausleihenListe = document.getElementById("ausleihen-liste");
       const historieListe = document.getElementById("historie-liste");
-
-      document.getElementById("add-kind-btn").onclick = () => {
-        const name = document.getElementById("kind-name").value.trim();
-        let link = document.getElementById("checkout-link").value.trim();
-        const code = document.getElementById("security-code").value.trim();
-        const istGruppenkonto = document.getElementById("ist-gruppen")?.checked;
-        const istAuslandskonto = document.getElementById("ist-ausland")?.checked;
-        if (!name || !code) return alert("Name und Sicherheitscode sind erforderlich.");
-        if (link && !link.startsWith("http")) link = "https://" + link;
-        set(ref1(db1, `kinder/${name}`), { link: link || null, code });
-
-        if (istGruppenkonto) {
-          set2(ref2(db2, `kinder/${name}`), { punkte: 0, farbe: "⚪" });
-        } else if (istAuslandskonto) {
-          set2(ref2(db2, `kinder/${name}`), { punkte: 0 });
-        }
-
-        document.getElementById("kind-name").value = "";
-        document.getElementById("checkout-link").value = "";
-        document.getElementById("security-code").value = "";
-        if (document.getElementById("ist-gruppen")) document.getElementById("ist-gruppen").checked = false;
-        if (document.getElementById("ist-ausland")) document.getElementById("ist-ausland").checked = false;
-      };
 
       document.getElementById("add-spielzeug-btn").onclick = () => {
         const nummer = document.getElementById("spielzeug-nummer").value.trim();
