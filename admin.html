@@ -118,7 +118,6 @@
       ladeKontoLoeschen();
     });
 
-    // ✅ ERSETZT: ladeKontoLoeschen mit logging & Fehlerhandling
     function ladeKontoLoeschen() {
       const liste = document.getElementById("konto-loeschen-liste");
       onVal2(ref2(db2, "kinder"), snapshot => {
@@ -134,16 +133,11 @@
 
     window.loescheKonto = function(name) {
       if (confirm(`Konto von ${name} wirklich löschen?`)) {
-        remove2(ref2(db2, "kinder/" + name)).then(() => {
-          console.log(`Konto ${name} gelöscht`);
-        }).catch(err => {
-          console.error(`Fehler beim Löschen von ${name}:`, err);
-        });
+        remove2(ref2(db2, "kinder/" + name)).catch(err => console.error("Fehler MausCity:", err));
+        remove(ref1(db1, "kinder/" + name)).catch(err => console.error("Fehler AdminDB:", err));
       }
     };
-
-    // ✅ ERSETZT: Hinzufügen (aber nur Bankkonto, wenn Checkbox aktiv)
-    window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", () => {
       document.getElementById("add-kind-btn").onclick = () => {
         const name = document.getElementById("kind-name").value.trim();
         let link = document.getElementById("checkout-link").value.trim();
@@ -169,7 +163,8 @@
         if (document.getElementById("ist-ausland")) document.getElementById("ist-ausland").checked = false;
       };
     });
-        function ladeMausdollarAnfragen() {
+
+    function ladeMausdollarAnfragen() {
       const container = document.createElement("div");
       container.className = "section";
       container.innerHTML = "<h2>Mausdollar Anfragen</h2>";
@@ -244,8 +239,7 @@
         });
       });
     }
-
-    function ladeListen() {
+function ladeListen() {
       const kinderListe = document.getElementById("kinder-liste");
       const spielzeugListe = document.getElementById("spielzeug-liste");
       const ausleihenListe = document.getElementById("ausleihen-liste");
@@ -288,7 +282,7 @@
           const name = childSnap.key;
           const daten = childSnap.val();
           const div = document.createElement("div");
-          div.innerHTML = `<b>${name}</b> hat <i>${daten.spielzeug}</i> ausgeliehen 
+          div.innerHTML = `<b>${name}</b> hat <i>${daten.spielzeug}</i> ausgeliehen 
             <button onclick="zurueckgeben('${name}')">Zurückgeben</button>`;
           ausleihenListe.appendChild(div);
         });
