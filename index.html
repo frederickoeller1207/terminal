@@ -163,16 +163,55 @@
       });
     }
 
+    function zeigeKinderButtons(kinder, handler) {
+      kinder.forEach(name => {
+        const btn = document.createElement("button");
+        btn.textContent = name;
+        btn.onclick = () => checkSicherheitscode(name, () => handler(name));
+        view.appendChild(btn);
+      });
+    }
+
+    function kinderButtonsMitUmschalter(allKinder, handler) {
+      const normale = allKinder.filter(n => !n.toLowerCase().startsWith("x"));
+      const andere = allKinder.filter(n => n.toLowerCase().startsWith("x"));
+      zeigeKinderButtons(normale, handler);
+
+      if (andere.length > 0) {
+        const toggleBtn = document.createElement("button");
+        toggleBtn.textContent = "Kinder aus anderen Gruppen anzeigen";
+        let sichtbar = false;
+        let fremdeButtons = [];
+
+        toggleBtn.onclick = () => {
+          sichtbar = !sichtbar;
+          toggleBtn.textContent = sichtbar
+            ? "Kinder aus anderen Gruppen verbergen"
+            : "Kinder aus anderen Gruppen anzeigen";
+          if (sichtbar) {
+            fremdeButtons = andere.map(name => {
+              const btn = document.createElement("button");
+              btn.textContent = name;
+              btn.onclick = () => checkSicherheitscode(name, () => handler(name));
+              view.appendChild(btn);
+              return btn;
+            });
+          } else {
+            fremdeButtons.forEach(b => b.remove());
+            fremdeButtons = [];
+          }
+        };
+
+        view.appendChild(toggleBtn);
+      }
+    }
+
     document.getElementById("btn-ausleihe").onclick = () => {
       openView("Spielzeug Ausleihe");
       onVal1(ref1(db1, "kinder"), snapshot => {
-        snapshot.forEach(childSnap => {
-          const name = childSnap.key;
-          const btn = document.createElement("button");
-          btn.textContent = name;
-          btn.onclick = () => checkSicherheitscode(name, () => ausleihen(name));
-          view.appendChild(btn);
-        });
+        const namen = [];
+        snapshot.forEach(childSnap => namen.push(childSnap.key));
+        kinderButtonsMitUmschalter(namen, ausleihen);
       });
     };
 
@@ -226,16 +265,12 @@
     document.getElementById("btn-checkout").onclick = () => {
       openView("Checkout");
       onVal1(ref1(db1, "kinder"), snapshot => {
-        snapshot.forEach(childSnap => {
-          const name = childSnap.key;
-          const link = childSnap.val().link;
-          const btn = document.createElement("button");
-          btn.textContent = name;
-          btn.onclick = () => checkSicherheitscode(name, () => {
-            if (link) window.location.href = link;
-            else alert("Kein Link hinterlegt.");
-          });
-          view.appendChild(btn);
+        const kinder = [];
+        snapshot.forEach(childSnap => kinder.push(childSnap.key));
+        kinderButtonsMitUmschalter(kinder, (name) => {
+          const link = snapshot.child(name).val().link;
+          if (link) window.location.href = link;
+          else alert("Kein Link hinterlegt.");
         });
       });
     };
@@ -244,15 +279,8 @@
       openView("Mausdollar hinzufügen");
       const kinder = [];
       onVal1(ref1(db1, "kinder"), snapshot => {
-        snapshot.forEach(childSnap => {
-          kinder.push(childSnap.key);
-        });
-        kinder.forEach(name => {
-          const btn = document.createElement("button");
-          btn.textContent = name;
-          btn.onclick = () => checkSicherheitscode(name, () => waehleBetrag(name));
-          view.appendChild(btn);
-        });
+        snapshot.forEach(childSnap => kinder.push(childSnap.key));
+        kinderButtonsMitUmschalter(kinder, waehleBetrag);
       });
     };
 
@@ -278,7 +306,7 @@
 
       const eigenerInput = document.createElement("input");
       eigenerInput.placeholder = "Eigener Grund";
-      eigenerInput.type = "text"; // kein autofocus!
+      eigenerInput.type = "text";
       view.appendChild(eigenerInput);
 
       const absendenBtn = document.createElement("button");
@@ -302,7 +330,7 @@
       view.innerHTML = `<h2>Anfrage gesendet! (${betrag} Mausdollar für: ${grund})</h2>`;
     }
 
-    resetView(); // Start
+    resetView();
   </script>
 </body>
 </html>
