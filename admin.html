@@ -67,12 +67,17 @@
       font-size: 16px;
       cursor: pointer;
     }
+    .checkboxes {
+      margin-top: 8px;
+      display: flex;
+      gap: 20px;
+    }
   </style>
   <script type="module">
     import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
     import { getDatabase as getDB1, ref as ref1, set, onValue, remove, get, push } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
     import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-    import { getDatabase as getDB2, ref as ref2, get as get2, update as update2, onValue as onVal2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+    import { getDatabase as getDB2, ref as ref2, get as get2, update as update2, onValue as onVal2, remove as remove2, set as set2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
 
     const app1 = initApp1({
       apiKey: "AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",
@@ -110,6 +115,7 @@
       ladeMausdollarAnfragen();
       ladeKinderKonten();
       ladeListen();
+      ladeKontoLoeschen();
     });
 
     function ladeMausdollarAnfragen() {
@@ -143,7 +149,8 @@
         });
       });
     }
-function ladeKinderKonten() {
+
+    function ladeKinderKonten() {
       const bereich = document.createElement("div");
       bereich.className = "section";
       bereich.innerHTML = "<h2>MausCity Konten</h2>";
@@ -158,8 +165,8 @@ function ladeKinderKonten() {
           bereich.innerHTML = "<h2>MausCity Konten</h2>";
           snapshot2.forEach(childSnap2 => {
             const name = childSnap2.key;
-            if (!eigeneKinder.has(name)) return;
             const data = childSnap2.val();
+            if (!eigeneKinder.has(name)) return;
             const zeile = document.createElement("div");
             zeile.className = "flex";
             const span = document.createElement("span");
@@ -186,6 +193,24 @@ function ladeKinderKonten() {
         });
       });
     }
+function ladeKontoLoeschen() {
+      const liste = document.getElementById("konto-loeschen-liste");
+      onVal2(ref2(db2, "kinder"), snapshot => {
+        liste.innerHTML = "";
+        snapshot.forEach(child => {
+          const name = child.key;
+          const div = document.createElement("div");
+          div.innerHTML = `${name} <span class="delete" onclick="loescheKonto('${name}')">x</span>`;
+          liste.appendChild(div);
+        });
+      });
+    }
+
+    window.loescheKonto = function(name) {
+      if (confirm(`Konto von ${name} wirklich löschen?`)) {
+        remove2(ref2(db2, "kinder/" + name));
+      }
+    };
 
     function ladeListen() {
       const kinderListe = document.getElementById("kinder-liste");
@@ -197,12 +222,23 @@ function ladeKinderKonten() {
         const name = document.getElementById("kind-name").value.trim();
         let link = document.getElementById("checkout-link").value.trim();
         const code = document.getElementById("security-code").value.trim();
+        const istGruppenkonto = document.getElementById("ist-gruppen")?.checked;
+        const istAuslandskonto = document.getElementById("ist-ausland")?.checked;
         if (!name || !code) return alert("Name und Sicherheitscode sind erforderlich.");
         if (link && !link.startsWith("http")) link = "https://" + link;
         set(ref1(db1, `kinder/${name}`), { link: link || null, code });
+
+        if (istGruppenkonto) {
+          set2(ref2(db2, `kinder/${name}`), { punkte: 0, farbe: "⚪" });
+        } else if (istAuslandskonto) {
+          set2(ref2(db2, `kinder/${name}`), { punkte: 0 });
+        }
+
         document.getElementById("kind-name").value = "";
         document.getElementById("checkout-link").value = "";
         document.getElementById("security-code").value = "";
+        if (document.getElementById("ist-gruppen")) document.getElementById("ist-gruppen").checked = false;
+        if (document.getElementById("ist-ausland")) document.getElementById("ist-ausland").checked = false;
       };
 
       document.getElementById("add-spielzeug-btn").onclick = () => {
@@ -327,14 +363,20 @@ function ladeKinderKonten() {
 </head>
 <body>
   <h1>Adminbereich</h1>
+
   <div class="section">
     <h2>Kinder hinzufügen</h2>
     <input id="kind-name" placeholder="Name des Kindes" />
     <input id="checkout-link" placeholder="Checkout-Link" />
     <input id="security-code" placeholder="3-stelliger Code" />
+    <div class="checkboxes">
+      <label><input type="checkbox" id="ist-gruppen"> Gruppenkonto hinzufügen</label>
+      <label><input type="checkbox" id="ist-ausland"> Auslandskonto hinzufügen</label>
+    </div>
     <button id="add-kind-btn">Hinzufügen</button>
     <div class="liste" id="kinder-liste"></div>
   </div>
+
   <div class="section">
     <h2>Spielzeuge hinzufügen</h2>
     <input id="spielzeug-nummer" placeholder="Nummer" />
@@ -342,13 +384,20 @@ function ladeKinderKonten() {
     <button id="add-spielzeug-btn">Hinzufügen</button>
     <div class="liste" id="spielzeug-liste"></div>
   </div>
+
   <div class="section">
     <h2>Aktuelle Ausleihen</h2>
     <div class="liste" id="ausleihen-liste"></div>
   </div>
+
   <div class="section">
     <h2>Historie</h2>
     <div class="liste" id="historie-liste"></div>
+  </div>
+
+  <div class="section">
+    <h2>Konto löschen</h2>
+    <div class="liste" id="konto-loeschen-liste"></div>
   </div>
 </body>
 </html>
