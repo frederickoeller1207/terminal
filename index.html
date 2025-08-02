@@ -82,225 +82,297 @@
     <button id="btn-ausleihe">Spielzeug Ausleihe</button>  
     <button id="btn-checkout">Checkout</button>  
     <button id="btn-mausdollar">Mausdollar hinzufügen</button>  
+    <button id="btn-shop">🛒 Maus-Amazon</button> <!-- NEU -->  
   </div>  
   <div id="home-btn" style="display:none;">🏠 Zurück</div>  
-  <div id="view"></div>  
-  <script type="module">  
-    import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";  
-    import { getDatabase as getDB1, ref as ref1, get as get1, onValue as onVal1, set as set1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";  
-    import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";  
-    import { getDatabase as getDB2, ref as ref2, update as update2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";  const config1 = {  
-  apiKey: "AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",  
-  authDomain: "gesamt-dae4e.firebaseapp.com",  
-  databaseURL: "https://gesamt-dae4e-default-rtdb.europe-west1.firebasedatabase.app",  
-  projectId: "gesamt-dae4e",  
-  storageBucket: "gesamt-dae4e.appspot.com",  
-  messagingSenderId: "844023612743",  
-  appId: "1:844023612743:web:0821aa894541f89a7df862"  
-};  
-const config2 = {  
-  apiKey: "AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg",  
-  authDomain: "punkte-45c20.firebaseapp.com",  
-  databaseURL: "https://punkte-45c20-default-rtdb.europe-west1.firebasedatabase.app",  
-  projectId: "punkte-45c20",  
-  storageBucket: "punkte-45c20.appspot.com",  
-  messagingSenderId: "931713539549",  
-  appId: "1:931713539549:web:e348bf38369639f1906a34"  
-};  
+  <div id="view"></div>
+<script type="module">  
+  import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";  
+  import { getDatabase as getDB1, ref as ref1, get as get1, onValue as onVal1, set as set1, push as push1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";  
+  import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";  
+  import { getDatabase as getDB2, ref as ref2, get as get2, update as update2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";  
 
-const app1 = initApp1(config1, "app1");  
-const db1 = getDB1(app1);  
-const app2 = initApp2(config2, "app2");  
-const db2 = getDB2(app2);  
+  const config1 = {
+    apiKey: "AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",
+    authDomain: "gesamt-dae4e.firebaseapp.com",
+    databaseURL: "https://gesamt-dae4e-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "gesamt-dae4e",
+    storageBucket: "gesamt-dae4e.appspot.com",
+    messagingSenderId: "844023612743",
+    appId: "1:844023612743:web:0821aa894541f89a7df862"
+  };
+  const config2 = {
+    apiKey: "AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg",
+    authDomain: "punkte-45c20.firebaseapp.com",
+    databaseURL: "https://punkte-45c20-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "punkte-45c20",
+    storageBucket: "punkte-45c20.appspot.com",
+    messagingSenderId: "931713539549",
+    appId: "1:931713539549:web:e348bf38369639f1906a34"
+  };
 
-const view = document.getElementById("view");  
-const menu = document.getElementById("menu");  
-const homeBtn = document.getElementById("home-btn");  
+  const app1 = initApp1(config1, "app1");
+  const db1 = getDB1(app1);
+  const app2 = initApp2(config2, "app2");
+  const db2 = getDB2(app2);
 
-const resetView = () => {  
-  view.innerHTML = "";  
-  menu.style.display = "flex";  
-  homeBtn.style.display = "none";  
-  document.getElementById("title").textContent = "Mäusegruppe Terminal";  
-};  
+  const view = document.getElementById("view");
+  const menu = document.getElementById("menu");
+  const homeBtn = document.getElementById("home-btn");
 
-const openView = (title) => {  
-  view.innerHTML = "";  
-  menu.style.display = "none";  
-  homeBtn.style.display = "flex";  
-  document.getElementById("title").textContent = title;  
-};  
+  const resetView = () => {
+    view.innerHTML = "";
+    menu.style.display = "flex";
+    homeBtn.style.display = "none";
+    document.getElementById("title").textContent = "Mäusegruppe Terminal";
+  };
 
-homeBtn.onclick = resetView;  
+  const openView = (title) => {
+    view.innerHTML = "";
+    menu.style.display = "none";
+    homeBtn.style.display = "flex";
+    document.getElementById("title").textContent = title;
+  };
 
-function eingabeMitZahl(title, callback) {  
-  openView(title);  
-  const input = document.createElement("input");  
-  input.type = "number";  
-  input.inputMode = "numeric";  
-  input.autofocus = true;  
-  const btn = document.createElement("button");  
-  btn.textContent = "OK";  
-  btn.onclick = () => {  
-    const val = input.value.trim();  
-    if (val) callback(val);  
-  };  
-  view.appendChild(input);  
-  view.appendChild(btn);  
-  input.focus();  
-}  
+  homeBtn.onclick = resetView;
 
-async function checkSicherheitscode(name, callback) {  
-  const snap = await get1(ref1(db1, `kinder/${name}`));  
-  const code = snap.exists() ? snap.val().code : null;  
-  if (!code) return alert("Kein Sicherheitscode hinterlegt.");  
-  eingabeMitZahl(`Bitte Sicherheitscode für ${name} eingeben:`, (eingabe) => {  
-    if (eingabe === code) callback();  
-    else alert("Falscher Code.");  
-  });  
-}  
+  function eingabeMitZahl(title, callback) {
+    openView(title);
+    const input = document.createElement("input");
+    input.type = "number";
+    input.inputMode = "numeric";
+    input.autofocus = true;
+    const btn = document.createElement("button");
+    btn.textContent = "OK";
+    btn.onclick = () => {
+      const val = input.value.trim();
+      if (val) callback(val);
+    };
+    view.appendChild(input);
+    view.appendChild(btn);
+    input.focus();
+  }
 
-document.getElementById("btn-ausleihe").onclick = () => {  
-  openView("Spielzeug Ausleihe");  
-  onVal1(ref1(db1, "kinder"), snapshot => {  
-    snapshot.forEach(childSnap => {  
-      const name = childSnap.key;  
-      const btn = document.createElement("button");  
-      btn.textContent = name;  
-      btn.onclick = () => checkSicherheitscode(name, () => ausleihen(name));  
-      view.appendChild(btn);  
-    });  
-  });  
-};  
+  async function checkSicherheitscode(name, callback) {
+    const snap = await get1(ref1(db1, `kinder/${name}`));
+    const code = snap.exists() ? snap.val().code : null;
+    if (!code) return alert("Kein Sicherheitscode hinterlegt.");
+    eingabeMitZahl(`Bitte Sicherheitscode für ${name} eingeben:`, (eingabe) => {
+      if (eingabe === code) callback();
+      else alert("Falscher Code.");
+    });
+  }
 
-function frageSpielzeugnummer(name, callback) {  
-  eingabeMitZahl(`${name}, gib bitte die Spielzeugnummer ein:`, callback);  
-}  
+  document.getElementById("btn-ausleihe").onclick = () => {
+    openView("Spielzeug Ausleihe");
+    onVal1(ref1(db1, "kinder"), snapshot => {
+      snapshot.forEach(childSnap => {
+        const name = childSnap.key;
+        const btn = document.createElement("button");
+        btn.textContent = name;
+        btn.onclick = () => checkSicherheitscode(name, () => ausleihen(name));
+        view.appendChild(btn);
+      });
+    });
+  };
 
-async function ausleihen(name) {  
-  const ausleiheSnap = await get1(ref1(db1, `ausleihen/${name}`));  
-  if (ausleiheSnap.exists() && ausleiheSnap.val().bestätigt === false) {  
-    alert("Bitte gib das ausgeliehene Spielzeug zurück.");  
-    return;  
-  }  
-  frageSpielzeugnummer(name, async (nummer) => {  
-    const spielzeugeSnap = await get1(ref1(db1, "spielzeuge"));  
-    const spielzeuge = spielzeugeSnap.exists() ? spielzeugeSnap.val() : {};  
-    if (spielzeuge[nummer]) {  
-      await set1(ref1(db1, `ausleihen/${name}`), {  
-        spielzeug: spielzeuge[nummer],  
-        nummer: nummer,  
-        zeit: new Date().toISOString(),  
-        bestätigt: false  
-      });  
-      const popup = document.createElement("div");  
-      popup.textContent = `${spielzeuge[nummer]} erfolgreich ausgeliehen.`;  
-      popup.style = `  
-        position: fixed;  
-        top: 50%;  
-        left: 50%;  
-        transform: translate(-50%, -50%);  
-        background: #ffffff;  
-        color: #000;  
-        padding: 20px 30px;  
-        border-radius: 12px;  
-        font-size: 18px;  
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);  
-        z-index: 9999;  
-        text-align: center;  
-      `;  
-      document.body.appendChild(popup);  
-      setTimeout(() => {  
-        popup.remove();  
-        resetView();  
-      }, 3000);  
-    } else {  
-      alert("Ungültige Nummer.");  
-    }  
-  });  
-}  
+  function frageSpielzeugnummer(name, callback) {
+    eingabeMitZahl(`${name}, gib bitte die Spielzeugnummer ein:`, callback);
+  }
 
-document.getElementById("btn-checkout").onclick = () => {  
-  openView("Checkout");  
-  onVal1(ref1(db1, "kinder"), snapshot => {  
-    snapshot.forEach(childSnap => {  
-      const name = childSnap.key;  
-      const link = childSnap.val().link;  
-      const btn = document.createElement("button");  
-      btn.textContent = name;  
-      btn.onclick = () => checkSicherheitscode(name, () => {  
-        if (link) window.location.href = link;  
-        else alert("Kein Link hinterlegt.");  
-      });  
-      view.appendChild(btn);  
-    });  
-  });  
-};  
+  async function ausleihen(name) {
+    const ausleiheSnap = await get1(ref1(db1, `ausleihen/${name}`));
+    if (ausleiheSnap.exists() && ausleiheSnap.val().bestätigt === false) {
+      alert("Bitte gib das ausgeliehene Spielzeug zurück.");
+      return;
+    }
+    frageSpielzeugnummer(name, async (nummer) => {
+      const spielzeugeSnap = await get1(ref1(db1, "spielzeuge"));
+      const spielzeuge = spielzeugeSnap.exists() ? spielzeugeSnap.val() : {};
+      if (spielzeuge[nummer]) {
+        await set1(ref1(db1, `ausleihen/${name}`), {
+          spielzeug: spielzeuge[nummer],
+          nummer: nummer,
+          zeit: new Date().toISOString(),
+          bestätigt: false
+        });
+        const popup = document.createElement("div");
+        popup.textContent = `${spielzeuge[nummer]} erfolgreich ausgeliehen.`;
+        popup.style = `
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: #ffffff;
+          color: #000;
+          padding: 20px 30px;
+          border-radius: 12px;
+          font-size: 18px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+          z-index: 9999;
+          text-align: center;
+        `;
+        document.body.appendChild(popup);
+        setTimeout(() => {
+          popup.remove();
+          resetView();
+        }, 3000);
+      } else {
+        alert("Ungültige Nummer.");
+      }
+    });
+  }
 
-document.getElementById("btn-mausdollar").onclick = () => {  
-  openView("Mausdollar hinzufügen");  
-  const kinder = [];  
-  onVal1(ref1(db1, "kinder"), snapshot => {  
-    snapshot.forEach(childSnap => {  
-      kinder.push(childSnap.key);  
-    });  
-    kinder.forEach(name => {  
-      const btn = document.createElement("button");  
-      btn.textContent = name;  
-      btn.onclick = () => checkSicherheitscode(name, () => waehleBetrag(name));  
-      view.appendChild(btn);  
-    });  
-  });  
-};  
+  document.getElementById("btn-checkout").onclick = () => {
+    openView("Checkout");
+    onVal1(ref1(db1, "kinder"), snapshot => {
+      snapshot.forEach(childSnap => {
+        const name = childSnap.key;
+        const link = childSnap.val().link;
+        const btn = document.createElement("button");
+        btn.textContent = name;
+        btn.onclick = () => checkSicherheitscode(name, () => {
+          if (link) window.location.href = link;
+          else alert("Kein Link hinterlegt.");
+        });
+        view.appendChild(btn);
+      });
+    });
+  };
 
-function waehleBetrag(name) {  
-  openView(`${name}: Wähle Betrag`);  
-  for (let i = 1; i <= 5; i++) {  
-    const btn = document.createElement("button");  
-    btn.textContent = `${i}`;  
-    btn.onclick = () => waehleGrund(name, i);  
-    view.appendChild(btn);  
-  }  
-}  
+  document.getElementById("btn-mausdollar").onclick = () => {
+    openView("Mausdollar hinzufügen");
+    const kinder = [];
+    onVal1(ref1(db1, "kinder"), snapshot => {
+      snapshot.forEach(childSnap => {
+        kinder.push(childSnap.key);
+      });
+      kinder.forEach(name => {
+        const btn = document.createElement("button");
+        btn.textContent = name;
+        btn.onclick = () => checkSicherheitscode(name, () => waehleBetrag(name));
+        view.appendChild(btn);
+      });
+    });
+  };
 
-function waehleGrund(name, betrag) {  
-  openView(`${name}: Grund wählen`);  
-  const gruende = ["Quiz", "Kurze Hilfe", "Malwettbewerb", "Tischdienst"];  
-  gruende.forEach(g => {  
-    const btn = document.createElement("button");  
-    btn.textContent = g;  
-    btn.onclick = () => sendeAnfrage(name, betrag, g);  
-    view.appendChild(btn);  
-  });  
+  function waehleBetrag(name) {
+    openView(`${name}: Wähle Betrag`);
+    for (let i = 1; i <= 5; i++) {
+      const btn = document.createElement("button");
+      btn.textContent = `${i}`;
+      btn.onclick = () => waehleGrund(name, i);
+      view.appendChild(btn);
+    }
+  }
 
-  const eigenerInput = document.createElement("input");  
-  eigenerInput.placeholder = "Eigener Grund";  
-  eigenerInput.type = "text"; // kein autofocus!  
-  view.appendChild(eigenerInput);  
+  function waehleGrund(name, betrag) {
+    openView(`${name}: Grund wählen`);
+    const gruende = ["Quiz", "Kurze Hilfe", "Malwettbewerb", "Tischdienst"];
+    gruende.forEach(g => {
+      const btn = document.createElement("button");
+      btn.textContent = g;
+      btn.onclick = () => sendeAnfrage(name, betrag, g);
+      view.appendChild(btn);
+    });
 
-  const absendenBtn = document.createElement("button");  
-  absendenBtn.textContent = "Absenden";  
-  absendenBtn.onclick = () => {  
-    const g = eigenerInput.value.trim();  
-    if (g) sendeAnfrage(name, betrag, g);  
-  };  
-  view.appendChild(absendenBtn);  
-}  
+    const eigenerInput = document.createElement("input");
+    eigenerInput.placeholder = "Eigener Grund";
+    eigenerInput.type = "text";
+    view.appendChild(eigenerInput);
 
-function sendeAnfrage(name, betrag, grund) {  
-  const now = new Date();  
-  const tag = String(now.getDate()).padStart(2, '0');  
-  const monat = String(now.getMonth() + 1).padStart(2, '0');  
-  const stunde = String(now.getHours()).padStart(2, '0');  
-  const minute = String(now.getMinutes()).padStart(2, '0');  
-  const zeit = `${tag}.${monat} – ${stunde}:${minute}`;  
-  const anfrageRef = ref1(db1, `anfragen/${Date.now()}_${name}`);  
-  set1(anfrageRef, { name, betrag, grund, zeit });  
-  view.innerHTML = `<h2>Anfrage gesendet! (${betrag} Mausdollar für: ${grund})</h2>`;  
-}  
+    const absendenBtn = document.createElement("button");
+    absendenBtn.textContent = "Absenden";
+    absendenBtn.onclick = () => {
+      const g = eigenerInput.value.trim();
+      if (g) sendeAnfrage(name, betrag, g);
+    };
+    view.appendChild(absendenBtn);
+  }
 
-resetView(); // Start
+  function sendeAnfrage(name, betrag, grund) {
+    const now = new Date();
+    const tag = String(now.getDate()).padStart(2, '0');
+    const monat = String(now.getMonth() + 1).padStart(2, '0');
+    const stunde = String(now.getHours()).padStart(2, '0');
+    const minute = String(now.getMinutes()).padStart(2, '0');
+    const zeit = `${tag}.${monat} – ${stunde}:${minute}`;
+    const anfrageRef = ref1(db1, `anfragen/${Date.now()}_${name}`);
+    set1(anfrageRef, { name, betrag, grund, zeit });
+    view.innerHTML = `<h2>Anfrage gesendet! (${betrag} Mausdollar für: ${grund})</h2>`;
+  }
 
-  </script>  
+  // 🛒 SHOP
+  document.getElementById("btn-shop").onclick = async () => {
+    openView("Maus-Amazon");
+    const kinderSnap = await get1(ref1(db1, "kinder"));
+    const kinder = Object.keys(kinderSnap.val() || {});
+    kinder.forEach(name => {
+      const btn = document.createElement("button");
+      btn.textContent = name;
+      btn.onclick = () => zeigeShop(name);
+      view.appendChild(btn);
+    });
+  };
+
+  async function zeigeShop(name) {
+    openView(`Maus-Amazon – ${name}`);
+    const kontostandSnap = await get2(ref2(db2, `kinder/${name}`));
+    const punkte = kontostandSnap.exists() ? (kontostandSnap.val().punkte || 0) : 0;
+    const stand = document.createElement("div");
+    stand.textContent = `💰 Kontostand: ${punkte} Mausdollar`;
+    view.appendChild(stand);
+
+    const shopSnap = await get1(ref1(db1, "shopartikel"));
+    const artikel = shopSnap.exists() ? Object.entries(shopSnap.val()) : [];
+
+    artikel.sort((a, b) => a[1].preis - b[1].preis);
+
+    artikel.forEach(([id, data]) => {
+      const btn = document.createElement("button");
+      btn.textContent = `${data.name} – ${data.preis} MD (${data.stock}x)`;
+      btn.onclick = () => zeigeProdukt(name, id, data, punkte);
+      view.appendChild(btn);
+    });
+  }
+
+  function zeigeProdukt(name, id, data, punkte) {
+    openView(data.name);
+    const beschr = document.createElement("div");
+    beschr.innerHTML = `
+      <p><b>Preis:</b> ${data.preis} Mausdollar</p>
+      <p><b>Lieferzeit:</b> ${data.lieferzeit}</p>
+      <p><b>Beschreibung:</b><br>${data.beschreibung}</p>
+      <p><b>Verfügbar:</b> ${data.stock} Stück</p>
+      <p><b>Dein Kontostand:</b> ${punkte} Mausdollar</p>
+    `;
+    view.appendChild(beschr);
+
+    if (data.reviews) {
+      const rev = document.createElement("div");
+      rev.innerHTML = `<b>Bewertungen:</b><br>${data.reviews.map(r => "• " + r).join("<br>")}`;
+      view.appendChild(rev);
+    }
+
+    const kaufen = document.createElement("button");
+    kaufen.textContent = "Jetzt kaufen";
+    kaufen.onclick = () => checkSicherheitscode(name, async () => {
+      if (punkte < data.preis) return alert("Nicht genug Mausdollar!");
+      await update2(ref2(db2, `kinder/${name}`), { punkte: punkte - data.preis });
+      await set1(ref1(db1, `shopartikel/${id}/stock`), data.stock - 1);
+      const now = new Date();
+      const zeit = `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')} – ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+      const kaufRef = ref1(db1, `kaeufe/${Date.now()}_${name}`);
+      await set1(kaufRef, { artikel: data.name, preis: data.preis, zeit });
+      openView("Bestellung erfolgreich");
+      const info = document.createElement("div");
+      info.innerHTML = `✅ Du hast <b>${data.name}</b> bestellt.<br>Lieferung in: <b>${data.lieferzeit}</b>`;
+      view.appendChild(info);
+    });
+    view.appendChild(kaufen);
+  }
+
+  resetView();
+</script>  
 </body>  
-</html>
+</html>844023612743
