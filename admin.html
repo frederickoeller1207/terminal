@@ -73,7 +73,7 @@
       gap: 20px;
     }
   </style>
-  <script type="module">
+<script type="module">
     import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
     import { getDatabase as getDB1, ref as ref1, set, onValue, remove, get, push } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
     import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
@@ -100,8 +100,7 @@
       appId: "1:931713539549:web:e348bf38369639f1906a34"
     }, "app2");
     const db2 = getDB2(app2);
-
-    const farben = ["⚪", "🔴", "🟡", "🟢", "⚫", "🟣"];
+const farben = ["⚪", "🔴", "🟡", "🟢", "⚫", "🟣"];
     function farbeToColor(f) {
       if (f === "🔴") return "red";
       if (f === "🟡") return "orange";
@@ -116,6 +115,7 @@
       ladeKinderKonten();
       ladeListen();
       ladeKontoLoeschen();
+      ladeShopArtikelVerwaltung(); // NEU
     });
 
     function ladeKontoLoeschen() {
@@ -163,8 +163,7 @@ window.addEventListener("DOMContentLoaded", () => {
         if (document.getElementById("ist-ausland")) document.getElementById("ist-ausland").checked = false;
       };
     });
-
-    function ladeMausdollarAnfragen() {
+function ladeMausdollarAnfragen() {
       const container = document.createElement("div");
       container.className = "section";
       container.innerHTML = "<h2>Mausdollar Anfragen</h2>";
@@ -318,18 +317,8 @@ function ladeListen() {
               const minute = String(date.getMinutes()).padStart(2, '0');
               return `${tag}.${monat} – ${stunde}:${minute}`;
             }
-            const aus = formatZeit(eintrag.ausgeliehen);
-            const zr = formatZeit(eintrag.zurückgegeben);
-            const zeile = document.createElement("div");
-            zeile.innerHTML = `• ${eintrag.kind}: von ${aus} bis ${zr} <span class="delete" onclick="loescheHistorie('${eintrag.kind}', '${eintrag.key}')">x</span>`;
-            box.appendChild(zeile);
-          }
-          historieListe.appendChild(box);
-        }
-      });
-    }
-
-    window.zurueckgeben = async function(name) {
+            const
+window.zurueckgeben = async function(name) {
       const ausleiheRef = ref1(db1, "ausleihen/" + name);
       const snapshot = await get(ausleiheRef);
       if (!snapshot.exists()) return;
@@ -403,5 +392,12 @@ function ladeListen() {
     <h2>Konto löschen</h2>
     <div class="liste" id="konto-loeschen-liste"></div>
   </div>
+
+  <div class="section">
+    <h2>Shopartikel verwalten</h2>
+    <div id="shop-verwaltung"></div>
+  </div>
+
 </body>
 </html>
+
