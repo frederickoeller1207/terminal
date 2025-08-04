@@ -5,72 +5,169 @@
   <title>Admin – Mäusegruppe</title>
   <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --primary-color: #007aff;
+      --primary-hover-color: #005bb5;
+      --background-color: #f4f4f4;
+      --card-background-color: #fff;
+      --text-color: #333;
+      --border-radius: 12px;
+      --box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+      --font-size-small: 14px;
+      --font-size-medium: 16px;
+      --font-size-large: 24px;
+    }
+
     body {
       font-family: 'SF Pro Display', sans-serif;
-      padding: 20px;
-      background: #f4f4f4;
-      font-size: 15px;
+      padding: 30px;
+      background-color: var(--background-color);
+      color: var(--text-color);
+      font-size: var(--font-size-medium);
+      line-height: 1.6;
     }
-    h1 { margin-bottom: 10px; font-size: 24px; }
-    h2 { font-size: 18px; margin-top: 0; }
-    input {
-      margin: 4px;
-      padding: 6px;
-      font-size: 14px;
-      border: 1px solid #ccc;
+    
+    h1 {
+      font-size: var(--font-size-large);
+      margin-bottom: 20px;
+      text-align: center;
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    h2 {
+      font-size: 20px;
+      margin: 0 0 15px 0;
+      font-weight: 600;
+    }
+    
+    input[type="text"], input[type="number"] {
+      padding: 10px;
+      border: 1px solid #ddd;
       border-radius: 8px;
+      font-size: var(--font-size-small);
+      width: 100%;
+      box-sizing: border-box;
     }
+
     button {
-      padding: 8px 14px;
-      margin-top: 6px;
-      font-size: 14px;
-      background-color: #007aff;
+      padding: 10px 16px;
+      font-size: var(--font-size-small);
+      background-color: var(--primary-color);
       color: white;
       border: none;
       border-radius: 10px;
       cursor: pointer;
+      transition: background-color 0.2s ease;
+      font-weight: 600;
     }
+
     button:hover {
-      background-color: #005bb5;
+      background-color: var(--primary-hover-color);
     }
+    
     .section {
-      margin-bottom: 30px;
-      background: #fff;
-      padding: 15px;
-      border-radius: 12px;
-      box-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
+      background: var(--card-background-color);
+      padding: 20px;
+      margin-bottom: 25px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
     }
-    .liste div {
-      margin: 6px 0;
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 15px;
     }
+
+    .form-group.inline {
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    
+    .checkboxes {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .liste {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid #eee;
+    }
+    
+    .liste > div {
+      padding: 10px 0;
+      border-bottom: 1px solid #f9f9f9;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .liste > div:last-child {
+      border-bottom: none;
+    }
+
+    .liste h3 {
+      font-size: var(--font-size-medium);
+      margin-top: 20px;
+    }
+
     .delete {
-      color: red;
+      color: #ff3b30;
       cursor: pointer;
       margin-left: 10px;
-      font-weight: bold;
+      font-weight: 600;
+      font-size: var(--font-size-small);
     }
+    
     .delete:hover {
       text-decoration: underline;
     }
+
     .flex {
       display: flex;
       align-items: center;
-      flex-wrap: wrap;
       gap: 10px;
-      margin-bottom: 8px;
+      padding: 8px 0;
     }
+    
+    .flex-buttons {
+      display: flex;
+      gap: 5px;
+    }
+
     .color-button {
       border: 1px solid #ccc;
-      border-radius: 6px;
-      padding: 3px 6px;
-      margin: 0 2px;
+      border-radius: 5px;
+      padding: 2px 5px;
       font-size: 16px;
       cursor: pointer;
+      transition: all 0.2s ease;
     }
-    .checkboxes {
-      margin-top: 8px;
+
+    .color-button:hover {
+      transform: scale(1.1);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .request-item {
       display: flex;
-      gap: 20px;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .request-item:last-child {
+      border-bottom: none;
+    }
+
+    .request-info {
+      flex-grow: 1;
     }
   </style>
   <script type="module">
@@ -113,32 +210,135 @@
 
     window.addEventListener("DOMContentLoaded", () => {
       ladeMausdollarAnfragen();
+      ladeAktuelleAusleihen();
       ladeKinderKonten();
-      ladeListen();
+      ladeKinderHinzufuegen();
+      ladeSpielzeugeHinzufuegen();
+      ladeHistorie();
       ladeKontoLoeschen();
     });
 
-    function ladeKontoLoeschen() {
-      const liste = document.getElementById("konto-loeschen-liste");
-      onVal2(ref2(db2, "kinder"), snapshot => {
-        liste.innerHTML = "";
-        snapshot.forEach(child => {
-          const name = child.key;
-          const div = document.createElement("div");
-          div.innerHTML = `${name} <span class="delete" onclick="loescheKonto('${name}')">x</span>`;
-          liste.appendChild(div);
+    function ladeMausdollarAnfragen() {
+      const container = document.getElementById("mausdollar-anfragen-liste");
+      onValue(ref1(db1, "anfragen"), (snapshot) => {
+        container.innerHTML = "";
+        snapshot.forEach(childSnap => {
+          const id = childSnap.key;
+          const data = childSnap.val();
+          const zeile = document.createElement("div");
+          zeile.className = "request-item";
+          zeile.innerHTML = `
+            <div class="request-info">${data.name} möchte ${data.betrag} Punkt(e) wegen **${data.grund}**</div>
+            <div class="flex-buttons">
+              <button onclick="bestaetigeAnfrage('${id}', '${data.name}', ${data.betrag})">✔️</button>
+              <button onclick="lehneAnfrage('${id}')">❌</button>
+            </div>
+          `;
+          container.appendChild(zeile);
         });
       });
     }
 
-    window.loescheKonto = function(name) {
-      if (confirm(`Konto von ${name} wirklich löschen?`)) {
-        remove2(ref2(db2, "kinder/" + name)).catch(err => console.error("Fehler MausCity:", err));
-        remove(ref1(db1, "kinder/" + name)).catch(err => console.error("Fehler AdminDB:", err));
-      }
+    window.bestaetigeAnfrage = async function(id, name, betrag) {
+      const kindRef = ref2(db2, `kinder/${name}`);
+      const kindSnap = await get2(kindRef);
+      const val = kindSnap.val() || { punkte: 0, farbe: "⚪" };
+      await update2(kindRef, { punkte: val.punkte + betrag });
+      remove(ref1(db1, "anfragen/" + id));
     };
-window.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("add-kind-btn").onclick = () => {
+    
+    window.lehneAnfrage = function(id) {
+      remove(ref1(db1, "anfragen/" + id));
+    };
+
+    function ladeAktuelleAusleihen() {
+      const ausleihenListe = document.getElementById("ausleihen-liste");
+      onValue(ref1(db1, "ausleihen"), (snapshot) => {
+        ausleihenListe.innerHTML = "";
+        snapshot.forEach(childSnap => {
+          const name = childSnap.key;
+          const daten = childSnap.val();
+          const div = document.createElement("div");
+          div.className = "flex";
+          div.innerHTML = `<b>${name}</b> hat <i>${daten.spielzeug}</i> ausgeliehen`;
+          const button = document.createElement("button");
+          button.textContent = "Zurückgeben";
+          button.onclick = () => zurueckgeben(name);
+          div.appendChild(button);
+          ausleihenListe.appendChild(div);
+        });
+      });
+    }
+
+    window.zurueckgeben = async function(name) {
+      const ausleiheRef = ref1(db1, "ausleihen/" + name);
+      const snapshot = await get(ausleiheRef);
+      if (!snapshot.exists()) return;
+      const daten = snapshot.val();
+      const historieRef = ref1(db1, "historie/" + name);
+      const neueHistorie = {
+        spielzeug: daten.spielzeug,
+        nummer: daten.nummer,
+        ausgeliehen: daten.zeit,
+        zurückgegeben: new Date().toISOString()
+      };
+      const neueRef = push(historieRef);
+      await set(neueRef, neueHistorie);
+      await remove(ausleiheRef);
+    };
+
+    function ladeKinderKonten() {
+      const bereich = document.getElementById("mauscity-konten-liste");
+      const eigeneKinder = new Set();
+      onValue(ref1(db1, "kinder"), (snapshot) => {
+        eigeneKinder.clear();
+        snapshot.forEach(childSnap => {
+          eigeneKinder.add(childSnap.key);
+        });
+        onVal2(ref2(db2, "kinder"), (snapshot2) => {
+          bereich.innerHTML = "";
+          snapshot2.forEach(childSnap2 => {
+            const name = childSnap2.key;
+            const data = childSnap2.val();
+            if (!eigeneKinder.has(name)) return;
+            const zeile = document.createElement("div");
+            zeile.className = "flex";
+            const kontoInfo = document.createElement("div");
+            kontoInfo.innerHTML = `<span>${name}</span> (<span style="color: ${farbeToColor(data.farbe)}; font-weight: bold;">${data.punkte}</span>)`;
+            
+            const punkteButtons = document.createElement("div");
+            punkteButtons.className = "flex-buttons";
+            const plus = document.createElement("button");
+            plus.textContent = "+";
+            plus.onclick = () => update2(ref2(db2, `kinder/${name}`), { punkte: data.punkte + 1 });
+            const minus = document.createElement("button");
+            minus.textContent = "–";
+            minus.onclick = () => update2(ref2(db2, `kinder/${name}`), { punkte: data.punkte - 1 });
+            punkteButtons.appendChild(plus);
+            punkteButtons.appendChild(minus);
+
+            const farbButtons = document.createElement("div");
+            farbButtons.className = "flex-buttons";
+            farben.forEach(f => {
+              const btn = document.createElement("button");
+              btn.textContent = f;
+              btn.className = "color-button";
+              btn.onclick = () => update2(ref2(db2, `kinder/${name}`), { farbe: f });
+              farbButtons.appendChild(btn);
+            });
+            
+            zeile.appendChild(kontoInfo);
+            zeile.appendChild(punkteButtons);
+            zeile.appendChild(farbButtons);
+            bereich.appendChild(zeile);
+          });
+        });
+      });
+    }
+
+    function ladeKinderHinzufuegen() {
+      const addKindBtn = document.getElementById("add-kind-btn");
+      addKindBtn.onclick = () => {
         const name = document.getElementById("kind-name").value.trim();
         let link = document.getElementById("checkout-link").value.trim();
         const code = document.getElementById("security-code").value.trim();
@@ -162,98 +362,8 @@ window.addEventListener("DOMContentLoaded", () => {
         if (document.getElementById("ist-gruppen")) document.getElementById("ist-gruppen").checked = false;
         if (document.getElementById("ist-ausland")) document.getElementById("ist-ausland").checked = false;
       };
-    });
 
-    function ladeMausdollarAnfragen() {
-      const container = document.createElement("div");
-      container.className = "section";
-      container.innerHTML = "<h2>Mausdollar Anfragen</h2>";
-      document.body.prepend(container);
-      onValue(ref1(db1, "anfragen"), (snapshot) => {
-        container.innerHTML = "<h2>Mausdollar Anfragen</h2>";
-        snapshot.forEach(childSnap => {
-          const id = childSnap.key;
-          const data = childSnap.val();
-          const zeile = document.createElement("div");
-          zeile.className = "flex";
-          zeile.innerHTML = `${data.name} möchte ${data.betrag} Punkt(e) wegen ${data.grund}`;
-          const bestätigen = document.createElement("button");
-          bestätigen.textContent = "✔️";
-          bestätigen.onclick = async () => {
-            const kindRef = ref2(db2, `kinder/${data.name}`);
-            const kindSnap = await get2(kindRef);
-            const val = kindSnap.val() || { punkte: 0, farbe: "⚪" };
-            await update2(kindRef, { punkte: val.punkte + data.betrag });
-            remove(ref1(db1, "anfragen/" + id));
-          };
-          const ablehnen = document.createElement("button");
-          ablehnen.textContent = "❌";
-          ablehnen.onclick = () => remove(ref1(db1, "anfragen/" + id));
-          zeile.appendChild(bestätigen);
-          zeile.appendChild(ablehnen);
-          container.appendChild(zeile);
-        });
-      });
-    }
-
-    function ladeKinderKonten() {
-      const bereich = document.createElement("div");
-      bereich.className = "section";
-      bereich.innerHTML = "<h2>MausCity Konten</h2>";
-      document.body.insertBefore(bereich, document.body.children[1]);
-      const eigeneKinder = new Set();
-      onValue(ref1(db1, "kinder"), (snapshot) => {
-        eigeneKinder.clear();
-        snapshot.forEach(childSnap => {
-          eigeneKinder.add(childSnap.key);
-        });
-        onVal2(ref2(db2, "kinder"), (snapshot2) => {
-          bereich.innerHTML = "<h2>MausCity Konten</h2>";
-          snapshot2.forEach(childSnap2 => {
-            const name = childSnap2.key;
-            const data = childSnap2.val();
-            if (!eigeneKinder.has(name)) return;
-            const zeile = document.createElement("div");
-            zeile.className = "flex";
-            const span = document.createElement("span");
-            span.textContent = `${name} (${data.punkte})`;
-            span.style.color = farbeToColor(data.farbe);
-            const plus = document.createElement("button");
-            plus.textContent = "+";
-            plus.onclick = () => update2(ref2(db2, `kinder/${name}`), { punkte: data.punkte + 1 });
-            const minus = document.createElement("button");
-            minus.textContent = "–";
-            minus.onclick = () => update2(ref2(db2, `kinder/${name}`), { punkte: data.punkte - 1 });
-            zeile.appendChild(span);
-            zeile.appendChild(plus);
-            zeile.appendChild(minus);
-            farben.forEach(f => {
-              const btn = document.createElement("button");
-              btn.textContent = f;
-              btn.className = "color-button";
-              btn.onclick = () => update2(ref2(db2, `kinder/${name}`), { farbe: f });
-              zeile.appendChild(btn);
-            });
-            bereich.appendChild(zeile);
-          });
-        });
-      });
-    }
-function ladeListen() {
       const kinderListe = document.getElementById("kinder-liste");
-      const spielzeugListe = document.getElementById("spielzeug-liste");
-      const ausleihenListe = document.getElementById("ausleihen-liste");
-      const historieListe = document.getElementById("historie-liste");
-
-      document.getElementById("add-spielzeug-btn").onclick = () => {
-        const nummer = document.getElementById("spielzeug-nummer").value.trim();
-        const name = document.getElementById("spielzeug-name").value.trim();
-        if (!nummer || !name) return alert("Nummer oder Name fehlt.");
-        set(ref1(db1, `spielzeuge/${nummer}`), name);
-        document.getElementById("spielzeug-nummer").value = "";
-        document.getElementById("spielzeug-name").value = "";
-      };
-
       onValue(ref1(db1, "kinder"), (snapshot) => {
         kinderListe.innerHTML = "";
         snapshot.forEach(childSnap => {
@@ -264,7 +374,26 @@ function ladeListen() {
           kinderListe.appendChild(div);
         });
       });
+    }
 
+    window.loescheKind = function(name) {
+      if (confirm(`Soll ${name} wirklich gelöscht werden?`)) {
+        remove(ref1(db1, "kinder/" + name));
+      }
+    };
+
+    function ladeSpielzeugeHinzufuegen() {
+      const addSpielzeugBtn = document.getElementById("add-spielzeug-btn");
+      addSpielzeugBtn.onclick = () => {
+        const nummer = document.getElementById("spielzeug-nummer").value.trim();
+        const name = document.getElementById("spielzeug-name").value.trim();
+        if (!nummer || !name) return alert("Nummer oder Name fehlt.");
+        set(ref1(db1, `spielzeuge/${nummer}`), name);
+        document.getElementById("spielzeug-nummer").value = "";
+        document.getElementById("spielzeug-name").value = "";
+      };
+
+      const spielzeugListe = document.getElementById("spielzeug-liste");
       onValue(ref1(db1, "spielzeuge"), (snapshot) => {
         spielzeugListe.innerHTML = "";
         snapshot.forEach(childSnap => {
@@ -275,19 +404,16 @@ function ladeListen() {
           spielzeugListe.appendChild(div);
         });
       });
+    }
 
-      onValue(ref1(db1, "ausleihen"), (snapshot) => {
-        ausleihenListe.innerHTML = "";
-        snapshot.forEach(childSnap => {
-          const name = childSnap.key;
-          const daten = childSnap.val();
-          const div = document.createElement("div");
-          div.innerHTML = `<b>${name}</b> hat <i>${daten.spielzeug}</i> ausgeliehen 
-            <button onclick="zurueckgeben('${name}')">Zurückgeben</button>`;
-          ausleihenListe.appendChild(div);
-        });
-      });
-
+    window.loescheSpielzeug = function(nummer) {
+      if (confirm(`Soll Spielzeug ${nummer} wirklich gelöscht werden?`)) {
+        remove(ref1(db1, "spielzeuge/" + nummer));
+      }
+    };
+    
+    function ladeHistorie() {
+      const historieListe = document.getElementById("historie-liste");
       onValue(ref1(db1, "historie"), async (snapshot) => {
         historieListe.innerHTML = "";
         const alleEintraege = {};
@@ -329,38 +455,29 @@ function ladeListen() {
       });
     }
 
-    window.zurueckgeben = async function(name) {
-      const ausleiheRef = ref1(db1, "ausleihen/" + name);
-      const snapshot = await get(ausleiheRef);
-      if (!snapshot.exists()) return;
-      const daten = snapshot.val();
-      const historieRef = ref1(db1, "historie/" + name);
-      const neueHistorie = {
-        spielzeug: daten.spielzeug,
-        nummer: daten.nummer,
-        ausgeliehen: daten.zeit,
-        zurückgegeben: new Date().toISOString()
-      };
-      const neueRef = push(historieRef);
-      await set(neueRef, neueHistorie);
-      await remove(ausleiheRef);
-    };
-
-    window.loescheKind = function(name) {
-      if (confirm(`Soll ${name} wirklich gelöscht werden?`)) {
-        remove(ref1(db1, "kinder/" + name));
-      }
-    };
-
-    window.loescheSpielzeug = function(nummer) {
-      if (confirm(`Soll Spielzeug ${nummer} wirklich gelöscht werden?`)) {
-        remove(ref1(db1, "spielzeuge/" + nummer));
-      }
-    };
-
     window.loescheHistorie = function(name, key) {
       if (confirm(`Eintrag von ${name} wirklich löschen?`)) {
         remove(ref1(db1, `historie/${name}/${key}`));
+      }
+    };
+
+    function ladeKontoLoeschen() {
+      const liste = document.getElementById("konto-loeschen-liste");
+      onVal2(ref2(db2, "kinder"), snapshot => {
+        liste.innerHTML = "";
+        snapshot.forEach(child => {
+          const name = child.key;
+          const div = document.createElement("div");
+          div.innerHTML = `${name} <span class="delete" onclick="loescheKonto('${name}')">x</span>`;
+          liste.appendChild(div);
+        });
+      });
+    }
+
+    window.loescheKonto = function(name) {
+      if (confirm(`Konto von ${name} wirklich löschen?`)) {
+        remove2(ref2(db2, "kinder/" + name)).catch(err => console.error("Fehler MausCity:", err));
+        remove(ref1(db1, "kinder/" + name)).catch(err => console.error("Fehler AdminDB:", err));
       }
     };
   </script>
@@ -369,10 +486,27 @@ function ladeListen() {
   <h1>Adminbereich</h1>
 
   <div class="section">
+    <h2>Mausdollar Anfragen</h2>
+    <div class="liste" id="mausdollar-anfragen-liste"></div>
+  </div>
+
+  <div class="section">
+    <h2>Aktuelle Ausleihen</h2>
+    <div class="liste" id="ausleihen-liste"></div>
+  </div>
+
+  <div class="section">
+    <h2>MausCity Konten</h2>
+    <div class="liste" id="mauscity-konten-liste"></div>
+  </div>
+
+  <div class="section">
     <h2>Kinder hinzufügen</h2>
-    <input id="kind-name" placeholder="Name des Kindes" />
-    <input id="checkout-link" placeholder="Checkout-Link" />
-    <input id="security-code" placeholder="3-stelliger Code" />
+    <div class="form-group">
+      <input id="kind-name" type="text" placeholder="Name des Kindes" />
+      <input id="checkout-link" type="text" placeholder="Checkout-Link (optional)" />
+      <input id="security-code" type="text" placeholder="3-stelliger Code" />
+    </div>
     <div class="checkboxes">
       <label><input type="checkbox" id="ist-gruppen"> Gruppenkonto hinzufügen</label>
       <label><input type="checkbox" id="ist-ausland"> Auslandskonto hinzufügen</label>
@@ -383,22 +517,19 @@ function ladeListen() {
 
   <div class="section">
     <h2>Spielzeuge hinzufügen</h2>
-    <input id="spielzeug-nummer" placeholder="Nummer" />
-    <input id="spielzeug-name" placeholder="Spielzeugname" />
-    <button id="add-spielzeug-btn">Hinzufügen</button>
+    <div class="form-group inline">
+      <input id="spielzeug-nummer" type="text" placeholder="Nummer" style="width: 100px;"/>
+      <input id="spielzeug-name" type="text" placeholder="Spielzeugname" style="flex-grow: 1;"/>
+      <button id="add-spielzeug-btn">Hinzufügen</button>
+    </div>
     <div class="liste" id="spielzeug-liste"></div>
-  </div>
-
-  <div class="section">
-    <h2>Aktuelle Ausleihen</h2>
-    <div class="liste" id="ausleihen-liste"></div>
   </div>
 
   <div class="section">
     <h2>Historie</h2>
     <div class="liste" id="historie-liste"></div>
   </div>
-
+  
   <div class="section">
     <h2>Konto löschen</h2>
     <div class="liste" id="konto-loeschen-liste"></div>
