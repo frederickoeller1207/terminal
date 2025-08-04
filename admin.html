@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Admin – Mäusegruppe</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -20,7 +21,7 @@
 
     body {
       font-family: 'SF Pro Display', sans-serif;
-      padding: 30px;
+      padding: 15px;
       background-color: var(--background-color);
       color: var(--text-color);
       font-size: var(--font-size-medium);
@@ -28,7 +29,7 @@
     }
     
     h1 {
-      font-size: var(--font-size-large);
+      font-size: 22px;
       margin-bottom: 20px;
       text-align: center;
       font-weight: 600;
@@ -36,13 +37,13 @@
     }
 
     h2 {
-      font-size: 20px;
+      font-size: 18px;
       margin: 0 0 15px 0;
       font-weight: 600;
     }
     
     input[type="text"], input[type="number"] {
-      padding: 10px;
+      padding: 8px;
       border: 1px solid #ddd;
       border-radius: 8px;
       font-size: var(--font-size-small);
@@ -51,7 +52,7 @@
     }
 
     button {
-      padding: 10px 16px;
+      padding: 8px 14px;
       font-size: var(--font-size-small);
       background-color: var(--primary-color);
       color: white;
@@ -60,6 +61,7 @@
       cursor: pointer;
       transition: background-color 0.2s ease;
       font-weight: 600;
+      white-space: nowrap;
     }
 
     button:hover {
@@ -68,8 +70,8 @@
     
     .section {
       background: var(--card-background-color);
-      padding: 20px;
-      margin-bottom: 25px;
+      padding: 15px;
+      margin-bottom: 20px;
       border-radius: var(--border-radius);
       box-shadow: var(--box-shadow);
     }
@@ -85,12 +87,14 @@
       flex-direction: row;
       flex-wrap: wrap;
       align-items: center;
+      gap: 10px;
     }
     
     .checkboxes {
       display: flex;
       flex-direction: column;
       gap: 10px;
+      margin-bottom: 15px;
     }
     
     .liste {
@@ -105,6 +109,8 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
     .liste > div:last-child {
@@ -160,6 +166,8 @@
       align-items: center;
       padding: 10px 0;
       border-bottom: 1px solid #eee;
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
     .request-item:last-child {
@@ -303,6 +311,7 @@
             if (!eigeneKinder.has(name)) return;
             const zeile = document.createElement("div");
             zeile.className = "flex";
+            
             const kontoInfo = document.createElement("div");
             kontoInfo.innerHTML = `<span>${name}</span> (<span style="color: ${farbeToColor(data.farbe)}; font-weight: bold;">${data.punkte}</span>)`;
             
@@ -317,19 +326,23 @@
             punkteButtons.appendChild(plus);
             punkteButtons.appendChild(minus);
 
-            const farbButtons = document.createElement("div");
-            farbButtons.className = "flex-buttons";
-            farben.forEach(f => {
-              const btn = document.createElement("button");
-              btn.textContent = f;
-              btn.className = "color-button";
-              btn.onclick = () => update2(ref2(db2, `kinder/${name}`), { farbe: f });
-              farbButtons.appendChild(btn);
-            });
-            
             zeile.appendChild(kontoInfo);
             zeile.appendChild(punkteButtons);
-            zeile.appendChild(farbButtons);
+
+            // NEUE FUNKTIONALITÄT: Farbauswahl nur für Kinder ohne '~'
+            if (!name.includes("~")) {
+              const farbButtons = document.createElement("div");
+              farbButtons.className = "flex-buttons";
+              farben.forEach(f => {
+                const btn = document.createElement("button");
+                btn.textContent = f;
+                btn.className = "color-button";
+                btn.onclick = () => update2(ref2(db2, `kinder/${name}`), { farbe: f });
+                farbButtons.appendChild(btn);
+              });
+              zeile.appendChild(farbButtons);
+            }
+            
             bereich.appendChild(zeile);
           });
         });
