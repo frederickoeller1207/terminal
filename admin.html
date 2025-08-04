@@ -64,6 +64,27 @@
       white-space: nowrap;
     }
 
+    button.secondary {
+      background-color: #f0f0f0;
+      color: #333;
+      border: 1px solid #ccc;
+    }
+
+    button.secondary:hover {
+      background-color: #e0e0e0;
+    }
+
+    .shop-admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .shop-admin-header h2 {
+      margin: 0;
+    }
+
     button:hover {
       background-color: var(--primary-hover-color);
     }
@@ -183,6 +204,10 @@
     import { getDatabase as getDB1, ref as ref1, set, onValue, remove, get, push } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
     import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
     import { getDatabase as getDB2, ref as ref2, get as get2, update as update2, onValue as onVal2, remove as remove2, set as set2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+    // Import für die dritte Firebase-App (Shop-Bestellungen)
+    import { initializeApp as initApp3 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+    import { getDatabase as getDB3, ref as ref3, onValue as onVal3, update as update3, remove as remove3, get as get3 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+
 
     const app1 = initApp1({
       apiKey: "AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",
@@ -206,6 +231,14 @@
     }, "app2");
     const db2 = getDB2(app2);
 
+    // Neue Firebase-Konfiguration für den Shop
+    const app3 = initApp3({
+      apiKey: "AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg", // Gleiche API-Key wie App2
+      databaseURL: "https://punkte-45c20-default-rtdb.europe-west1.firebasedatabase.app"
+    }, "app3");
+    const db3 = getDB3(app3);
+
+
     const farben = ["⚪", "🔴", "🟡", "🟢", "⚫", "🟣"];
     function farbeToColor(f) {
       if (f === "🔴") return "red";
@@ -217,6 +250,7 @@
     }
 
     window.addEventListener("DOMContentLoaded", () => {
+      ladeShopBestellungen();
       ladeMausdollarAnfragen();
       ladeAktuelleAusleihen();
       ladeKinderKonten();
@@ -225,6 +259,59 @@
       ladeHistorie();
       ladeKontoLoeschen();
     });
+
+    function ladeShopBestellungen() {
+      const pendingOrdersList = document.getElementById('pending-orders-list');
+      const ordersRef = ref3(db3, 'bestellungen');
+      onVal3(ordersRef, (snapshot) => {
+          pendingOrdersList.innerHTML = '';
+          const orders = snapshot.val();
+          if (orders) {
+              Object.keys(orders).forEach(key => {
+                  const order = orders[key];
+                  if (order.status === 'wird geliefert') {
+                      const li = document.createElement('div');
+                      li.className = 'request-item';
+                      li.innerHTML = `
+                          <div class="request-info">
+                              <strong>${order.name}</strong> hat "${order.artikel}" bestellt.<br>
+                              <small>Kaufpreis: ${order.gezahlterPreis} Mausdollar, Datum: ${new Date(order.kaufdatum).toLocaleDateString()}</small>
+                          </div>
+                          <div class="flex-buttons">
+                              <button class="confirm-delivery-btn" data-id="${key}" data-user-type="${order.userType}" data-user-name="${order.name}" data-item-name="${order.artikel}">✔️</button>
+                              <button class="reject-purchase-btn" data-id="${key}" data-user-type="${order.userType}" data-user-name="${order.name}" data-price="${order.gezahlterPreis}">❌</button>
+                          </div>
+                      `;
+                      pendingOrdersList.appendChild(li);
+                  }
+              });
+          }
+      });
+
+      pendingOrdersList.addEventListener('click', async (e) => {
+        const orderId = e.target.dataset.id;
+        const userType = e.target.dataset.userType;
+        const userName = e.target.dataset.userName;
+        const price = parseFloat(e.target.dataset.price);
+
+        if (e.target.classList.contains('confirm-delivery-btn')) {
+            const itemName = e.target.dataset.itemName;
+            update3(ref3(db3, `bestellungen/${orderId}`), { status: 'Produkt geliefert' });
+            alert(`Bestellung von ${userName} (${itemName}) als geliefert markiert.`);
+        } else if (e.target.classList.contains('reject-purchase-btn')) {
+            const userRef = ref3(db3, `${userType}/${userName}`);
+            const userSnap = await get3(userRef);
+            const user = userSnap.val();
+
+            if (user) {
+                const newPoints = (user.punkte || 0) + price;
+                update3(ref3(db3, `${userType}/${userName}`), { punkte: newPoints });
+            }
+            update3(ref3(db3, `bestellungen/${orderId}`), { status: 'Kauf abgelehnt' });
+            alert(`Kauf von ${userName} abgelehnt. ${price} Mausdollar wurden erstattet.`);
+        }
+    });
+  }
 
     function ladeMausdollarAnfragen() {
       const container = document.getElementById("mausdollar-anfragen-liste");
@@ -497,6 +584,16 @@
 </head>
 <body>
   <h1>Adminbereich</h1>
+
+  <div class="section">
+    <div class="shop-admin-header">
+      <h2>Shop Bestellungen</h2>
+      <a href="https://frederickoeller1207.github.io/Mousecity-Store/admin" target="_blank">
+        <button class="secondary">Zur Shop Administration</button>
+      </a>
+    </div>
+    <div class="liste" id="pending-orders-list"></div>
+  </div>
 
   <div class="section">
     <h2>Mausdollar Anfragen</h2>
