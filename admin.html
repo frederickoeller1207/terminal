@@ -216,6 +216,51 @@
       font-size: var(--font-size-small);
       border-radius: 8px;
     }
+
+    .action-buttons {
+      display: flex;
+      gap: 5px;
+      flex-grow: 1; /* allow buttons to take available space */
+      justify-content: flex-end; /* push buttons to the right */
+    }
+
+    .action-button {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: none;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      white-space: nowrap;
+    }
+
+    .action-button.execute {
+      background-color: var(--primary-color);
+    }
+    
+    .action-button.execute:hover {
+      background-color: var(--primary-hover-color);
+    }
+
+    .action-button.white {
+      background-color: #fff;
+      color: #333;
+      border: 1px solid #ccc;
+    }
+
+    .action-button.white:hover {
+      background-color: #f0f0f0;
+    }
+
+    .action-button.green {
+      background-color: #28a745;
+    }
+
+    .action-button.green:hover {
+      background-color: #218838;
+    }
+
   </style>
   <script type="module">
     import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
@@ -677,9 +722,11 @@
   <div class="section">
     <div class="mauscity-header">
       <h2>MausCity Konten</h2>
-      <button id="durchfuehren-btn" class="small-button">Durchführen</button>
-      <button id="alle-gruen-btn" class="small-button">Alle auf Grün</button>
-      <button id="alle-weiss-btn" class="small-button">Alle auf Weiß</button>
+      <div class="action-buttons">
+        <button id="durchfuehren-btn" class="action-button execute">✔️</button>
+        <button id="alle-gruen-btn" class="action-button green">Alle</button>
+        <button id="alle-weiss-btn" class="action-button white">Alle</button>
+      </div>
     </div>
     <div class="liste" id="mauscity-konten-liste"></div>
   </div>
