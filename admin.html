@@ -198,6 +198,24 @@
     .request-info {
       flex-grow: 1;
     }
+
+    .mauscity-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .mauscity-header h2 {
+      margin: 0;
+      flex-shrink: 0;
+    }
+    
+    .small-button {
+      padding: 5px 10px;
+      font-size: var(--font-size-small);
+      border-radius: 8px;
+    }
   </style>
   <script type="module">
     import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
@@ -246,7 +264,7 @@
       if (f === "🟢") return "green";
       if (f === "⚫") return "black";
       if (f === "🟣") return "purple";
-      return "gray";
+      return "#333"; // Farbe für "⚪" und Standardfall
     }
 
     window.addEventListener("DOMContentLoaded", () => {
@@ -258,7 +276,58 @@
       ladeSpielzeugeHinzufuegen();
       ladeHistorie();
       ladeKontoLoeschen();
+      
+      // Event Listener für die neuen Buttons
+      document.getElementById('durchfuehren-btn').onclick = durchfuehren;
+      document.getElementById('alle-gruen-btn').onclick = alleAufGruen;
+      document.getElementById('alle-weiss-btn').onclick = alleAufWeiss;
     });
+
+    async function durchfuehren() {
+      const normaleKonten = [];
+      const snapshot = await get2(ref2(db2, "kinder"));
+      snapshot.forEach(childSnap => {
+        const data = childSnap.val();
+        if (data.farbe !== undefined) {
+          normaleKonten.push({ name: childSnap.key, punkte: data.punkte || 0, farbe: data.farbe });
+        }
+      });
+      
+      normaleKonten.forEach(({ name, farbe, punkte }) => {
+        let delta = 0;
+        if (farbe === "🟢") delta = 1;
+        else if (farbe === "🔴") delta = -1;
+        else if (farbe === "⚫") delta = -2;
+        else if (farbe === "🟣") delta = 2;
+        update2(ref2(db2, `kinder/${name}`), {
+          punkte: punkte + delta,
+          farbe: "⚪"
+        });
+      });
+    }
+
+    async function alleAufGruen() {
+      const snapshot = await get2(ref2(db2, "kinder"));
+      snapshot.forEach(childSnap => {
+        const name = childSnap.key;
+        const data = childSnap.val();
+        if (data.farbe !== undefined) {
+          update2(ref2(db2, `kinder/${name}`), { farbe: "🟢" });
+        }
+      });
+    }
+
+    async function alleAufWeiss() {
+      const snapshot = await get2(ref2(db2, "kinder"));
+      snapshot.forEach(childSnap => {
+        const name = childSnap.key;
+        const data = childSnap.val();
+        if (data.farbe !== undefined) {
+          update2(ref2(db2, `kinder/${name}`), { farbe: "⚪" });
+        }
+      });
+    }
+
 
     function ladeShopBestellungen() {
       const pendingOrdersList = document.getElementById('pending-orders-list');
@@ -400,7 +469,7 @@
             zeile.className = "flex";
             
             const kontoInfo = document.createElement("div");
-            kontoInfo.innerHTML = `<span>${name}</span> (<span style="color: ${farbeToColor(data.farbe)}; font-weight: bold;">${data.punkte}</span>)`;
+            kontoInfo.innerHTML = `<span style="color: ${farbeToColor(data.farbe)}; font-weight: bold;">${name}</span> (<span style="color: ${farbeToColor(data.farbe)}; font-weight: bold;">${data.punkte}</span>)`;
             
             const punkteButtons = document.createElement("div");
             punkteButtons.className = "flex-buttons";
@@ -606,7 +675,12 @@
   </div>
 
   <div class="section">
-    <h2>MausCity Konten</h2>
+    <div class="mauscity-header">
+      <h2>MausCity Konten</h2>
+      <button id="durchfuehren-btn" class="small-button">Durchführen</button>
+      <button id="alle-gruen-btn" class="small-button">Alle auf Grün</button>
+      <button id="alle-weiss-btn" class="small-button">Alle auf Weiß</button>
+    </div>
     <div class="liste" id="mauscity-konten-liste"></div>
   </div>
 
