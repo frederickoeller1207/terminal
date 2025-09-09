@@ -9,9 +9,9 @@
   body { font-family:'SF Pro Display',sans-serif; margin:0; background:#ece5dd; }
   .header { background:#075e54; color:#fff; padding:14px; font-weight:600; display:flex; align-items:center; }
   .header button { background:none; border:none; color:#fff; font-size:20px; margin-right:10px; cursor:pointer; }
-  .chat-list { display:flex; flex-direction:column; }
-  .chat-item { background:#fff; padding:14px; border-bottom:1px solid #eee; cursor:pointer; }
-  .chat-item:hover { background:#f9f9f9; }
+  .list { padding:10px; }
+  .list button { display:block; width:100%; text-align:left; padding:14px; margin-bottom:8px;
+                 background:#fff; border:none; border-radius:8px; font-size:16px; cursor:pointer; }
   .chat-window { display:none; flex-direction:column; height:100vh; }
   .messages { flex:1; overflow-y:auto; padding:10px; background:#ece5dd; }
   .msg { max-width:70%; margin:6px 0; padding:10px 14px; border-radius:16px; font-size:15px; position:relative; }
@@ -26,10 +26,16 @@
 </head>
 <body>
 
+<!-- Auswahl Name -->
+<div id="loginView">
+  <div class="header">Wähle deinen Namen</div>
+  <div id="nameList" class="list"></div>
+</div>
+
 <!-- Chatliste -->
-<div id="chatListView">
+<div id="chatListView" style="display:none">
   <div class="header">Nachrichten</div>
-  <div id="chatList" class="chat-list"></div>
+  <div id="chatList" class="list"></div>
   <div class="new-chat" onclick="openNewChat()">➕ Neue Nachricht</div>
 </div>
 
@@ -63,30 +69,43 @@
 
   function convId(a,b){ return [a,b].sort((x,y)=>x.localeCompare(y,'de')).join("|"); }
 
+  // Kinderliste laden
   async function loadKids(){
     const s=await get(ref2(db2,"kinder"));
-    ALL_KIDS=[];
     if(s.exists()){ s.forEach(ch=>ALL_KIDS.push(ch.key)); }
-    // Login: wähle Name (einfach für Demo)
-    const name=prompt("Dein Name:");
-    if(!ALL_KIDS.includes(name)){ alert("Unbekanntes Konto"); return; }
+    renderLogin();
+  }
+
+  function renderLogin(){
+    const list=document.getElementById("nameList");
+    list.innerHTML="";
+    ALL_KIDS.sort().forEach(name=>{
+      const b=document.createElement("button");
+      b.textContent=name;
+      b.onclick=()=>askPin(name);
+      list.appendChild(b);
+    });
+  }
+
+  async function askPin(name){
     const snap=await get1(ref1(db1,`kinder/${name}`));
     if(!snap.exists()||!snap.val().code){ alert("Kein PIN"); return; }
-    const pin=prompt("PIN eingeben:");
-    if(pin!==String(snap.val().code)){ alert("Falscher PIN"); return; }
-    currentKid=name;
-    loadThreads();
+    const pin=prompt(`PIN für ${name} eingeben:`);
+    if(pin===String(snap.val().code)){
+      currentKid=name;
+      document.getElementById("loginView").style.display="none";
+      document.getElementById("chatListView").style.display="block";
+      loadThreads();
+    } else { alert("Falscher PIN."); }
   }
 
   function loadThreads(){
     const chatList=document.getElementById("chatList");
-    chatList.innerHTML="";
     onValue(ref2(db2,`threadsByKid/${currentKid}`),(snap)=>{
       chatList.innerHTML="";
-      if(!snap.exists()){ chatList.innerHTML="<div class='chat-item'>Keine Chats</div>"; return; }
+      if(!snap.exists()){ chatList.innerHTML="<div>Keine Chats</div>"; return; }
       Object.keys(snap.val()).forEach(peer=>{
-        const item=document.createElement("div"); item.className="chat-item";
-        item.textContent=peer;
+        const item=document.createElement("button"); item.textContent=peer;
         item.onclick=()=>openChat(peer);
         chatList.appendChild(item);
       });
