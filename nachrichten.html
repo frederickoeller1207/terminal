@@ -6,83 +6,84 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  :root{--wa-bg:#ece5dd;--wa-dark:#075e54;--bubble-me:#dcf8c6;--bubble-other:#ffffff}
-  body{font-family:'SF Pro Display',sans-serif;margin:0;background:#f9f9fb;color:#1c1c1e}
-  .header{background:var(--wa-dark);color:#fff;padding:14px;font-weight:600;display:flex;align-items:center;gap:10px}
+  :root{
+    --bg:#f9f9fb; --card:#fff; --border:#ddd; --primary:#007aff;
+    --waTop:#075e54; --bubbleMe:#dcf8c6; --bubbleOther:#ffffff;
+  }
+  body{font-family:'SF Pro Display',sans-serif;margin:0;background:var(--bg);color:#1c1c1e}
+  .header{background:var(--waTop);color:#fff;padding:14px;font-weight:600;display:flex;align-items:center;gap:10px}
   .header button{background:none;border:none;color:#fff;font-size:20px;cursor:pointer}
   .screen{display:none}
   .screen.active{display:block}
-  .container{padding:16px}
-  .btn{display:block;width:100%;max-width:360px;margin:10px auto;padding:14px 18px;background:#fff;border:1px solid #ddd;border-radius:12px;font-size:18px;font-weight:600;cursor:pointer}
-  .btn.primary{background:#fff;border-color:#007aff;color:#007aff}
-  .list{padding:10px}
-  .list button{display:block;width:100%;text-align:left;padding:14px;margin-bottom:8px;background:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer}
-  .pin-wrap{display:flex;gap:8px;justify-content:center;align-items:center;margin-top:12px}
-  .pin-wrap input{width:160px;padding:10px;border:1px solid #ccc;border-radius:10px;font-size:16px}
-  .pin-wrap .btn{width:auto;margin:0}
-  /* WhatsApp-Chat */
-  #chatListView .list .item{display:flex;align-items:center;gap:10px;padding:12px;border-radius:12px;border:1px solid #eee;background:#fff;margin-bottom:8px}
-  #chatListView .item .avatar{width:36px;height:36px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-weight:600}
-  #chatWindow{height:100vh;display:none;flex-direction:column;background:var(--wa-bg)}
+  .container{padding:16px;max-width:720px;margin:0 auto}
+  /* Terminal-Buttons */
+  .btn{display:block;width:100%;padding:18px 24px;margin:10px 0;background:#fff;border:1px solid var(--border);border-radius:12px;font-size:20px;font-weight:600;cursor:pointer;text-align:center}
+  .btn.primary{border-color:var(--primary);color:var(--primary)}
+  /* Listen */
+  .list{display:flex;flex-direction:column;gap:10px}
+  .list button{display:block;width:100%;text-align:left;padding:14px;background:#fff;border:1px solid var(--border);border-radius:12px;font-size:16px;cursor:pointer}
+  .pin-wrap{display:flex;gap:8px;align-items:center;margin-top:12px}
+  .pin-wrap input{flex:1;min-width:160px;padding:10px;border:1px solid var(--border);border-radius:10px;font-size:16px}
+  /* Chatliste Cards */
+  .item{display:flex;align-items:center;gap:10px;padding:12px;border-radius:12px;border:1px solid var(--border);background:#fff}
+  .avatar{width:36px;height:36px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-weight:600}
+  /* Chatfenster */
+  #chatWindow{height:100vh;display:none;flex-direction:column;background:#ece5dd}
   #messages{flex:1;overflow-y:auto;padding:10px}
-  .msg{max-width:72%;margin:6px 0;padding:10px 14px;border-radius:16px;font-size:15px;position:relative}
-  .me{align-self:flex-end;background:var(--bubble-me);border-bottom-right-radius:0}
-  .other{align-self:flex-start;background:var(--bubble-other);border-bottom-left-radius:0}
+  .msg{max-width:72%;margin:6px 0;padding:10px 14px;border-radius:16px;font-size:15px}
+  .me{align-self:flex-end;background:var(--bubbleMe);border-bottom-right-radius:0}
+  .other{align-self:flex-start;background:var(--bubbleOther);border-bottom-left-radius:0}
   .msg small{display:block;font-size:11px;color:#555;margin-top:4px;text-align:right}
   .composer{display:flex;gap:8px;padding:8px;background:#f0f0f0;position:sticky;bottom:0}
-  .composer input{flex:1;border:1px solid #ccc;border-radius:20px;padding:10px 14px;font-size:15px}
-  .composer button{background:var(--wa-dark);border:none;color:#fff;padding:10px 16px;border-radius:20px;font-weight:600;cursor:pointer}
+  .composer input{flex:1;border:1px solid var(--border);border-radius:20px;padding:10px 14px;font-size:15px}
+  .composer button{background:var(--waTop);border:none;color:#fff;padding:10px 16px;border-radius:20px;font-weight:600;cursor:pointer}
   /* Briefkasten */
-  .card{background:#fff;border:1px solid #eee;border-radius:12px;padding:12px;max-width:680px;margin:12px auto}
-  textarea{width:100%;min-height:120px;padding:12px;border:1px solid #ccc;border-radius:10px;font-size:16px;resize:vertical}
+  .card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px}
+  textarea{width:100%;min-height:120px;padding:12px;border:1px solid var(--border);border-radius:10px;font-size:16px;resize:vertical}
   .hint{font-size:13px;color:#6b7280;margin-top:6px}
 </style>
 </head>
 <body>
 
-<!-- Startscreen -->
+<!-- Start -->
 <div id="startView" class="screen active">
   <div class="header">Was möchtest du nutzen?</div>
   <div class="container">
     <button class="btn primary" id="btnBriefkasten">Digitaler Briefkasten</button>
     <button class="btn" id="btnNachrichten">Nachrichten</button>
-    <div class="btn" id="btnBackHome" onclick="window.location.href='index.html'">Zurück zum Terminal</div>
+    <button class="btn" onclick="window.location.href='index.html'">Zurück zum Terminal</button>
   </div>
 </div>
 
 <!-- Briefkasten -->
 <div id="briefkastenView" class="screen">
-  <div class="header">
-    <button id="backFromBrief">←</button><div>Digitaler Briefkasten</div>
-  </div>
-  <div class="card">
-    <div style="font-weight:600;margin-bottom:8px">Anonym eine Nachricht senden</div>
-    <textarea id="bkText" placeholder="Schreibe hier deine Nachricht... (niemand sieht deinen Namen)"></textarea>
-    <div class="hint">Die Nachricht geht an die Lehrer. Dein Name wird nicht gespeichert.</div>
-    <button class="btn primary" id="bkSend" style="margin-top:12px">Senden</button>
-    <div id="bkStatus" class="hint"></div>
+  <div class="header"><button id="backFromBrief">←</button><div>Digitaler Briefkasten</div></div>
+  <div class="container">
+    <div class="card">
+      <div style="font-weight:600;margin-bottom:8px">Anonym eine Nachricht senden</div>
+      <textarea id="bkText" placeholder="Schreibe hier deine Nachricht..."></textarea>
+      <div class="hint">Die Nachricht geht an <b>Herr Köller und Frau Stanojevic</b>. Dein Name wird nicht gespeichert.</div>
+      <button class="btn primary" id="bkSend" style="margin-top:12px">Senden</button>
+      <div id="bkStatus" class="hint"></div>
+    </div>
   </div>
 </div>
 
 <!-- Login: Namenliste + PIN -->
 <div id="loginView" class="screen">
-  <div class="header">
-    <button id="backFromLogin">←</button><div>Wähle deinen Namen</div>
-  </div>
+  <div class="header"><button id="backFromLogin">←</button><div>Wähle deinen Namen</div></div>
   <div class="container">
-    <div class="list" id="nameList"></div>
+    <div id="nameList" class="list"></div>
     <div class="pin-wrap" id="pinWrap" style="display:none">
       <input id="pinInput" type="number" inputmode="numeric" placeholder="PIN eingeben">
-      <button class="btn primary" id="pinOk">OK</button>
+      <button class="btn primary" id="pinOk" style="width:auto">OK</button>
     </div>
   </div>
 </div>
 
 <!-- Chatliste -->
 <div id="chatListView" class="screen">
-  <div class="header">
-    <button id="backToLogin">←</button><div id="chatListTitle">Nachrichten</div>
-  </div>
+  <div class="header"><button id="backToLogin">←</button><div id="chatListTitle">Nachrichten</div></div>
   <div class="container">
     <div id="chatList" class="list"></div>
     <button class="btn primary" id="btnNewChat">➕ Neue Nachricht</button>
@@ -91,9 +92,7 @@
 
 <!-- Einzelchat -->
 <div id="chatWindow">
-  <div class="header">
-    <button id="btnBackList">←</button><div id="chatTitle"></div>
-  </div>
+  <div class="header"><button id="btnBackList">←</button><div id="chatTitle"></div></div>
   <div id="messages"></div>
   <div class="composer">
     <input id="msgInput" placeholder="Nachricht eingeben...">
@@ -103,170 +102,151 @@
 
 <script type="module">
   import { initializeApp as init1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-  import { getDatabase as getDB1, ref as ref1, get as get1, onValue as onVal1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+  import { getDatabase as getDB1, ref as ref1, get as get1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
   import { initializeApp as init2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
   import { getDatabase as getDB2, ref as ref2, onValue, get, set, push, update } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
 
-  // app1: Kinder + PIN, app2: Konten/Chats/Briefkasten
+  // app1: PINs, app2: Konten/Chats/Briefkasten
   const app1 = init1({ apiKey:"AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU", databaseURL:"https://gesamt-dae4e-default-rtdb.europe-west1.firebasedatabase.app" },"a1");
-  const db1 = getDB1(app1);
+  const db1  = getDB1(app1);
   const app2 = init2({ apiKey:"AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg", databaseURL:"https://punkte-45c20-default-rtdb.europe-west1.firebasedatabase.app" },"a2");
-  const db2 = getDB2(app2);
+  const db2  = getDB2(app2);
 
-  /* State */
-  let ALL_KIDS = [];           // aus app1 (alle Konten)
-  let currentKid = null;       // eingeloggter Name
-  let currentPeer = null;      // Chatpartner
+  // State
+  let ALL_KIDS = [];  // Quelle: app2/kinder
+  let currentKid = null, currentPeer = null;
 
-  /* Views */
+  // Helpers
   const V = id => document.getElementById(id);
   const show = id => { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); V(id).classList.add('active'); };
-  const showChatWindow = (on=true) => { V('chatWindow').style.display = on ? 'flex' : 'none'; };
+  const showChatWindow = on => V('chatWindow').style.display = on ? 'flex' : 'none';
+  const cid = (a,b)=> [a,b].sort((x,y)=>x.localeCompare(y,'de')).join("|");
 
-  /* Startscreen */
+  // Navigation
   V('btnBriefkasten').onclick = ()=> show('briefkastenView');
   V('btnNachrichten').onclick = ()=> show('loginView');
-  V('backFromBrief').onclick = ()=> show('startView');
-  V('backFromLogin').onclick = ()=> show('startView');
+  V('backFromBrief').onclick  = ()=> show('startView');
+  V('backFromLogin').onclick  = ()=> show('startView');
+  V('btnBackList').onclick    = ()=> showChatWindow(false);
+  V('backToLogin').onclick    = ()=> { currentKid=null; show('loginView'); showChatWindow(false); };
 
-  /* Briefkasten senden (anonym) */
+  // Briefkasten
   V('bkSend').onclick = async ()=>{
-    const txt = V('bkText').value.trim();
-    if(!txt){ V('bkStatus').textContent = "Bitte Nachricht eingeben."; return; }
-    const mRef = push(ref2(db2, 'briefkasten'));
-    await set(mRef, { text: txt, ts: Date.now() });
-    V('bkText').value = "";
-    V('bkStatus').textContent = "Nachricht wurde gesendet.";
-    setTimeout(()=> V('bkStatus').textContent="", 2500);
+    const txt = (V('bkText').value||"").trim();
+    if(!txt){ V('bkStatus').textContent="Bitte Nachricht eingeben."; return; }
+    const mRef = push(ref2(db2,'briefkasten'));
+    await set(mRef,{ text:txt, ts:Date.now() });
+    V('bkText').value=""; V('bkStatus').textContent="Nachricht wurde gesendet.";
+    setTimeout(()=>V('bkStatus').textContent="", 2500);
   };
 
-  /* Namen laden: aus app1/kinder (ALLE Kinder), live */
-  onVal1(ref1(db1, "kinder"), (snap)=>{
-    ALL_KIDS = [];
-    if (snap.exists()){
-      snap.forEach(ch=> ALL_KIDS.push({ name: ch.key, code: (ch.val()||{}).code || null }));
-    }
+  // Namen laden **wie Konto einsehen**: app2/kinder (alle Konten)
+  onValue(ref2(db2,"kinder"), (snap)=>{
+    ALL_KIDS.length = 0;
+    if (snap.exists()) snap.forEach(ch => ALL_KIDS.push(ch.key));
     renderNameList();
   });
 
   function renderNameList(){
-    const list = V('nameList');
-    list.innerHTML = "";
-    ALL_KIDS.sort((a,b)=>a.name.localeCompare(b.name,'de')).forEach(k=>{
-      const btn = document.createElement('button');
-      btn.textContent = k.name;
-      btn.onclick = ()=> openPin(k.name);
+    const list = V('nameList'); list.innerHTML="";
+    ALL_KIDS.sort((a,b)=>a.localeCompare(b,'de')).forEach(name=>{
+      const btn=document.createElement('button'); btn.textContent=name;
+      btn.onclick=()=>openPin(name);
       list.appendChild(btn);
     });
   }
 
-  /* PIN-Eingabe innerhalb der Seite */
+  // PIN gegen app1 prüfen
   function openPin(name){
-    currentKid = null; // noch nicht eingeloggt
-    V('pinWrap').style.display = 'flex';
-    V('pinInput').value = "";
-    V('pinInput').focus();
+    V('pinWrap').style.display='flex';
+    V('pinInput').value=""; V('pinInput').focus();
 
     const submit = async ()=>{
       const pin = String(V('pinInput').value||"").trim();
-      const s = await get1(ref1(db1, `kinder/${name}`));
-      const real = s.exists() ? String((s.val()||{}).code||"") : "";
-      if(pin && real && pin === real){
+      const s   = await get1(ref1(db1,`kinder/${name}`));
+      const real= s.exists()? String((s.val()||{}).code||"") : "";
+      if (real && pin===real){
         currentKid = name;
-        V('pinWrap').style.display = 'none';
+        V('pinWrap').style.display='none';
         V('chatListTitle').textContent = `Nachrichten – ${currentKid}`;
         show('chatListView'); loadThreads();
       } else {
-        alert("Falscher PIN.");
+        alert("Kein oder falscher PIN hinterlegt.");
       }
     };
     V('pinOk').onclick = submit;
     V('pinInput').onkeypress = e=>{ if(e.key==="Enter") submit(); };
   }
 
-  /* Threads laden für currentKid */
+  // Threads für currentKid
   function loadThreads(){
-    const list = V('chatList');
-    list.innerHTML = "";
-    onValue(ref2(db2, `threadsByKid/${currentKid}`), (snap)=>{
-      list.innerHTML = "";
+    const list = V('chatList'); list.innerHTML="";
+    onValue(ref2(db2,`threadsByKid/${currentKid}`),(snap)=>{
+      list.innerHTML="";
       const peers = snap.exists()? Object.keys(snap.val()) : [];
-      if(peers.length===0){
-        const empty = document.createElement('div'); empty.className='item'; empty.textContent="Noch keine Chats";
+      if (peers.length===0){
+        const empty=document.createElement('div'); empty.className='item'; empty.textContent="Noch keine Chats";
         list.appendChild(empty);
       } else {
         peers.sort((a,b)=>a.localeCompare(b,'de'));
         peers.forEach(p=>{
-          const row = document.createElement('div'); row.className='item'; row.onclick=()=>openChat(p);
-          const av = document.createElement('div'); av.className='avatar'; av.textContent = p.slice(0,1).toUpperCase();
-          const label = document.createElement('div'); label.textContent = p;
-          row.appendChild(av); row.appendChild(label);
-          list.appendChild(row);
+          const row=document.createElement('div'); row.className='item'; row.onclick=()=>openChat(p);
+          const av=document.createElement('div'); av.className='avatar'; av.textContent=p.slice(0,1).toUpperCase();
+          const label=document.createElement('div'); label.textContent=p;
+          row.appendChild(av); row.appendChild(label); list.appendChild(row);
         });
       }
     });
   }
 
-  /* Neuer Chat starten: Auswahl aus allen Kindern außer ich selbst */
+  // Neuer Chat
   V('btnNewChat').onclick = ()=>{
-    const list = V('chatList');
-    const picker = document.createElement('div'); picker.className='item';
-    const sel = document.createElement('select');
-    sel.style.flex='1'; sel.style.padding='10px'; sel.style.border='1px solid #ddd'; sel.style.borderRadius='10px';
+    const row=document.createElement('div'); row.className='item';
+    const sel=document.createElement('select');
+    sel.style.flex='1'; sel.style.padding='10px'; sel.style.border='1px solid var(--border)'; sel.style.borderRadius='10px';
     sel.innerHTML = `<option value="">Empfänger wählen…</option>` +
-      ALL_KIDS.filter(k=>k.name!==currentKid).map(k=>`<option value="${k.name}">${k.name}</option>`).join('');
-    const ok = document.createElement('button'); ok.className='btn primary'; ok.textContent='Chat öffnen';
-    ok.onclick = ()=>{ if(sel.value){ openChat(sel.value); picker.remove(); } };
-    picker.appendChild(sel); picker.appendChild(ok);
-    list.prepend(picker);
+      ALL_KIDS.filter(n=>n!==currentKid).map(n=>`<option>${n}</option>`).join("");
+    const ok=document.createElement('button'); ok.className='btn primary'; ok.textContent='Chat öffnen';
+    ok.onclick=()=>{ if(sel.value){ openChat(sel.value); row.remove(); } };
+    row.appendChild(sel); row.appendChild(ok);
+    V('chatList').prepend(row);
   };
 
-  /* Chat öffnen */
-  function convId(a,b){ return [a,b].sort((x,y)=>x.localeCompare(y,'de')).join("|"); }
+  // Chat öffnen
   function openChat(peer){
     currentPeer = peer;
     V('chatTitle').textContent = peer;
-    show('chatListView'); // bleibt aktiv für History
     showChatWindow(true);
     const box = V('messages');
-    onValue(ref2(db2, `chats/${convId(currentKid, peer)}`),(snap)=>{
-      box.innerHTML = "";
-      const msgs = [];
-      if (snap.exists()) snap.forEach(ch=> msgs.push(ch.val()));
-      msgs.sort((a,b)=> (a.ts||0) - (b.ts||0));
+    onValue(ref2(db2,`chats/${cid(currentKid,peer)}`),(snap)=>{
+      box.innerHTML="";
+      const msgs=[]; if(snap.exists()) snap.forEach(ch=>msgs.push(ch.val()));
+      msgs.sort((a,b)=>(a.ts||0)-(b.ts||0));
       msgs.forEach(m=>{
-        const d = document.createElement('div'); d.className = 'msg ' + (m.from===currentKid ? 'me':'other');
-        const time = new Date(m.ts||Date.now()).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"});
+        const d=document.createElement('div'); d.className='msg '+(m.from===currentKid?'me':'other');
+        const time=new Date(m.ts||Date.now()).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
         d.innerHTML = `${m.text}<small>${time}</small>`;
         box.appendChild(d);
       });
-      box.scrollTop = box.scrollHeight;
+      box.scrollTop=box.scrollHeight;
     });
   }
 
-  /* Zurück aus Chat */
-  V('btnBackList').onclick = ()=> showChatWindow(false);
-  V('backToLogin').onclick   = ()=> { currentKid=null; show('loginView'); showChatWindow(false); };
-
-  /* Senden */
+  // Senden
   async function sendMsg(from,to,text){
-    const cid = convId(from,to);
-    const mRef = push(ref2(db2, `chats/${cid}`));
-    await set(mRef, { from, to, text, ts: Date.now(), fromType: "kid" });
+    const mRef = push(ref2(db2,`chats/${cid(from,to)}`));
+    await set(mRef,{ from,to,text,ts:Date.now(),fromType:"kid" });
     await Promise.all([
-      update(ref2(db2, `threadsByKid/${from}`), { [to]: true }),
-      update(ref2(db2, `threadsByKid/${to}`),   { [from]: true })
+      update(ref2(db2,`threadsByKid/${from}`),{ [to]: true }),
+      update(ref2(db2,`threadsByKid/${to}`),  { [from]: true })
     ]);
   }
   V('sendBtn').onclick = ()=>{
-    const inp = V('msgInput'); const t = (inp.value||"").trim();
+    const t=(V('msgInput').value||"").trim();
     if(!t || !currentKid || !currentPeer) return;
-    sendMsg(currentKid, currentPeer, t);
-    inp.value="";
+    sendMsg(currentKid,currentPeer,t);
+    V('msgInput').value="";
   };
-
-  /* Start */
-  // Startscreen ist aktiv; Daten für Namenliste werden live geladen.
 </script>
 </body>
 </html>
