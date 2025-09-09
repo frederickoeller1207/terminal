@@ -16,262 +16,47 @@
       --box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
       --font-size-small: 14px;
       --font-size-medium: 16px;
-      --font-size-large: 24px;
     }
-
-    body {
-      font-family: 'SF Pro Display', sans-serif;
-      padding: 15px;
-      background-color: var(--background-color);
-      color: var(--text-color);
-      font-size: var(--font-size-medium);
-      line-height: 1.6;
-    }
-    
-    h1 {
-      font-size: 22px;
-      margin-bottom: 20px;
-      text-align: center;
-      font-weight: 600;
-      color: var(--primary-color);
-    }
-
-    h2 {
-      font-size: 18px;
-      margin: 0 0 15px 0;
-      font-weight: 600;
-    }
-    
-    input[type="text"], input[type="number"] {
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      font-size: var(--font-size-small);
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    button {
-      padding: 8px 14px;
-      font-size: var(--font-size-small);
-      background-color: var(--primary-color);
-      color: white;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: background-color 0.2s ease;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-
-    button.secondary {
-      background-color: #f0f0f0;
-      color: #333;
-      border: 1px solid #ccc;
-    }
-
-    button.secondary:hover {
-      background-color: #e0e0e0;
-    }
-
-    .shop-admin-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-    }
-
-    .shop-admin-header h2 {
-      margin: 0;
-    }
-
-    button:hover {
-      background-color: var(--primary-hover-color);
-    }
-    
-    .section {
-      background: var(--card-background-color);
-      padding: 15px;
-      margin-bottom: 20px;
-      border-radius: var(--border-radius);
-      box-shadow: var(--box-shadow);
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-
-    .form-group.inline {
-      flex-direction: row;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 10px;
-    }
-    
-    .checkboxes {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-    
-    .liste {
-      margin-top: 15px;
-      padding-top: 15px;
-      border-top: 1px solid #eee;
-    }
-    
-    .liste > div {
-      padding: 10px 0;
-      border-bottom: 1px solid #f9f9f9;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .liste > div:last-child {
-      border-bottom: none;
-    }
-
-    .liste h3 {
-      font-size: var(--font-size-medium);
-      margin-top: 20px;
-    }
-
-    .delete {
-      color: #ff3b30;
-      cursor: pointer;
-      margin-left: 10px;
-      font-weight: 600;
-      font-size: var(--font-size-small);
-    }
-    
-    .delete:hover {
-      text-decoration: underline;
-    }
-
-    .flex {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 0;
-    }
-    
-    .flex-buttons {
-      display: flex;
-      gap: 5px;
-    }
-
-    .color-button {
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      padding: 2px 5px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .color-button:hover {
-      transform: scale(1.1);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .request-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 0;
-      border-bottom: 1px solid #eee;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .request-item:last-child {
-      border-bottom: none;
-    }
-
-    .request-info {
-      flex-grow: 1;
-    }
-
-    .mauscity-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-
-    .mauscity-header h2 {
-      margin: 0;
-      flex-shrink: 0;
-    }
-    
-    .small-button {
-      padding: 5px 10px;
-      font-size: var(--font-size-small);
-      border-radius: 8px;
-    }
-
-    .action-buttons {
-      display: flex;
-      gap: 5px;
-      flex-grow: 1; /* allow buttons to take available space */
-      justify-content: flex-end; /* push buttons to the right */
-    }
-
-    .action-button {
-      padding: 8px 12px;
-      border-radius: 8px;
-      border: none;
-      color: white;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background-color 0.2s;
-      white-space: nowrap;
-    }
-
-    .action-button.execute {
-      background-color: var(--primary-color);
-    }
-    
-    .action-button.execute:hover {
-      background-color: var(--primary-hover-color);
-    }
-
-    .action-button.white {
-      background-color: #fff;
-      color: #333;
-      border: 1px solid #ccc;
-    }
-
-    .action-button.white:hover {
-      background-color: #f0f0f0;
-    }
-
-    .action-button.green {
-      background-color: #28a745;
-    }
-
-    .action-button.green:hover {
-      background-color: #218838;
-    }
-
+    body { font-family: 'SF Pro Display', sans-serif; padding: 15px; background-color: var(--background-color); color: var(--text-color); font-size: var(--font-size-medium); line-height: 1.6; }
+    h1 { font-size: 22px; margin-bottom: 20px; text-align: center; font-weight: 600; color: var(--primary-color); }
+    h2 { font-size: 18px; margin: 0 0 15px 0; font-weight: 600; }
+    input[type="text"], input[type="number"] { padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: var(--font-size-small); width: 100%; box-sizing: border-box; }
+    button { padding: 8px 14px; font-size: var(--font-size-small); background-color: var(--primary-color); color: white; border: none; border-radius: 10px; cursor: pointer; transition: background-color 0.2s ease; font-weight: 600; white-space: nowrap; }
+    button.secondary { background-color: #f0f0f0; color: #333; border: 1px solid #ccc; }
+    button.secondary:hover { background-color: #e0e0e0; }
+    button:hover { background-color: var(--primary-hover-color); }
+    .section { background: var(--card-background-color); padding: 15px; margin-bottom: 20px; border-radius: var(--border-radius); box-shadow: var(--box-shadow); }
+    .liste { margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; }
+    .liste > div { padding: 10px 0; border-bottom: 1px solid #f9f9f9; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .liste > div:last-child { border-bottom: none; }
+    .delete { color: #ff3b30; cursor: pointer; margin-left: 10px; font-weight: 600; font-size: var(--font-size-small); }
+    .delete:hover { text-decoration: underline; }
+    .flex { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+    .flex-buttons { display: flex; gap: 5px; align-items: center; }
+    .color-button { border: 1px solid #ccc; border-radius: 5px; padding: 2px 5px; font-size: 16px; cursor: pointer; transition: all 0.2s ease; background:#fff; }
+    .color-button:hover { transform: scale(1.1); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .small-button { padding: 4px 8px; font-size: 12px; border-radius: 8px; background:#fff; color:#333; border:1px solid #ccc; }
+    .shop-admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .action-buttons { display: flex; gap: 5px; flex-grow: 1; justify-content: flex-end; }
+    .action-button { padding: 8px 12px; border-radius: 8px; border: none; color: white; font-weight: 600; cursor: pointer; transition: background-color 0.2s; white-space: nowrap; }
+    .action-button.execute { background-color: var(--primary-color); }
+    .action-button.execute:hover { background-color: var(--primary-hover-color); }
+    .action-button.white { background-color: #fff; color: #333; border: 1px solid #ccc; }
+    .action-button.white:hover { background-color: #f0f0f0; }
+    .action-button.green { background-color: #28a745; }
+    .action-button.green:hover { background-color: #218838; }
   </style>
+
   <script type="module">
+    /* Firebase Imports */
     import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
     import { getDatabase as getDB1, ref as ref1, set, onValue, remove, get, push } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
     import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
     import { getDatabase as getDB2, ref as ref2, get as get2, update as update2, onValue as onVal2, remove as remove2, set as set2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
-    // Import für die dritte Firebase-App (Shop-Bestellungen)
     import { initializeApp as initApp3 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
     import { getDatabase as getDB3, ref as ref3, onValue as onVal3, update as update3, remove as remove3, get as get3 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
 
-
+    /* Apps */
     const app1 = initApp1({
       apiKey: "AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",
       authDomain: "gesamt-dae4e.firebaseapp.com",
@@ -294,14 +79,13 @@
     }, "app2");
     const db2 = getDB2(app2);
 
-    // Neue Firebase-Konfiguration für den Shop
     const app3 = initApp3({
-      apiKey: "AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg", // Gleiche API-Key wie App2
+      apiKey: "AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg",
       databaseURL: "https://punkte-45c20-default-rtdb.europe-west1.firebasedatabase.app"
     }, "app3");
     const db3 = getDB3(app3);
 
-
+    /* Farben */
     const farben = ["⚪", "🔴", "🟡", "🟢", "⚫", "🟣"];
     function farbeToColor(f) {
       if (f === "🔴") return "red";
@@ -309,9 +93,88 @@
       if (f === "🟢") return "green";
       if (f === "⚫") return "black";
       if (f === "🟣") return "purple";
-      return "#333"; // Farbe für "⚪" und Standardfall
+      return "#333";
     }
 
+    /* Ziel-Progress-Logik */
+    function clamp01(x){ return Math.max(0, Math.min(100, x|0)); }
+    function colorToDelta(f){
+      if (f==="🟢") return 5;
+      if (f==="🟣") return 10;
+      if (f==="🔴") return -5;
+      if (f==="⚫") return -10;
+      return 0; // 🟡, ⚪
+    }
+
+    async function rewardMilestonesAndMaybeComplete(name, kid, newProgress){
+      const activeGoalIndex = kid.activeGoalIndex ?? 0;
+      let saldo = kid.punkte || 0;
+      let last = kid.lastRewardedMilestone ?? 0;
+
+      const from = Math.floor(Math.max(last,0)/10);
+      const to   = Math.floor(newProgress/10);
+      if (to > from){
+        for(let m=from+1; m<=to && m<10; m++){
+          saldo += 1; // +1 je 10%-Schritt
+          last = m*10;
+        }
+      }
+
+      if (newProgress >= 100){
+        if (last < 100){ saldo += 1; last = 100; } // 100%-Schritt
+        saldo += 5; // Abschlussbonus
+        await update2(ref2(db2, `kinder/${name}`), {
+          punkte: saldo,
+          activeGoalIndex: activeGoalIndex + 1,
+          progress: 0,
+          lastRewardedMilestone: 0,
+          farbe: "⚪"
+        });
+      } else {
+        await update2(ref2(db2, `kinder/${name}`), {
+          punkte: saldo,
+          lastRewardedMilestone: last,
+          progress: newProgress,
+          farbe: "⚪"
+        });
+      }
+    }
+
+    async function applyColorProgress(name, kid){
+      const delta = colorToDelta(kid.farbe);
+      const progress = kid.progress ?? 0;
+      const newP = clamp01(progress + delta);
+      await rewardMilestonesAndMaybeComplete(name, kid, newP);
+    }
+
+    /* Ziele laden für "Z"-Button (Cache) */
+    let GOALS_CACHE = null;
+    async function ladeZieleMeta(){
+      if (GOALS_CACHE) return GOALS_CACHE;
+      const snap = await get2(ref2(db2, "ziele/meta"));
+      GOALS_CACHE = (snap.exists() && Array.isArray(snap.val())) ? snap.val() : [];
+      return GOALS_CACHE;
+    }
+
+    window.zeigeAktivesZiel = async function(name){
+      try {
+        const [kidSnap, goals] = await Promise.all([
+          get2(ref2(db2, `kinder/${name}`)),
+          ladeZieleMeta()
+        ]);
+        if (!kidSnap.exists()) { alert("Kein Datensatz gefunden."); return; }
+        const v = kidSnap.val() || {};
+        if (v.farbe === undefined) { alert("Dieses Konto hat keine Farbe und kein Ziel."); return; }
+        const idx = Math.max(0, Math.min((goals.length||1)-1, (v.activeGoalIndex ?? 0)|0));
+        const titel = goals[idx] || "—";
+        alert(`Aktives Ziel für ${name}\n\nZiel ${idx+1}: ${titel}`);
+      } catch(e){
+        console.error(e);
+        alert("Fehler beim Laden des Ziels.");
+      }
+    };
+
+    /* Init */
     window.addEventListener("DOMContentLoaded", () => {
       ladeShopBestellungen();
       ladeMausdollarAnfragen();
@@ -321,36 +184,30 @@
       ladeSpielzeugeHinzufuegen();
       ladeHistorie();
       ladeKontoLoeschen();
-      
-      // Event Listener für die neuen Buttons
+
       document.getElementById('durchfuehren-btn').onclick = durchfuehren;
       document.getElementById('alle-gruen-btn').onclick = alleAufGruen;
       document.getElementById('alle-weiss-btn').onclick = alleAufWeiss;
     });
 
+    /* Durchführen: Farben → Ziel-Prozente */
     async function durchfuehren() {
-      const normaleKonten = [];
       const snapshot = await get2(ref2(db2, "kinder"));
       snapshot.forEach(childSnap => {
-        const data = childSnap.val();
-        if (data.farbe !== undefined) {
-          normaleKonten.push({ name: childSnap.key, punkte: data.punkte || 0, farbe: data.farbe });
-        }
-      });
-      
-      normaleKonten.forEach(({ name, farbe, punkte }) => {
-        let delta = 0;
-        if (farbe === "🟢") delta = 1;
-        else if (farbe === "🔴") delta = -1;
-        else if (farbe === "⚫") delta = -2;
-        else if (farbe === "🟣") delta = 2;
-        update2(ref2(db2, `kinder/${name}`), {
-          punkte: punkte + delta,
-          farbe: "⚪"
-        });
+        const name = childSnap.key;
+        const kid = childSnap.val() || {};
+        if (kid.farbe === undefined) return; // Auslandskonto überspringen
+        applyColorProgress(name, {
+          punkte: kid.punkte || 0,
+          farbe: kid.farbe,
+          activeGoalIndex: kid.activeGoalIndex ?? 0,
+          progress: kid.progress ?? 0,
+          lastRewardedMilestone: kid.lastRewardedMilestone ?? 0
+        }).catch(console.error);
       });
     }
 
+    /* Sammel-Farben */
     async function alleAufGruen() {
       const snapshot = await get2(ref2(db2, "kinder"));
       snapshot.forEach(childSnap => {
@@ -361,7 +218,6 @@
         }
       });
     }
-
     async function alleAufWeiss() {
       const snapshot = await get2(ref2(db2, "kinder"));
       snapshot.forEach(childSnap => {
@@ -373,7 +229,7 @@
       });
     }
 
-
+    /* Shop-Bestellungen */
     function ladeShopBestellungen() {
       const pendingOrdersList = document.getElementById('pending-orders-list');
       const ordersRef = ref3(db3, 'bestellungen');
@@ -416,7 +272,6 @@
             const userRef = ref3(db3, `${userType}/${userName}`);
             const userSnap = await get3(userRef);
             const user = userSnap.val();
-
             if (user) {
                 const newPoints = (user.punkte || 0) + price;
                 update3(ref3(db3, `${userType}/${userName}`), { punkte: newPoints });
@@ -424,9 +279,10 @@
             update3(ref3(db3, `bestellungen/${orderId}`), { status: 'Kauf abgelehnt' });
             alert(`Kauf von ${userName} abgelehnt. ${price} Mausdollar wurden erstattet.`);
         }
-    });
-  }
+      });
+    }
 
+    /* Mausdollar Anfragen */
     function ladeMausdollarAnfragen() {
       const container = document.getElementById("mausdollar-anfragen-liste");
       onValue(ref1(db1, "anfragen"), (snapshot) => {
@@ -447,7 +303,6 @@
         });
       });
     }
-
     window.bestaetigeAnfrage = async function(id, name, betrag) {
       const kindRef = ref2(db2, `kinder/${name}`);
       const kindSnap = await get2(kindRef);
@@ -455,11 +310,9 @@
       await update2(kindRef, { punkte: val.punkte + betrag });
       remove(ref1(db1, "anfragen/" + id));
     };
-    
-    window.lehneAnfrage = function(id) {
-      remove(ref1(db1, "anfragen/" + id));
-    };
+    window.lehneAnfrage = function(id) { remove(ref1(db1, "anfragen/" + id)); };
 
+    /* Ausleihen */
     function ladeAktuelleAusleihen() {
       const ausleihenListe = document.getElementById("ausleihen-liste");
       onValue(ref1(db1, "ausleihen"), (snapshot) => {
@@ -478,59 +331,55 @@
         });
       });
     }
-
     window.zurueckgeben = async function(name) {
       const ausleiheRef = ref1(db1, "ausleihen/" + name);
       const snapshot = await get(ausleiheRef);
       if (!snapshot.exists()) return;
       const daten = snapshot.val();
       const historieRef = ref1(db1, "historie/" + name);
-      const neueHistorie = {
-        spielzeug: daten.spielzeug,
-        nummer: daten.nummer,
-        ausgeliehen: daten.zeit,
-        zurückgegeben: new Date().toISOString()
-      };
+      const neueHistorie = { spielzeug: daten.spielzeug, nummer: daten.nummer, ausgeliehen: daten.zeit, zurückgegeben: new Date().toISOString() };
       const neueRef = push(historieRef);
       await set(neueRef, neueHistorie);
       await remove(ausleiheRef);
     };
 
+    /* Kontenliste mit Z-Button und Farbauswahl */
     function ladeKinderKonten() {
       const bereich = document.getElementById("mauscity-konten-liste");
       const eigeneKinder = new Set();
       onValue(ref1(db1, "kinder"), (snapshot) => {
         eigeneKinder.clear();
-        snapshot.forEach(childSnap => {
-          eigeneKinder.add(childSnap.key);
-        });
+        snapshot.forEach(childSnap => { eigeneKinder.add(childSnap.key); });
         onVal2(ref2(db2, "kinder"), (snapshot2) => {
           bereich.innerHTML = "";
           snapshot2.forEach(childSnap2 => {
             const name = childSnap2.key;
             const data = childSnap2.val();
             if (!eigeneKinder.has(name)) return;
+
             const zeile = document.createElement("div");
             zeile.className = "flex";
-            
+
             const kontoInfo = document.createElement("div");
-            kontoInfo.innerHTML = `<span style="color: ${farbeToColor(data.farbe)}; font-weight: bold;">${name}</span> (<span style="color: ${farbeToColor(data.farbe)}; font-weight: bold;">${data.punkte}</span>)`;
-            
+            kontoInfo.innerHTML =
+              `<span style="color:${farbeToColor(data.farbe)};font-weight:bold;">${name}</span>
+               (<span style="color:${farbeToColor(data.farbe)};font-weight:bold;">${data.punkte || 0}</span>)
+               <button class="small-button" title="Aktives Ziel zeigen" onclick="zeigeAktivesZiel('${name}')">Z</button>`;
+
             const punkteButtons = document.createElement("div");
             punkteButtons.className = "flex-buttons";
             const plus = document.createElement("button");
             plus.textContent = "+";
-            plus.onclick = () => update2(ref2(db2, `kinder/${name}`), { punkte: data.punkte + 1 });
+            plus.onclick = () => update2(ref2(db2, `kinder/${name}`), { punkte: (data.punkte || 0) + 1 });
             const minus = document.createElement("button");
             minus.textContent = "–";
-            minus.onclick = () => update2(ref2(db2, `kinder/${name}`), { punkte: data.punkte - 1 });
+            minus.onclick = () => update2(ref2(db2, `kinder/${name}`), { punkte: (data.punkte || 0) - 1 });
             punkteButtons.appendChild(plus);
             punkteButtons.appendChild(minus);
 
             zeile.appendChild(kontoInfo);
             zeile.appendChild(punkteButtons);
 
-            // NEUE FUNKTIONALITÄT: Farbauswahl nur für Kinder ohne '~'
             if (!name.includes("~")) {
               const farbButtons = document.createElement("div");
               farbButtons.className = "flex-buttons";
@@ -538,18 +387,19 @@
                 const btn = document.createElement("button");
                 btn.textContent = f;
                 btn.className = "color-button";
+                btn.title = "Farbe setzen";
                 btn.onclick = () => update2(ref2(db2, `kinder/${name}`), { farbe: f });
                 farbButtons.appendChild(btn);
               });
               zeile.appendChild(farbButtons);
             }
-            
             bereich.appendChild(zeile);
           });
         });
       });
     }
 
+    /* Kinder hinzufügen */
     function ladeKinderHinzufuegen() {
       const addKindBtn = document.getElementById("add-kind-btn");
       addKindBtn.onclick = () => {
@@ -589,13 +439,13 @@
         });
       });
     }
-
     window.loescheKind = function(name) {
       if (confirm(`Soll ${name} wirklich gelöscht werden?`)) {
         remove(ref1(db1, "kinder/" + name));
       }
     };
 
+    /* Spielzeuge */
     function ladeSpielzeugeHinzufuegen() {
       const addSpielzeugBtn = document.getElementById("add-spielzeug-btn");
       addSpielzeugBtn.onclick = () => {
@@ -619,13 +469,13 @@
         });
       });
     }
-
     window.loescheSpielzeug = function(nummer) {
       if (confirm(`Soll Spielzeug ${nummer} wirklich gelöscht werden?`)) {
         remove(ref1(db1, "spielzeuge/" + nummer));
       }
     };
-    
+
+    /* Historie */
     function ladeHistorie() {
       const historieListe = document.getElementById("historie-liste");
       onValue(ref1(db1, "historie"), async (snapshot) => {
@@ -668,13 +518,13 @@
         }
       });
     }
-
     window.loescheHistorie = function(name, key) {
       if (confirm(`Eintrag von ${name} wirklich löschen?`)) {
         remove(ref1(db1, `historie/${name}/${key}`));
       }
     };
 
+    /* Konten löschen */
     function ladeKontoLoeschen() {
       const liste = document.getElementById("konto-loeschen-liste");
       onVal2(ref2(db2, "kinder"), snapshot => {
@@ -687,7 +537,6 @@
         });
       });
     }
-
     window.loescheKonto = function(name) {
       if (confirm(`Konto von ${name} wirklich löschen?`)) {
         remove2(ref2(db2, "kinder/" + name)).catch(err => console.error("Fehler MausCity:", err));
@@ -720,12 +569,12 @@
   </div>
 
   <div class="section">
-    <div class="mauscity-header">
+    <div class="shop-admin-header">
       <h2>MausCity Konten</h2>
       <div class="action-buttons">
-        <button id="durchfuehren-btn" class="action-button execute">✔️</button>
-        <button id="alle-gruen-btn" class="action-button green">Alle</button>
-        <button id="alle-weiss-btn" class="action-button white">Alle</button>
+        <button id="durchfuehren-btn" class="action-button execute" title="Farben → Ziel-Fortschritt anwenden">✔️</button>
+        <button id="alle-gruen-btn" class="action-button green" title="Alle auf Grün setzen">Alle</button>
+        <button id="alle-weiss-btn" class="action-button white" title="Alle auf Weiß setzen">Alle</button>
       </div>
     </div>
     <div class="liste" id="mauscity-konten-liste"></div>
