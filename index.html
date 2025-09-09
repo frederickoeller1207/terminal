@@ -232,16 +232,25 @@
       renderKinderListe();  
       suchInput.addEventListener("keyup", (e) => renderKinderListe(e.target.value));  
     }  
+  
     function showKontoDetails(konto) {  
       openView(konto.name);  
       const detailsContainer = document.createElement("div");  
       detailsContainer.id = "konto-details";  
   
-      if (konto.farbe) {  
-        const farbInfo = document.createElement("p");  
-        farbInfo.textContent = "Deine Farbe für heute ist:";  
-        detailsContainer.appendChild(farbInfo);  
+      // NEU: Kontostand ganz oben  
+      const kontostand = Number(konto.punkte ?? konto.kontostand ?? 0);  
+      const saldo = document.createElement("p");  
+      saldo.style.fontWeight = "600";  
+      saldo.textContent = `Du hast ${kontostand} M$ auf deinem Konto`;  
+      detailsContainer.appendChild(saldo);  
   
+      // Farbe + Zielfortschritt  
+      const farbLabel = document.createElement("p");  
+      farbLabel.textContent = "Deine Farbe für heute ist:";  
+      detailsContainer.appendChild(farbLabel);  
+  
+      if (konto.farbe) {  
         const farbKreis = document.createElement("div");  
         farbKreis.className = "color-circle";  
         farbKreis.style.backgroundColor = farbeToColor(konto.farbe);  
@@ -251,10 +260,15 @@
         bedeutung.textContent = getFarbBedeutung(konto.farbe);  
         detailsContainer.appendChild(bedeutung);  
       } else {  
-        const bedeutung = document.createElement("p");  
-        bedeutung.textContent = "Dieses Konto hat keine Farbe.";  
-        detailsContainer.appendChild(bedeutung);  
+        const keineFarbe = document.createElement("p");  
+        keineFarbe.textContent = "Dieses Konto hat keine Farbe.";  
+        detailsContainer.appendChild(keineFarbe);  
+  
+        const unver = document.createElement("p");  
+        unver.textContent = "Dein Ziel-Fortschritt bleibt heute unverändert.";  
+        detailsContainer.appendChild(unver);  
       }  
+  
       view.appendChild(detailsContainer);  
     }  
   
@@ -377,4 +391,4 @@
   
     resetView();  
   </script>  </body>  
-</html>  
+</html>
