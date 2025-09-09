@@ -1,293 +1,380 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8" />
-  <title>Mäusegruppe Terminal</title>
-  <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600&display=swap" rel="stylesheet">
-  <style>
-    body{font-family:'SF Pro Display',sans-serif;background:#f9f9fb;padding:16px;color:#1c1c1e;margin:0;display:flex;flex-direction:column;justify-content:center;min-height:100vh}
-    h1{margin-bottom:30px;font-size:26px;font-weight:600;text-align:center}
-    #home-btn{display:flex;justify-content:center;font-size:18px;color:#007aff;cursor:pointer;margin-bottom:20px}
-    .menu{display:flex;flex-direction:column;align-items:center;gap:16px;margin-bottom:30px}
-    #view{display:flex;flex-direction:column;align-items:center;gap:16px;width:100%}
-    button{background:#fff;border:1px solid #ccc;border-radius:12px;padding:18px 24px;font-size:20px;font-weight:600;color:#000;box-shadow:0 2px 5px rgba(0,0,0,.05);cursor:pointer;width:95%;max-width:340px;text-align:center;transition:all .2s ease,transform .1s ease}
-    button:hover{background:#f0f0f5}
-    button:active{background:#e0e0e5;transform:scale(.97);box-shadow:0 1px 3px rgba(0,0,0,.1) inset}
-    input{width:95%;max-width:340px;font-size:16px;padding:12px;margin-top:12px;border:1px solid #ccc;border-radius:10px}
-    .card{width:95%;max-width:480px;background:#fff;border:1px solid #ddd;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.05);padding:16px}
-    .subtle{color:#6b7280;font-size:14px;margin:0 0 8px 0;text-transform:uppercase;letter-spacing:.04em}
-    .big-line{font-size:22px;font-weight:600;margin:4px 0 0 0;text-align:center}
-    .section-title{font-size:18px;font-weight:600;margin:0 0 8px 0;text-align:left}
-    .row{display:flex;justify-content:space-between;align-items:center;gap:12px}
-    .chip{padding:6px 10px;border-radius:999px;background:#eef5ff;color:#0077ff;font-weight:600;font-size:14px}
-    .goal-title{font-size:22px;font-weight:700;margin:4px 0 10px 0}
-    .progress{width:100%;height:16px;background:#eef2ff;border-radius:999px;overflow:hidden}
-    .progress > div{height:100%;width:0%;background:#cfe0ff;transition:width .3s ease}
-    .goal-buttons{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
-    .goal-buttons button{width:auto;padding:10px 14px;font-size:16px}
-    .color-circle{width:24px;height:24px;border-radius:50%;border:1px solid #ccc;margin-top:5px}
-    .ziel-details{display:flex;flex-direction:column;align-items:center;gap:12px;font-size:18px;text-align:center}
-    .list{margin-top:8px}
-    .list p{margin:4px 0}
-  </style>
-</head>
-<body>
-  <h1 id="title">Mäusegruppe Terminal</h1>
-  <div id="menu" class="menu">
-    <button id="btn-konto-ziel">Konto / Ziel einsehen</button>
-    <button id="btn-ausleihe">Spielzeug Ausleihe</button>
-    <button id="btn-checkout">Checkout</button>
-    <button id="btn-mausdollar">Mausdollar hinzufügen</button>
-    <button onclick="window.location.href='https://frederickoeller1207.github.io/Mousecity-Store/'">Mousecity Store</button>
-  </div>
-  <div id="home-btn" style="display:none;">🏠 Zurück</div>
-  <div id="view"></div>
-
-  <script type="module">
-    import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-    import { getDatabase as getDB1, ref as ref1, get as get1, onValue as onVal1, set as set1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
-    import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-    import { getDatabase as getDB2, ref as ref2, get as get2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
-
-    const config1 = {
-      apiKey:"AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",
-      authDomain:"gesamt-dae4e.firebaseapp.com",
-      databaseURL:"https://gesamt-dae4e-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId:"gesamt-dae4e",
-      storageBucket:"gesamt-dae4e.appspot.com",
-      messagingSenderId:"844023612743",
-      appId:"1:844023612743:web:0821aa894541f89a7df862"
-    };
-    const config2 = {
-      apiKey:"AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg",
-      authDomain:"punkte-45c20.firebaseapp.com",
-      databaseURL:"https://punkte-45c20-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId:"punkte-45c20",
-      storageBucket:"punkte-45c20.appspot.com",
-      messagingSenderId:"931713539549",
-      appId:"1:931713539549:web:e348bf38369639f1906a34"
-    };
-
-    const app1 = initApp1(config1,"app1");
-    const db1  = getDB1(app1);
-    const app2 = initApp2(config2,"app2");
-    const db2  = getDB2(app2);
-
-    const view   = document.getElementById("view");
-    const menu   = document.getElementById("menu");
-    const homeBtn= document.getElementById("home-btn");
-
-    const resetView = () => { view.innerHTML=""; menu.style.display="flex"; homeBtn.style.display="none"; document.getElementById("title").textContent="Mäusegruppe Terminal"; };
-    const openView  = (title) => { view.innerHTML=""; menu.style.display="none"; homeBtn.style.display="flex"; document.getElementById("title").textContent=title; };
-    homeBtn.onclick = resetView;
-
-    function eingabeMitZahl(title, cb){ openView(title); const i=document.createElement("input"); i.type="number"; i.inputMode="numeric"; i.autofocus=true;
-      const b=document.createElement("button"); b.textContent="OK"; b.onclick=()=>{const v=i.value.trim(); if(v) cb(v);}; view.appendChild(i); view.appendChild(b); i.focus(); }
-
-    async function checkSicherheitscode(name, cb){
-      const snap = await get1(ref1(db1,`kinder/${name}`));
-      const code = snap.exists()? snap.val().code : null;
-      if(!code) return alert("Kein Sicherheitscode hinterlegt.");
-      eingabeMitZahl(`Bitte Sicherheitscode für ${name} eingeben:`, (x)=>{ if(x===code) cb(); else alert("Falscher Code."); });
-    }
-
-    function farbeToColor(f){ if(f==="🔴")return"red"; if(f==="🟡")return"orange"; if(f==="🟢")return"green"; if(f==="⚫")return"black"; if(f==="🟣")return"purple"; if(f==="🔵")return"blue"; return"#ccc";}
-    function getFarbBedeutung(f){ if(f==="🟢")return"Du bist deinem Ziel heute 5 % näher."; if(f==="🟣")return"Du bist deinem Ziel heute 10 % näher."; if(f==="🔴")return"Du entfernst dich heute um 5 % von deinem Ziel."; if(f==="⚫")return"Du entfernst dich heute um 10 % von deinem Ziel."; if(f==="🟡"||f==="⚪"||!f)return"Dein Ziel-Fortschritt bleibt heute unverändert."; return"";}
-    function formatMausdollar(v){ const n=Number(v||0); return n.toLocaleString("de-DE"); }
-
-    // Konto / Ziel einsehen
-    document.getElementById("btn-konto-ziel").onclick = showKontoZiel;
-
-    async function showKontoZiel(){
-      openView("Konto / Ziel einsehen");
-      const q=document.createElement("input"); q.placeholder="Suche nach Namen..."; q.autofocus=true; view.appendChild(q);
-      const list=document.createElement("div"); list.id="kinder-liste"; list.style.marginTop="20px"; view.appendChild(list);
-
-      const snap=await get2(ref2(db2,"kinder"));
-      const konten=[];
-      if(snap.exists()){ snap.forEach(s=>{ konten.push({ name:s.key, ...s.val() }); }); }
-
-      function render(f=""){
-        list.innerHTML="";
-        konten.filter(k=>k.name.toLowerCase().includes(f.toLowerCase())).forEach(k=>{
-          const b=document.createElement("button"); b.textContent=k.name; b.onclick=()=>showKontoZielDetails(k); list.appendChild(b);
-        });
-      }
-      render();
-      q.addEventListener("keyup",e=>render(e.target.value));
-    }
-
-    async function fetchZiele(name){
-      // Erwartete Struktur in db2:
-      // ziele/{name}/aktuelles { text:string, fortschritt:number }
-      // ziele/{name}/vorherige [string]  | als Objekt {id:text}
-      // ziele/{name}/zukuenftige [string] | als Objekt {id:text}
-      const p = ref2(db2,`ziele/${name}`);
-      const s = await get2(p);
-      if(!s.exists()) return { aktuelles:null, vorherige:[], zukuenftige:[] };
-      const v = s.val()||{};
-      const toArr = (x)=> Array.isArray(x)? x : x? Object.values(x) : [];
-      return {
-        aktuelles: v.aktuelles || null,
-        vorherige: toArr(v.vorherige),
-        zukuenftige: toArr(v.zukuenftige)
-      };
-    }
-
-    function zielHeaderRow(name){
-      const r=document.createElement("div"); r.className="row";
-      const back=document.createElement("span"); back.textContent="Aktuelles Ziel"; back.className="subtle";
-      const chip=document.createElement("span"); chip.textContent="Ziel 1"; chip.className="chip";
-      r.appendChild(back); r.appendChild(chip);
-      return r;
-    }
-
-    async function showKontoZielDetails(konto){
-      openView(konto.name);
-
-      const hatFarbe = !!konto.farbe;
-      const hatZielFeld = Object.prototype.hasOwnProperty.call(konto,"ziel") && konto.ziel!==null && konto.ziel!==undefined;
-
-      // Ziele laden
-      const zielData = await fetchZiele(konto.name);
-      const hatAktuellesZiel = !!(zielData.aktuelles && zielData.aktuelles.text);
-
-      // Fall: kein Ziel und keine Farbe
-      if(!hatFarbe && !hatZielFeld && !hatAktuellesZiel){
-        const card=document.createElement("div"); card.className="card";
-        card.innerHTML = `
-          <p class="big-line">Du hast ein Kontostand von ${formatMausdollar(konto.punkte)} M$.</p>
-          <p>Dieses Konto hat kein Ziel und keine Farbe, da du nicht in der Mäusegruppe bist.</p>
-        `;
-        view.appendChild(card);
-        return;
-      }
-
-      // Kontostand
-      const saldoCard=document.createElement("div"); saldoCard.className="card";
-      saldoCard.innerHTML=`<p class="subtle">Kontostand</p><p class="big-line">Du hast ${formatMausdollar(konto.punkte)} M$ auf deinem Konto</p>`;
-      view.appendChild(saldoCard);
-
-      // Ziel-Bereich wie im Ziel-Screenshot
-      const zielBox=document.createElement("div"); zielBox.className="card";
-      zielBox.appendChild(zielHeaderRow(konto.name));
-
-      const title=document.createElement("div"); title.className="goal-title";
-      title.textContent = hatAktuellesZiel ? zielData.aktuelles.text : "Kein Ziel hinterlegt.";
-      zielBox.appendChild(title);
-
-      const progressWrap=document.createElement("div"); progressWrap.className="progress";
-      const progressInner=document.createElement("div"); progressInner.style.width = `${Math.max(0, Math.min(100, Number((zielData.aktuelles&&zielData.aktuelles.fortschritt)|| (hatZielFeld? Number(konto.ziel):0)) ))}%`;
-      progressWrap.appendChild(progressInner);
-      zielBox.appendChild(progressWrap);
-
-      const pText=document.createElement("div"); pText.className="subtle";
-      const pct = Math.max(0, Math.min(100, Number((zielData.aktuelles&&zielData.aktuelles.fortschritt)|| (hatZielFeld? Number(konto.ziel):0)) ));
-      pText.textContent = `Fortschritt: ${isFinite(pct)? pct:0}%`;
-      zielBox.appendChild(pText);
-
-      // Ziel-Listen
-      const btnRow=document.createElement("div"); btnRow.className="goal-buttons";
-      const bPrev=document.createElement("button"); bPrev.textContent="Vorherige Ziele";
-      const bNext=document.createElement("button"); bNext.textContent="Zukünftige Ziele";
-      btnRow.appendChild(bPrev); btnRow.appendChild(bNext);
-      zielBox.appendChild(btnRow);
-
-      const listPrev=document.createElement("div"); listPrev.className="list";
-      const listNext=document.createElement("div"); listNext.className="list";
-
-      bPrev.onclick=()=>{ listPrev.innerHTML = zielData.vorherige.length? zielData.vorherige.map(t=>`<p>• ${t}</p>`).join("") : "<p>Keine Einträge.</p>"; listNext.innerHTML=""; };
-      bNext.onclick=()=>{ listNext.innerHTML = zielData.zukuenftige.length? zielData.zukuenftige.map(t=>`<p>• ${t}</p>`).join("") : "<p>Keine Einträge.</p>"; listPrev.innerHTML=""; };
-
-      zielBox.appendChild(listPrev);
-      zielBox.appendChild(listNext);
-      view.appendChild(zielBox);
-
-      // Farbe unter dem Ziel
-      const farbCard=document.createElement("div"); farbCard.className="card";
-      const zielHeader=document.createElement("div"); zielHeader.className="section-title"; zielHeader.textContent="Ziel / Farbe";
-      farbCard.appendChild(zielHeader);
-
-      const zc=document.createElement("div"); zc.className="ziel-details";
-      const farbInfo=document.createElement("p"); farbInfo.textContent="Deine Farbe für heute ist:";
-      const kreis=document.createElement("div"); kreis.className="color-circle"; kreis.style.backgroundColor=farbeToColor(konto.farbe||"⚪");
-      const bedeutung=document.createElement("p"); bedeutung.textContent=getFarbBedeutung(konto.farbe);
-      zc.appendChild(farbInfo); zc.appendChild(kreis); zc.appendChild(bedeutung);
-      farbCard.appendChild(zc);
-      view.appendChild(farbCard);
-    }
-
-    // Ausleihe
-    document.getElementById("btn-ausleihe").onclick=()=>{
-      openView("Spielzeug Ausleihe");
-      onVal1(ref1(db1,"kinder"),snap=>{
-        snap.forEach(s=>{
-          const name=s.key;
-          const b=document.createElement("button"); b.textContent=name;
-          b.onclick=()=>checkSicherheitscode(name,()=>ausleihen(name));
-          view.appendChild(b);
-        });
-      });
-    };
-    function frageSpielzeugnummer(name,cb){ eingabeMitZahl(`${name}, gib bitte die Spielzeugnummer ein:`,cb); }
-    async function ausleihen(name){
-      const a=await get1(ref1(db1,`ausleihen/${name}`));
-      if(a.exists() && a.val().bestätigt===false){ alert("Bitte gib das ausgeliehene Spielzeug zurück."); return; }
-      frageSpielzeugnummer(name, async (nr)=>{
-        const s=await get1(ref1(db1,"spielzeuge")); const sp=s.exists()? s.val():{};
-        if(sp[nr]){
-          await set1(ref1(db1,`ausleihen/${name}`),{spielzeug:sp[nr],nummer:nr,zeit:new Date().toISOString(),bestätigt:false});
-          const p=document.createElement("div"); p.textContent=`${sp[nr]} erfolgreich ausgeliehen.`; p.style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;color:#000;padding:20px 30px;border-radius:12px;font-size:18px;box-shadow:0 4px 12px rgba(0,0,0,.2);z-index:9999;text-align:center;"; document.body.appendChild(p);
-          setTimeout(()=>{p.remove();resetView();},3000);
-        }else{ alert("Ungültige Nummer."); }
-      });
-    }
-
-    // Checkout
-    document.getElementById("btn-checkout").onclick=()=>{
-      openView("Checkout");
-      onVal1(ref1(db1,"kinder"),snap=>{
-        snap.forEach(s=>{
-          const name=s.key; const link=s.val().link;
-          const b=document.createElement("button"); b.textContent=name;
-          b.onclick=()=>checkSicherheitscode(name,()=>{ if(link) window.location.href=link; else alert("Kein Link hinterlegt."); });
-          view.appendChild(b);
-        });
-      });
-    };
-
-    // Mausdollar hinzufügen
-    document.getElementById("btn-mausdollar").onclick=()=>{
-      openView("Mausdollar hinzufügen");
-      const kinder=[]; onVal1(ref1(db1,"kinder"),snap=>{
-        snap.forEach(s=>{kinder.push(s.key);});
-        kinder.forEach(name=>{
-          const b=document.createElement("button"); b.textContent=name;
-          b.onclick=()=>checkSicherheitscode(name,()=>waehleBetrag(name));
-          view.appendChild(b);
-        });
-      });
-    };
-    function waehleBetrag(name){
-      openView(`${name}: Wähle Betrag`);
-      for(let i=1;i<=5;i++){ const b=document.createElement("button"); b.textContent=`${i}`; b.onclick=()=>waehleGrund(name,i); view.appendChild(b); }
-    }
-    function waehleGrund(name,betrag){
-      openView(`${name}: Grund wählen`);
-      const gruende=["Quiz","Kurze Hilfe","Malwettbewerb","Tischdienst"];
-      gruende.forEach(g=>{ const b=document.createElement("button"); b.textContent=g; b.onclick=()=>sendeAnfrage(name,betrag,g); view.appendChild(b); });
-      const e=document.createElement("input"); e.placeholder="Eigener Grund"; e.type="text"; view.appendChild(e);
-      const a=document.createElement("button"); a.textContent="Absenden"; a.onclick=()=>{ const g=e.value.trim(); if(g) sendeAnfrage(name,betrag,g); }; view.appendChild(a);
-    }
-    function sendeAnfrage(name,betrag,grund){
-      const now=new Date(); const tag=String(now.getDate()).padStart(2,'0'); const mon=String(now.getMonth()+1).padStart(2,'0'); const h=String(now.getHours()).padStart(2,'0'); const m=String(now.getMinutes()).padStart(2,'0');
-      const zeit=`${tag}.${mon} – ${h}:${m}`;
-      const ref=ref1(db1,`anfragen/${Date.now()}_${name}`);
-      set1(ref,{name,betrag,grund,zeit});
-      view.innerHTML=`<h2>Anfrage gesendet! (${betrag} Mausdollar für: ${grund})</h2>`;
-    }
-
-    resetView();
-  </script>
-</body>
-</html>
+<!DOCTYPE html>  <html lang="de">  
+<head>  
+  <meta charset="UTF-8" />  
+  <title>Mäusegruppe Terminal</title>  
+  <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600&display=swap" rel="stylesheet">  
+  <style>  
+    body {  
+      font-family: 'SF Pro Display', sans-serif;  
+      background-color: #f9f9fb;  
+      padding: 16px;  
+      color: #1c1c1e;  
+      margin: 0;  
+      display: flex;  
+      flex-direction: column;  
+      justify-content: center;  
+      min-height: 100vh;  
+    }  
+    h1 {  
+      margin-bottom: 30px;  
+      font-size: 26px;  
+      font-weight: 600;  
+      text-align: center;  
+    }  
+    #home-btn {  
+      display: flex;  
+      justify-content: center;  
+      font-size: 18px;  
+      color: #007aff;  
+      cursor: pointer;  
+      margin-bottom: 20px;  
+    }  
+    .menu {  
+      display: flex;  
+      flex-direction: column;  
+      align-items: center;  
+      gap: 16px;  
+      margin-bottom: 30px;  
+    }  
+    #view {  
+      display: flex;  
+      flex-direction: column;  
+      align-items: center;  
+      gap: 16px;  
+    }  
+    button {  
+      background-color: #ffffff;  
+      border: 1px solid #ccc;  
+      border-radius: 12px;  
+      padding: 18px 24px;  
+      font-size: 20px;  
+      font-weight: 600;  
+      color: #000;  
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);  
+      cursor: pointer;  
+      width: 95%;  
+      max-width: 340px;  
+      text-align: center;  
+      transition: all 0.2s ease, transform 0.1s ease;  
+    }  
+    button:hover { background-color: #f0f0f5; }  
+    button:active {  
+      background-color: #e0e0e5;  
+      transform: scale(0.97);  
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1) inset;  
+    }  
+    input {  
+      width: 95%;  
+      max-width: 340px;  
+      font-size: 16px;  
+      padding: 12px;  
+      margin-top: 12px;  
+      border: 1px solid #ccc;  
+      border-radius: 10px;  
+    }  
+    #konto-details {  
+      display: flex;  
+      flex-direction: column;  
+      align-items: center;  
+      gap: 12px;  
+      font-size: 18px;  
+      text-align: center;  
+    }  
+    .color-circle {  
+      width: 24px;  
+      height: 24px;  
+      border-radius: 50%;  
+      border: 1px solid #ccc;  
+      margin-top: 5px;  
+    }  
+  </style>  
+</head>  
+<body>  
+  <h1 id="title">Mäusegruppe Terminal</h1>  
+  <div id="menu" class="menu">  
+    <button id="btn-kontoeinsehen">Konto einsehen</button>  
+    <button onclick="window.location.href='https://frederickoeller1207.github.io/ziele/'">Mein Ziel</button>  
+    <button id="btn-ausleihe">Spielzeug Ausleihe</button>  
+    <button id="btn-checkout">Checkout</button>  
+    <button id="btn-mausdollar">Mausdollar hinzufügen</button>  
+    <button onclick="window.location.href='https://frederickoeller1207.github.io/Mousecity-Store/'">Mousecity Store</button>  
+  </div>  
+  <div id="home-btn" style="display:none;">🏠 Zurück</div>  
+  <div id="view"></div>    <script type="module">  
+    import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";  
+    import { getDatabase as getDB1, ref as ref1, get as get1, onValue as onVal1, set as set1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";  
+    import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";  
+    import { getDatabase as getDB2, ref as ref2, update as update2, onValue as onVal2, get as get2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";  
+  
+    const config1 = {  
+      apiKey: "AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",  
+      authDomain: "gesamt-dae4e.firebaseapp.com",  
+      databaseURL: "https://gesamt-dae4e-default-rtdb.europe-west1.firebasedatabase.app",  
+      projectId: "gesamt-dae4e",  
+      storageBucket: "gesamt-dae4e.appspot.com",  
+      messagingSenderId: "844023612743",  
+      appId: "1:844023612743:web:0821aa894541f89a7df862"  
+    };  
+    const config2 = {  
+      apiKey: "AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg",  
+      authDomain: "punkte-45c20.firebaseapp.com",  
+      databaseURL: "https://punkte-45c20-default-rtdb.europe-west1.firebasedatabase.app",  
+      projectId: "punkte-45c20",  
+      storageBucket: "punkte-45c20.appspot.com",  
+      messagingSenderId: "931713539549",  
+      appId: "1:931713539549:web:e348bf38369639f1906a34"  
+    };  
+  
+    const app1 = initApp1(config1, "app1");  
+    const db1 = getDB1(app1);  
+    const app2 = initApp2(config2, "app2");  
+    const db2 = getDB2(app2);  
+  
+    const view = document.getElementById("view");  
+    const menu = document.getElementById("menu");  
+    const homeBtn = document.getElementById("home-btn");  
+  
+    const farben = ["⚪", "🔴", "🟡", "🟢", "⚫", "🟣"];  
+  
+    const resetView = () => {  
+      view.innerHTML = "";  
+      menu.style.display = "flex";  
+      homeBtn.style.display = "none";  
+      document.getElementById("title").textContent = "Mäusegruppe Terminal";  
+    };  
+    const openView = (title) => {  
+      view.innerHTML = "";  
+      menu.style.display = "none";  
+      homeBtn.style.display = "flex";  
+      document.getElementById("title").textContent = title;  
+    };  
+    homeBtn.onclick = resetView;  
+  
+    function eingabeMitZahl(title, callback) {  
+      openView(title);  
+      const input = document.createElement("input");  
+      input.type = "number";  
+      input.inputMode = "numeric";  
+      input.autofocus = true;  
+      const btn = document.createElement("button");  
+      btn.textContent = "OK";  
+      btn.onclick = () => {  
+        const val = input.value.trim();  
+        if (val) callback(val);  
+      };  
+      view.appendChild(input);  
+      view.appendChild(btn);  
+      input.focus();  
+    }  
+  
+    async function checkSicherheitscode(name, callback) {  
+      const snap = await get1(ref1(db1, `kinder/${name}`));  
+      const code = snap.exists() ? snap.val().code : null;  
+      if (!code) return alert("Kein Sicherheitscode hinterlegt.");  
+      eingabeMitZahl(`Bitte Sicherheitscode für ${name} eingeben:`, (eingabe) => {  
+        if (eingabe === code) callback();  
+        else alert("Falscher Code.");  
+      });  
+    }  
+  
+    // --- Konto einsehen ---  
+    document.getElementById("btn-kontoeinsehen").onclick = showKontoEinsehen;  
+  
+    function farbeToColor(f) {  
+      if (f === "🔴") return "red";  
+      if (f === "🟡") return "orange";  
+      if (f === "🟢") return "green";  
+      if (f === "⚫") return "black";  
+      if (f === "🟣") return "purple";  
+      if (f === "🔵") return "blue";  
+      return "#ccc";  
+    }  
+    function getFarbBedeutung(farbe) {  
+      if (farbe === "🟢") return "Du bist deinem Ziel heute 5 % näher.";  
+      if (farbe === "🟣") return "Du bist deinem Ziel heute 10 % näher.";  
+      if (farbe === "🔴") return "Du entfernst dich heute um 5 % von deinem Ziel.";  
+      if (farbe === "⚫") return "Du entfernst dich heute um 10 % von deinem Ziel.";  
+      if (farbe === "🟡" || farbe === "⚪") return "Dein Ziel-Fortschritt bleibt heute unverändert.";  
+      return "";  
+    }  
+  
+    async function showKontoEinsehen() {  
+      openView("Konto einsehen");  
+      const suchInput = document.createElement("input");  
+      suchInput.placeholder = "Suche nach Namen...";  
+      suchInput.autofocus = true;  
+      view.appendChild(suchInput);  
+  
+      const kinderListe = document.createElement("div");  
+      kinderListe.id = "kinder-liste";  
+      kinderListe.style.marginTop = "20px";  
+      view.appendChild(kinderListe);  
+  
+      const kinderSnap = await get2(ref2(db2, "kinder"));  
+      const alleKonten = [];  
+      if (kinderSnap.exists()) {  
+        kinderSnap.forEach(kindSnap => {  
+          alleKonten.push({ name: kindSnap.key, ...kindSnap.val() });  
+        });  
+      }  
+      function renderKinderListe(filterText = "") {  
+        kinderListe.innerHTML = "";  
+        const gefilterteKonten = alleKonten.filter(konto =>  
+          konto.name.toLowerCase().includes(filterText.toLowerCase())  
+        );  
+        gefilterteKonten.forEach(konto => {  
+          const btn = document.createElement("button");  
+          btn.textContent = konto.name;  
+          btn.onclick = () => showKontoDetails(konto);  
+          kinderListe.appendChild(btn);  
+        });  
+      }  
+      renderKinderListe();  
+      suchInput.addEventListener("keyup", (e) => renderKinderListe(e.target.value));  
+    }  
+    function showKontoDetails(konto) {  
+      openView(konto.name);  
+      const detailsContainer = document.createElement("div");  
+      detailsContainer.id = "konto-details";  
+  
+      if (konto.farbe) {  
+        const farbInfo = document.createElement("p");  
+        farbInfo.textContent = "Deine Farbe für heute ist:";  
+        detailsContainer.appendChild(farbInfo);  
+  
+        const farbKreis = document.createElement("div");  
+        farbKreis.className = "color-circle";  
+        farbKreis.style.backgroundColor = farbeToColor(konto.farbe);  
+        detailsContainer.appendChild(farbKreis);  
+  
+        const bedeutung = document.createElement("p");  
+        bedeutung.textContent = getFarbBedeutung(konto.farbe);  
+        detailsContainer.appendChild(bedeutung);  
+      } else {  
+        const bedeutung = document.createElement("p");  
+        bedeutung.textContent = "Dieses Konto hat keine Farbe.";  
+        detailsContainer.appendChild(bedeutung);  
+      }  
+      view.appendChild(detailsContainer);  
+    }  
+  
+    // --- Ausleihe ---  
+    document.getElementById("btn-ausleihe").onclick = () => {  
+      openView("Spielzeug Ausleihe");  
+      onVal1(ref1(db1, "kinder"), snapshot => {  
+        snapshot.forEach(childSnap => {  
+          const name = childSnap.key;  
+          const btn = document.createElement("button");  
+          btn.textContent = name;  
+          btn.onclick = () => checkSicherheitscode(name, () => ausleihen(name));  
+          view.appendChild(btn);  
+        });  
+      });  
+    };  
+    function frageSpielzeugnummer(name, callback) {  
+      eingabeMitZahl(`${name}, gib bitte die Spielzeugnummer ein:`, callback);  
+    }  
+    async function ausleihen(name) {  
+      const ausleiheSnap = await get1(ref1(db1, `ausleihen/${name}`));  
+      if (ausleiheSnap.exists() && ausleiheSnap.val().bestätigt === false) {  
+        alert("Bitte gib das ausgeliehene Spielzeug zurück.");  
+        return;  
+      }  
+      frageSpielzeugnummer(name, async (nummer) => {  
+        const spielzeugeSnap = await get1(ref1(db1, "spielzeuge"));  
+        const spielzeuge = spielzeugeSnap.exists() ? spielzeugeSnap.val() : {};  
+        if (spielzeuge[nummer]) {  
+          await set1(ref1(db1, `ausleihen/${name}`), {  
+            spielzeug: spielzeuge[nummer],  
+            nummer: nummer,  
+            zeit: new Date().toISOString(),  
+            bestätigt: false  
+          });  
+          const popup = document.createElement("div");  
+          popup.textContent = `${spielzeuge[nummer]} erfolgreich ausgeliehen.`;  
+          popup.style = "position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;color:#000;padding:20px 30px;border-radius:12px;font-size:18px;box-shadow:0 4px 12px rgba(0,0,0,0.2);z-index:9999;text-align:center;";  
+          document.body.appendChild(popup);  
+          setTimeout(() => { popup.remove(); resetView(); }, 3000);  
+        } else {  
+          alert("Ungültige Nummer.");  
+        }  
+      });  
+    }  
+  
+    // --- Checkout ---  
+    document.getElementById("btn-checkout").onclick = () => {  
+      openView("Checkout");  
+      onVal1(ref1(db1, "kinder"), snapshot => {  
+        snapshot.forEach(childSnap => {  
+          const name = childSnap.key;  
+          const link = childSnap.val().link;  
+          const btn = document.createElement("button");  
+          btn.textContent = name;  
+          btn.onclick = () => checkSicherheitscode(name, () => {  
+            if (link) window.location.href = link;  
+            else alert("Kein Link hinterlegt.");  
+          });  
+          view.appendChild(btn);  
+        });  
+      });  
+    };  
+  
+    // --- Mausdollar hinzufügen ---  
+    document.getElementById("btn-mausdollar").onclick = () => {  
+      openView("Mausdollar hinzufügen");  
+      const kinder = [];  
+      onVal1(ref1(db1, "kinder"), snapshot => {  
+        snapshot.forEach(childSnap => { kinder.push(childSnap.key); });  
+        kinder.forEach(name => {  
+          const btn = document.createElement("button");  
+          btn.textContent = name;  
+          btn.onclick = () => checkSicherheitscode(name, () => waehleBetrag(name));  
+          view.appendChild(btn);  
+        });  
+      });  
+    };  
+    function waehleBetrag(name) {  
+      openView(`${name}: Wähle Betrag`);  
+      for (let i = 1; i <= 5; i++) {  
+        const btn = document.createElement("button");  
+        btn.textContent = `${i}`;  
+        btn.onclick = () => waehleGrund(name, i);  
+        view.appendChild(btn);  
+      }  
+    }  
+    function waehleGrund(name, betrag) {  
+      openView(`${name}: Grund wählen`);  
+      const gruende = ["Quiz", "Kurze Hilfe", "Malwettbewerb", "Tischdienst"];  
+      gruende.forEach(g => {  
+        const btn = document.createElement("button");  
+        btn.textContent = g;  
+        btn.onclick = () => sendeAnfrage(name, betrag, g);  
+        view.appendChild(btn);  
+      });  
+      const eigenerInput = document.createElement("input");  
+      eigenerInput.placeholder = "Eigener Grund";  
+      eigenerInput.type = "text";  
+      view.appendChild(eigenerInput);  
+      const absendenBtn = document.createElement("button");  
+      absendenBtn.textContent = "Absenden";  
+      absendenBtn.onclick = () => {  
+        const g = eigenerInput.value.trim();  
+        if (g) sendeAnfrage(name, betrag, g);  
+      };  
+      view.appendChild(absendenBtn);  
+    }  
+    function sendeAnfrage(name, betrag, grund) {  
+      const now = new Date();  
+      const tag = String(now.getDate()).padStart(2, '0');  
+      const monat = String(now.getMonth() + 1).padStart(2, '0');  
+      const stunde = String(now.getHours()).padStart(2, '0');  
+      const minute = String(now.getMinutes()).padStart(2, '0');  
+      const zeit = `${tag}.${monat} – ${stunde}:${minute}`;  
+      const anfrageRef = ref1(db1, `anfragen/${Date.now()}_${name}`);  
+      set1(anfrageRef, { name, betrag, grund, zeit });  
+      view.innerHTML = `<h2>Anfrage gesendet! (${betrag} Mausdollar für: ${grund})</h2>`;  
+    }  
+  
+    resetView();  
+  </script>  </body>  
+</html>  
