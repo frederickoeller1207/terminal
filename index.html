@@ -58,9 +58,7 @@
       text-align: center;
       transition: all 0.2s ease, transform 0.1s ease;
     }
-    button:hover {
-      background-color: #f0f0f5;
-    }
+    button:hover { background-color: #f0f0f5; }
     button:active {
       background-color: #e0e0e5;
       transform: scale(0.97);
@@ -75,8 +73,6 @@
       border: 1px solid #ccc;
       border-radius: 10px;
     }
-
-    /* Neue Styles für Kontostand-Ansicht */
     #konto-details {
       display: flex;
       flex-direction: column;
@@ -98,13 +94,15 @@
   <h1 id="title">Mäusegruppe Terminal</h1>
   <div id="menu" class="menu">
     <button id="btn-kontoeinsehen">Konto einsehen</button>
+    <button onclick="window.location.href='https://frederickoeller1207.github.io/ziele/'">Mein Ziel</button>
     <button id="btn-ausleihe">Spielzeug Ausleihe</button>
     <button id="btn-checkout">Checkout</button>
     <button id="btn-mausdollar">Mausdollar hinzufügen</button>
-    <button onclick="window.location.href = 'https://frederickoeller1207.github.io/Mousecity-Store/'">Mousecity Store</button>
+    <button onclick="window.location.href='https://frederickoeller1207.github.io/Mousecity-Store/'">Mousecity Store</button>
   </div>
   <div id="home-btn" style="display:none;">🏠 Zurück</div>
   <div id="view"></div>
+
   <script type="module">
     import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
     import { getDatabase as getDB1, ref as ref1, get as get1, onValue as onVal1, set as set1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
@@ -147,14 +145,12 @@
       homeBtn.style.display = "none";
       document.getElementById("title").textContent = "Mäusegruppe Terminal";
     };
-
     const openView = (title) => {
       view.innerHTML = "";
       menu.style.display = "none";
       homeBtn.style.display = "flex";
       document.getElementById("title").textContent = title;
     };
-
     homeBtn.onclick = resetView;
 
     function eingabeMitZahl(title, callback) {
@@ -184,6 +180,88 @@
       });
     }
 
+    // --- Konto einsehen ---
+    document.getElementById("btn-kontoeinsehen").onclick = showKontoEinsehen;
+
+    function farbeToColor(f) {
+      if (f === "🔴") return "red";
+      if (f === "🟡") return "orange";
+      if (f === "🟢") return "green";
+      if (f === "⚫") return "black";
+      if (f === "🟣") return "purple";
+      if (f === "🔵") return "blue";
+      return "#ccc";
+    }
+    function getFarbBedeutung(farbe) {
+      if (farbe === "🟢") return "Du bist deinem Ziel heute 5 % näher.";
+      if (farbe === "🟣") return "Du bist deinem Ziel heute 10 % näher.";
+      if (farbe === "🔴") return "Du entfernst dich heute um 5 % von deinem Ziel.";
+      if (farbe === "⚫") return "Du entfernst dich heute um 10 % von deinem Ziel.";
+      if (farbe === "🟡" || farbe === "⚪") return "Dein Ziel-Fortschritt bleibt heute unverändert.";
+      return "";
+    }
+
+    async function showKontoEinsehen() {
+      openView("Konto einsehen");
+      const suchInput = document.createElement("input");
+      suchInput.placeholder = "Suche nach Namen...";
+      suchInput.autofocus = true;
+      view.appendChild(suchInput);
+
+      const kinderListe = document.createElement("div");
+      kinderListe.id = "kinder-liste";
+      kinderListe.style.marginTop = "20px";
+      view.appendChild(kinderListe);
+
+      const kinderSnap = await get2(ref2(db2, "kinder"));
+      const alleKonten = [];
+      if (kinderSnap.exists()) {
+        kinderSnap.forEach(kindSnap => {
+          alleKonten.push({ name: kindSnap.key, ...kindSnap.val() });
+        });
+      }
+      function renderKinderListe(filterText = "") {
+        kinderListe.innerHTML = "";
+        const gefilterteKonten = alleKonten.filter(konto =>
+          konto.name.toLowerCase().includes(filterText.toLowerCase())
+        );
+        gefilterteKonten.forEach(konto => {
+          const btn = document.createElement("button");
+          btn.textContent = konto.name;
+          btn.onclick = () => showKontoDetails(konto);
+          kinderListe.appendChild(btn);
+        });
+      }
+      renderKinderListe();
+      suchInput.addEventListener("keyup", (e) => renderKinderListe(e.target.value));
+    }
+    function showKontoDetails(konto) {
+      openView(konto.name);
+      const detailsContainer = document.createElement("div");
+      detailsContainer.id = "konto-details";
+
+      if (konto.farbe) {
+        const farbInfo = document.createElement("p");
+        farbInfo.textContent = "Deine Farbe für heute ist:";
+        detailsContainer.appendChild(farbInfo);
+
+        const farbKreis = document.createElement("div");
+        farbKreis.className = "color-circle";
+        farbKreis.style.backgroundColor = farbeToColor(konto.farbe);
+        detailsContainer.appendChild(farbKreis);
+
+        const bedeutung = document.createElement("p");
+        bedeutung.textContent = getFarbBedeutung(konto.farbe);
+        detailsContainer.appendChild(bedeutung);
+      } else {
+        const bedeutung = document.createElement("p");
+        bedeutung.textContent = "Dieses Konto hat keine Farbe.";
+        detailsContainer.appendChild(bedeutung);
+      }
+      view.appendChild(detailsContainer);
+    }
+
+    // --- Ausleihe ---
     document.getElementById("btn-ausleihe").onclick = () => {
       openView("Spielzeug Ausleihe");
       onVal1(ref1(db1, "kinder"), snapshot => {
@@ -196,11 +274,9 @@
         });
       });
     };
-
     function frageSpielzeugnummer(name, callback) {
       eingabeMitZahl(`${name}, gib bitte die Spielzeugnummer ein:`, callback);
     }
-
     async function ausleihen(name) {
       const ausleiheSnap = await get1(ref1(db1, `ausleihen/${name}`));
       if (ausleiheSnap.exists() && ausleiheSnap.val().bestätigt === false) {
@@ -219,31 +295,16 @@
           });
           const popup = document.createElement("div");
           popup.textContent = `${spielzeuge[nummer]} erfolgreich ausgeliehen.`;
-          popup.style = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #ffffff;
-            color: #000;
-            padding: 20px 30px;
-            border-radius: 12px;
-            font-size: 18px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            z-index: 9999;
-            text-align: center;
-          `;
+          popup.style = "position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;color:#000;padding:20px 30px;border-radius:12px;font-size:18px;box-shadow:0 4px 12px rgba(0,0,0,0.2);z-index:9999;text-align:center;";
           document.body.appendChild(popup);
-          setTimeout(() => {
-            popup.remove();
-            resetView();
-          }, 3000);
+          setTimeout(() => { popup.remove(); resetView(); }, 3000);
         } else {
           alert("Ungültige Nummer.");
         }
       });
     }
 
+    // --- Checkout ---
     document.getElementById("btn-checkout").onclick = () => {
       openView("Checkout");
       onVal1(ref1(db1, "kinder"), snapshot => {
@@ -261,13 +322,12 @@
       });
     };
 
+    // --- Mausdollar hinzufügen ---
     document.getElementById("btn-mausdollar").onclick = () => {
       openView("Mausdollar hinzufügen");
       const kinder = [];
       onVal1(ref1(db1, "kinder"), snapshot => {
-        snapshot.forEach(childSnap => {
-          kinder.push(childSnap.key);
-        });
+        snapshot.forEach(childSnap => { kinder.push(childSnap.key); });
         kinder.forEach(name => {
           const btn = document.createElement("button");
           btn.textContent = name;
@@ -276,7 +336,6 @@
         });
       });
     };
-
     function waehleBetrag(name) {
       openView(`${name}: Wähle Betrag`);
       for (let i = 1; i <= 5; i++) {
@@ -286,7 +345,6 @@
         view.appendChild(btn);
       }
     }
-
     function waehleGrund(name, betrag) {
       openView(`${name}: Grund wählen`);
       const gruende = ["Quiz", "Kurze Hilfe", "Malwettbewerb", "Tischdienst"];
@@ -296,12 +354,10 @@
         btn.onclick = () => sendeAnfrage(name, betrag, g);
         view.appendChild(btn);
       });
-
       const eigenerInput = document.createElement("input");
       eigenerInput.placeholder = "Eigener Grund";
-      eigenerInput.type = "text"; // kein autofocus!
+      eigenerInput.type = "text";
       view.appendChild(eigenerInput);
-
       const absendenBtn = document.createElement("button");
       absendenBtn.textContent = "Absenden";
       absendenBtn.onclick = () => {
@@ -310,7 +366,6 @@
       };
       view.appendChild(absendenBtn);
     }
-
     function sendeAnfrage(name, betrag, grund) {
       const now = new Date();
       const tag = String(now.getDate()).padStart(2, '0');
@@ -323,103 +378,7 @@
       view.innerHTML = `<h2>Anfrage gesendet! (${betrag} Mausdollar für: ${grund})</h2>`;
     }
 
-    // --- NEUE FUNKTIONALITÄT ---
-    document.getElementById("btn-kontoeinsehen").onclick = showKontoEinsehen;
-
-    function farbeToColor(f) {
-      if (f === "🔴") return "red";
-      if (f === "🟡") return "orange";
-      if (f === "🟢") return "green";
-      if (f === "⚫") return "black";
-      if (f === "🟣") return "purple";
-      if (f === "🔵") return "blue";
-      return "#ccc"; // Standardfarbe für weiß/unbekannt
-    }
-    
-    function getFarbBedeutung(farbe) {
-      switch(farbe) {
-        case "🟢": return "Das bedeutet, du hast morgen einen Mausdollar mehr.";
-        case "🔵": return "Das bedeutet, du hast morgen einen Mausdollar weniger.";
-        case "🔴": return "Das bedeutet, du hast morgen einen Mausdollar weniger.";
-        case "⚫": return "Das bedeutet, du hast morgen zwei Mausdollar weniger.";
-        case "🟣": return "Das bedeutet, du hast morgen zwei Mausdollar mehr.";
-        case "🟡":
-        case "⚪": return "Das bedeutet, dein Kontostand bleibt morgen gleich.";
-        default: return "";
-      }
-    }
-
-    async function showKontoEinsehen() {
-      openView("Konto einsehen");
-      const suchInput = document.createElement("input");
-      suchInput.placeholder = "Suche nach Namen...";
-      suchInput.autofocus = true;
-      view.appendChild(suchInput);
-
-      const kinderListe = document.createElement("div");
-      kinderListe.id = "kinder-liste";
-      kinderListe.style.marginTop = "20px";
-      view.appendChild(kinderListe);
-      
-      const kinderSnap = await get2(ref2(db2, "kinder"));
-      const alleKonten = [];
-      if (kinderSnap.exists()) {
-          kinderSnap.forEach(kindSnap => {
-              alleKonten.push({ name: kindSnap.key, ...kindSnap.val() });
-          });
-      }
-
-      function renderKinderListe(filterText = "") {
-        kinderListe.innerHTML = "";
-        const gefilterteKonten = alleKonten.filter(konto =>
-          konto.name.toLowerCase().includes(filterText.toLowerCase())
-        );
-        
-        gefilterteKonten.forEach(konto => {
-          const btn = document.createElement("button");
-          btn.textContent = konto.name;
-          btn.onclick = () => showKontoDetails(konto);
-          kinderListe.appendChild(btn);
-        });
-      }
-      
-      renderKinderListe();
-      suchInput.addEventListener("keyup", (e) => renderKinderListe(e.target.value));
-    }
-    
-    function showKontoDetails(konto) {
-      openView(konto.name);
-      const detailsContainer = document.createElement("div");
-      detailsContainer.id = "konto-details";
-      
-      const kontostand = document.createElement("p");
-      kontostand.innerHTML = `Du hast einen Kontostand von **${konto.punkte || 0}** Mousedollar.`;
-      detailsContainer.appendChild(kontostand);
-
-      if (konto.farbe) {
-        const farbInfo = document.createElement("p");
-        farbInfo.textContent = "Deine Farbe für heute ist:";
-        detailsContainer.appendChild(farbInfo);
-
-        const farbKreis = document.createElement("div");
-        farbKreis.className = "color-circle";
-        farbKreis.style.backgroundColor = farbeToColor(konto.farbe);
-        detailsContainer.appendChild(farbKreis);
-
-        const bedeutung = document.createElement("p");
-        bedeutung.textContent = getFarbBedeutung(konto.farbe);
-        detailsContainer.appendChild(bedeutung);
-      } else {
-         const bedeutung = document.createElement("p");
-         bedeutung.textContent = "Dieses Konto hat keine Farbe.";
-         detailsContainer.appendChild(bedeutung);
-      }
-
-      view.appendChild(detailsContainer);
-    }
-    // --- ENDE NEUE FUNKTIONALITÄT ---
-
-    resetView(); // Start
+    resetView();
   </script>
 </body>
 </html>
