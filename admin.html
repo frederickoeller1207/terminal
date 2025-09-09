@@ -45,6 +45,7 @@
     .action-button.white:hover { background-color: #f0f0f0; }
     .action-button.green { background-color: #28a745; }
     .action-button.green:hover { background-color: #218838; }
+    .callout { background:#fff7ed; border:1px solid #fed7aa; border-radius:10px; padding:10px; }
   </style>
 
   <script type="module">
@@ -106,35 +107,34 @@
       return 0; // 🟡, ⚪
     }
 
+    // NEU: Abschluss ohne Auto-+5 und ohne Auto-Wechsel
     async function rewardMilestonesAndMaybeComplete(name, kid, newProgress){
-      const activeGoalIndex = kid.activeGoalIndex ?? 0;
       let saldo = kid.punkte || 0;
-      let last = kid.lastRewardedMilestone ?? 0;
+      let last  = kid.lastRewardedMilestone ?? 0;
 
       const from = Math.floor(Math.max(last,0)/10);
-      const to   = Math.floor(newProgress/10);
+      const to   = Math.floor((Math.min(newProgress,100))/10);
       if (to > from){
-        for(let m=from+1; m<=to && m<10; m++){
-          saldo += 1; // +1 je 10%-Schritt
+        for(let m=from+1; m<=to && m<10; m++){ // 10..90 %
+          saldo += 1;
           last = m*10;
         }
       }
 
       if (newProgress >= 100){
-        if (last < 100){ saldo += 1; last = 100; } // 100%-Schritt
-        saldo += 5; // Abschlussbonus
+        if (last < 100){ saldo += 1; last = 100; } // 100%-Meilenstein selbst
         await update2(ref2(db2, `kinder/${name}`), {
           punkte: saldo,
-          activeGoalIndex: activeGoalIndex + 1,
-          progress: 0,
-          lastRewardedMilestone: 0,
+          progress: 100,
+          lastRewardedMilestone: 100,
+          needsGoalAssignment: true, // Admin muss Bonus/Nächstes Ziel setzen
           farbe: "⚪"
         });
       } else {
         await update2(ref2(db2, `kinder/${name}`), {
           punkte: saldo,
           lastRewardedMilestone: last,
-          progress: newProgress,
+          progress: clamp01(newProgress),
           farbe: "⚪"
         });
       }
@@ -147,7 +147,7 @@
       await rewardMilestonesAndMaybeComplete(name, kid, newP);
     }
 
-    /* Ziele laden für "Z"-Button (Cache) */
+    /* Ziele-Cache für Titel + Z-Button */
     let GOALS_CACHE = null;
     async function ladeZieleMeta(){
       if (GOALS_CACHE) return GOALS_CACHE;
@@ -155,7 +155,6 @@
       GOALS_CACHE = (snap.exists() && Array.isArray(snap.val())) ? snap.val() : [];
       return GOALS_CACHE;
     }
-
     window.zeigeAktivesZiel = async function(name){
       try {
         const [kidSnap, goals] = await Promise.all([
@@ -174,6 +173,58 @@
       }
     };
 
+    /* Abschlüsse warten auf Freigabe */
+    async function renderAbschluesse(){
+      const box = document.getElementById("abschluss-wartend");
+      if (!box) return;
+      box.innerHTML = "";
+      const [kSnap, goals] = await Promise.all([
+        get2(ref2(db2, "kinder")),
+        ladeZieleMeta()
+      ]);
+      if (!kSnap.exists()) return;
+      kSnap.forEach(ch=>{
+        const name = ch.key;
+        const v = ch.val()||{};
+        if (v.farbe === undefined) return; // Auslandskonto ignorieren
+        if (v.progress === 100 && v.needsGoalAssignment){
+          const zielTitel = goals[(v.activeGoalIndex ?? 0)] || "—";
+          const row = document.createElement("div");
+          row.className = "flex";
+          row.innerHTML = `
+            <div><b>${name}</b> hat 100 % erreicht – „${zielTitel}“.</div>
+            <div class="flex-buttons">
+              <button class="small-button" onclick="vergebeFinale5('${name}')">Bonus +5</button>
+              <button class="small-button" onclick="naechstesZiel('${name}')">Nächstes Ziel</button>
+            </div>`;
+          box.appendChild(row);
+        }
+      });
+    }
+    window.vergebeFinale5 = async function(name){
+      const s = await get2(ref2(db2, `kinder/${name}`));
+      if (!s.exists()) return;
+      const v = s.val()||{};
+      await update2(ref2(db2, `kinder/${name}`), { punkte: (v.punkte||0) + 5 });
+      alert(`${name}: +5 Mausdollar vergeben.`);
+      renderAbschluesse();
+    };
+    window.naechstesZiel = async function(name){
+      const s = await get2(ref2(db2, `kinder/${name}`));
+      if (!s.exists()) return;
+      const v = s.val()||{};
+      const goals = await ladeZieleMeta();
+      const nextIdx = Math.min((goals.length?goals.length:1)-1, (v.activeGoalIndex ?? 0) + 1);
+      await update2(ref2(db2, `kinder/${name}`), {
+        activeGoalIndex: nextIdx,
+        progress: 0,
+        lastRewardedMilestone: 0,
+        needsGoalAssignment: false
+      });
+      alert(`${name}: auf nächstes Ziel gesetzt.`);
+      renderAbschluesse();
+    };
+
     /* Init */
     window.addEventListener("DOMContentLoaded", () => {
       ladeShopBestellungen();
@@ -184,8 +235,12 @@
       ladeSpielzeugeHinzufuegen();
       ladeHistorie();
       ladeKontoLoeschen();
+      renderAbschluesse();
 
-      document.getElementById('durchfuehren-btn').onclick = durchfuehren;
+      document.getElementById('durchfuehren-btn').onclick = async ()=>{
+        await durchfuehren();
+        renderAbschluesse();
+      };
       document.getElementById('alle-gruen-btn').onclick = alleAufGruen;
       document.getElementById('alle-weiss-btn').onclick = alleAufWeiss;
     });
@@ -197,13 +252,13 @@
         const name = childSnap.key;
         const kid = childSnap.val() || {};
         if (kid.farbe === undefined) return; // Auslandskonto überspringen
-        applyColorProgress(name, {
+        rewardMilestonesAndMaybeComplete(name, {
           punkte: kid.punkte || 0,
           farbe: kid.farbe,
           activeGoalIndex: kid.activeGoalIndex ?? 0,
           progress: kid.progress ?? 0,
           lastRewardedMilestone: kid.lastRewardedMilestone ?? 0
-        }).catch(console.error);
+        }, clamp01((kid.progress ?? 0) + colorToDelta(kid.farbe))).catch(console.error);
       });
     }
 
@@ -566,6 +621,12 @@
   <div class="section">
     <h2>Aktuelle Ausleihen</h2>
     <div class="liste" id="ausleihen-liste"></div>
+  </div>
+
+  <!-- NEU: Abschlüsse warten -->
+  <div class="section">
+    <h2>Abschlüsse warten auf Freigabe</h2>
+    <div class="liste callout" id="abschluss-wartend"></div>
   </div>
 
   <div class="section">
