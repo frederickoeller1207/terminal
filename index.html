@@ -42,6 +42,7 @@
       flex-direction: column;
       align-items: center;
       gap: 16px;
+      width: 100%;
     }
     button {
       background-color: #ffffff;
@@ -73,13 +74,15 @@
       border: 1px solid #ccc;
       border-radius: 10px;
     }
-    #konto-details {
+    #konto-details, .ziel-details {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 12px;
       font-size: 18px;
       text-align: center;
+      width: 95%;
+      max-width: 420px;
     }
     .color-circle {
       width: 24px;
@@ -88,13 +91,40 @@
       border: 1px solid #ccc;
       margin-top: 5px;
     }
+    .card {
+      width: 95%;
+      max-width: 420px;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      padding: 16px;
+    }
+    .subtle {
+      color: #6b7280;
+      font-size: 14px;
+      margin: 0 0 8px 0;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .big-line {
+      font-size: 22px;
+      font-weight: 600;
+      margin: 4px 0 0 0;
+      text-align: center;
+    }
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0 0 8px 0;
+      text-align: left;
+    }
   </style>
 </head>
 <body>
   <h1 id="title">Mäusegruppe Terminal</h1>
   <div id="menu" class="menu">
-    <button id="btn-kontoeinsehen">Konto einsehen</button>
-    <button onclick="window.location.href='https://frederickoeller1207.github.io/ziele/'">Mein Ziel</button>
+    <button id="btn-konto-ziel">Konto / Ziel einsehen</button>
     <button id="btn-ausleihe">Spielzeug Ausleihe</button>
     <button id="btn-checkout">Checkout</button>
     <button id="btn-mausdollar">Mausdollar hinzufügen</button>
@@ -107,7 +137,7 @@
     import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
     import { getDatabase as getDB1, ref as ref1, get as get1, onValue as onVal1, set as set1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
     import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-    import { getDatabase as getDB2, ref as ref2, update as update2, onValue as onVal2, get as get2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+    import { getDatabase as getDB2, ref as ref2, get as get2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
 
     const config1 = {
       apiKey: "AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",
@@ -136,8 +166,6 @@
     const view = document.getElementById("view");
     const menu = document.getElementById("menu");
     const homeBtn = document.getElementById("home-btn");
-
-    const farben = ["⚪", "🔴", "🟡", "🟢", "⚫", "🟣"];
 
     const resetView = () => {
       view.innerHTML = "";
@@ -180,9 +208,6 @@
       });
     }
 
-    // --- Konto einsehen ---
-    document.getElementById("btn-kontoeinsehen").onclick = showKontoEinsehen;
-
     function farbeToColor(f) {
       if (f === "🔴") return "red";
       if (f === "🟡") return "orange";
@@ -197,12 +222,19 @@
       if (farbe === "🟣") return "Du bist deinem Ziel heute 10 % näher.";
       if (farbe === "🔴") return "Du entfernst dich heute um 5 % von deinem Ziel.";
       if (farbe === "⚫") return "Du entfernst dich heute um 10 % von deinem Ziel.";
-      if (farbe === "🟡" || farbe === "⚪") return "Dein Ziel-Fortschritt bleibt heute unverändert.";
+      if (farbe === "🟡" || farbe === "⚪" || !farbe) return "Dein Ziel-Fortschritt bleibt heute unverändert.";
       return "";
     }
+    function formatMausdollar(val) {
+      const n = Number(val || 0);
+      return n.toLocaleString("de-DE");
+    }
 
-    async function showKontoEinsehen() {
-      openView("Konto einsehen");
+    // --- Konto / Ziel einsehen ---
+    document.getElementById("btn-konto-ziel").onclick = showKontoZiel;
+
+    async function showKontoZiel() {
+      openView("Konto / Ziel einsehen");
       const suchInput = document.createElement("input");
       suchInput.placeholder = "Suche nach Namen...";
       suchInput.autofocus = true;
@@ -228,37 +260,75 @@
         gefilterteKonten.forEach(konto => {
           const btn = document.createElement("button");
           btn.textContent = konto.name;
-          btn.onclick = () => showKontoDetails(konto);
+          btn.onclick = () => showKontoZielDetails(konto);
           kinderListe.appendChild(btn);
         });
       }
       renderKinderListe();
       suchInput.addEventListener("keyup", (e) => renderKinderListe(e.target.value));
     }
-    function showKontoDetails(konto) {
+
+    function showKontoZielDetails(konto) {
       openView(konto.name);
-      const detailsContainer = document.createElement("div");
-      detailsContainer.id = "konto-details";
 
-      if (konto.farbe) {
-        const farbInfo = document.createElement("p");
-        farbInfo.textContent = "Deine Farbe für heute ist:";
-        detailsContainer.appendChild(farbInfo);
+      const hatFarbe = !!konto.farbe;
+      const hatZiel = Object.prototype.hasOwnProperty.call(konto, "ziel") && konto.ziel !== null && konto.ziel !== undefined;
 
-        const farbKreis = document.createElement("div");
-        farbKreis.className = "color-circle";
-        farbKreis.style.backgroundColor = farbeToColor(konto.farbe);
-        detailsContainer.appendChild(farbKreis);
-
-        const bedeutung = document.createElement("p");
-        bedeutung.textContent = getFarbBedeutung(konto.farbe);
-        detailsContainer.appendChild(bedeutung);
-      } else {
-        const bedeutung = document.createElement("p");
-        bedeutung.textContent = "Dieses Konto hat keine Farbe.";
-        detailsContainer.appendChild(bedeutung);
+      // Wenn kein Ziel und keine Farbe: Spezialtext
+      if (!hatFarbe && !hatZiel) {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <p class="big-line">Du hast ein Kontostand von ${formatMausdollar(konto.punkte)} M$.</p>
+          <p>Dieses Konto hat kein Ziel und keine Farbe, da du nicht in der Mäusegruppe bist.</p>
+        `;
+        view.appendChild(card);
+        return;
       }
-      view.appendChild(detailsContainer);
+
+      // Kontostand oben
+      const saldoCard = document.createElement("div");
+      saldoCard.className = "card";
+      saldoCard.innerHTML = `
+        <p class="subtle">Kontostand</p>
+        <p class="big-line">Du hast ${formatMausdollar(konto.punkte)} M$ auf deinem Konto</p>
+      `;
+      view.appendChild(saldoCard);
+
+      // Ziel-Karte
+      const zielCard = document.createElement("div");
+      zielCard.className = "card";
+
+      const zielHeader = document.createElement("div");
+      zielHeader.className = "section-title";
+      zielHeader.textContent = "Ziel";
+      zielCard.appendChild(zielHeader);
+
+      const zielContent = document.createElement("div");
+      zielContent.className = "ziel-details";
+
+      const farbInfo = document.createElement("p");
+      farbInfo.textContent = "Deine Farbe für heute ist:";
+      zielContent.appendChild(farbInfo);
+
+      const farbKreis = document.createElement("div");
+      farbKreis.className = "color-circle";
+      farbKreis.style.backgroundColor = farbeToColor(konto.farbe || "⚪");
+      zielContent.appendChild(farbKreis);
+
+      const bedeutung = document.createElement("p");
+      bedeutung.textContent = getFarbBedeutung(konto.farbe);
+      zielContent.appendChild(bedeutung);
+
+      // Optional: Ziel-Prozent, falls vorhanden (wird angezeigt, wenn konto.ziel existiert)
+      if (hatZiel) {
+        const zielProzent = document.createElement("p");
+        zielProzent.textContent = `Aktueller Ziel-Stand: ${konto.ziel}%`;
+        zielContent.appendChild(zielProzent);
+      }
+
+      zielCard.appendChild(zielContent);
+      view.appendChild(zielCard);
     }
 
     // --- Ausleihe ---
