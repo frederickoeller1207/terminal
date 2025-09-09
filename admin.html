@@ -46,6 +46,7 @@
     .action-button.green { background-color: #28a745; }
     .action-button.green:hover { background-color: #218838; }
     .callout { background:#fff7ed; border:1px solid #fed7aa; border-radius:10px; padding:10px; }
+    .z-btn { margin-left: 6px; font-size: 12px; cursor: pointer; color: #007aff; font-weight: bold; }
   </style>
 
   <script type="module">
@@ -86,7 +87,7 @@
     }, "app3");
     const db3 = getDB3(app3);
 
-    /* Farben */
+    /* Farben und Mappings */
     const farben = ["⚪", "🔴", "🟡", "🟢", "⚫", "🟣"];
     function farbeToColor(f) {
       if (f === "🔴") return "red";
@@ -96,9 +97,6 @@
       if (f === "🟣") return "purple";
       return "#333";
     }
-
-    /* Ziel-Progress-Logik */
-    function clamp01(x){ return Math.max(0, Math.min(100, x|0)); }
     function colorToDelta(f){
       if (f==="🟢") return 5;
       if (f==="🟣") return 10;
@@ -106,48 +104,9 @@
       if (f==="⚫") return -10;
       return 0; // 🟡, ⚪
     }
+    const clamp01 = x => Math.max(0, Math.min(100, x|0));
 
-    // NEU: Abschluss ohne Auto-+5 und ohne Auto-Wechsel
-    async function rewardMilestonesAndMaybeComplete(name, kid, newProgress){
-      let saldo = kid.punkte || 0;
-      let last  = kid.lastRewardedMilestone ?? 0;
-
-      const from = Math.floor(Math.max(last,0)/10);
-      const to   = Math.floor((Math.min(newProgress,100))/10);
-      if (to > from){
-        for(let m=from+1; m<=to && m<10; m++){ // 10..90 %
-          saldo += 1;
-          last = m*10;
-        }
-      }
-
-      if (newProgress >= 100){
-        if (last < 100){ saldo += 1; last = 100; } // 100%-Meilenstein selbst
-        await update2(ref2(db2, `kinder/${name}`), {
-          punkte: saldo,
-          progress: 100,
-          lastRewardedMilestone: 100,
-          needsGoalAssignment: true, // Admin muss Bonus/Nächstes Ziel setzen
-          farbe: "⚪"
-        });
-      } else {
-        await update2(ref2(db2, `kinder/${name}`), {
-          punkte: saldo,
-          lastRewardedMilestone: last,
-          progress: clamp01(newProgress),
-          farbe: "⚪"
-        });
-      }
-    }
-
-    async function applyColorProgress(name, kid){
-      const delta = colorToDelta(kid.farbe);
-      const progress = kid.progress ?? 0;
-      const newP = clamp01(progress + delta);
-      await rewardMilestonesAndMaybeComplete(name, kid, newP);
-    }
-
-    /* Ziele-Cache für Titel + Z-Button */
+    /* Ziele-Cache und Z-Button */
     let GOALS_CACHE = null;
     async function ladeZieleMeta(){
       if (GOALS_CACHE) return GOALS_CACHE;
@@ -166,41 +125,103 @@
         if (v.farbe === undefined) { alert("Dieses Konto hat keine Farbe und kein Ziel."); return; }
         const idx = Math.max(0, Math.min((goals.length||1)-1, (v.activeGoalIndex ?? 0)|0));
         const titel = goals[idx] || "—";
-        alert(`Aktives Ziel für ${name}\n\nZiel ${idx+1}: ${titel}`);
+        alert(`Aktives Ziel für ${name}\n\nZiel ${idx+1}: ${titel}\nFortschritt: ${v.progress||0}%`);
       } catch(e){
         console.error(e);
         alert("Fehler beim Laden des Ziels.");
       }
     };
 
-    /* Abschlüsse warten auf Freigabe */
-    async function renderAbschluesse(){
-      const box = document.getElementById("abschluss-wartend");
-      if (!box) return;
-      box.innerHTML = "";
-      const [kSnap, goals] = await Promise.all([
-        get2(ref2(db2, "kinder")),
-        ladeZieleMeta()
-      ]);
-      if (!kSnap.exists()) return;
-      kSnap.forEach(ch=>{
-        const name = ch.key;
-        const v = ch.val()||{};
-        if (v.farbe === undefined) return; // Auslandskonto ignorieren
-        if (v.progress === 100 && v.needsGoalAssignment){
-          const zielTitel = goals[(v.activeGoalIndex ?? 0)] || "—";
-          const row = document.createElement("div");
-          row.className = "flex";
-          row.innerHTML = `
-            <div><b>${name}</b> hat 100 % erreicht – „${zielTitel}“.</div>
-            <div class="flex-buttons">
-              <button class="small-button" onclick="vergebeFinale5('${name}')">Bonus +5</button>
-              <button class="small-button" onclick="naechstesZiel('${name}')">Nächstes Ziel</button>
-            </div>`;
-          box.appendChild(row);
+    /* Meilenstein-Logik: nur neue, höhere Marken */
+    async function rewardMilestonesAndMaybeComplete(name, kid, newProgress){
+      let saldo = kid.punkte || 0;
+      let last  = kid.lastRewardedMilestone ?? 0;
+
+      const capped = Math.min(newProgress, 100);
+      const from = Math.floor(Math.max(last,0)/10);
+      const to   = Math.floor(capped/10);
+
+      if (to > from){
+        for(let m=from+1; m<=to && m<10; m++){ // 10..90 % je einmal
+          saldo += 1; last = m*10;
         }
-      });
+      }
+
+      if (capped >= 100){
+        if (last < 100){ saldo += 1; last = 100; } // 100 % je einmal
+        await update2(ref2(db2, `kinder/${name}`), {
+          punkte: saldo,
+          progress: 100,
+          lastRewardedMilestone: 100,
+          needsGoalAssignment: true,
+          farbe: "⚪"
+        });
+        renderAbschluesse();
+      } else {
+        await update2(ref2(db2, `kinder/${name}`), {
+          punkte: saldo,
+          lastRewardedMilestone: last,
+          progress: clamp01(capped),
+          farbe: "⚪"
+        });
+      }
     }
+
+    /* Durchführen: Farben → Prozent anwenden */
+    async function durchfuehren() {
+      const snapshot = await get2(ref2(db2, "kinder"));
+      const ops = [];
+      snapshot.forEach(childSnap => {
+        const name = childSnap.key;
+        const kid = childSnap.val() || {};
+        if (kid.farbe === undefined) return; // Auslandskonto überspringen
+        const newP = clamp01((kid.progress ?? 0) + colorToDelta(kid.farbe));
+        ops.push(rewardMilestonesAndMaybeComplete(name, {
+          punkte: kid.punkte || 0,
+          farbe: kid.farbe,
+          activeGoalIndex: kid.activeGoalIndex ?? 0,
+          progress: kid.progress ?? 0,
+          lastRewardedMilestone: kid.lastRewardedMilestone ?? 0
+        }, newP));
+      });
+      await Promise.all(ops);
+      renderAbschluesse();
+    }
+
+    /* Abschlüsse warten: dynamisch sichtbar */
+    async function renderAbschluesse(){
+      const section = document.getElementById("abschluss-section");
+      const box = document.getElementById("abschluss-wartend");
+      box.innerHTML = "";
+      let count = 0;
+
+      const [kSnap, goals] = await Promise.all([
+        get2(ref2(db2, "kinder")), ladeZieleMeta()
+      ]);
+      if (kSnap.exists()){
+        kSnap.forEach(ch=>{
+          const name = ch.key;
+          const v = ch.val()||{};
+          if (v.farbe === undefined) return;
+          if (v.progress === 100 && v.needsGoalAssignment){
+            const zielTitel = goals[(v.activeGoalIndex ?? 0)] || "—";
+            const row = document.createElement("div");
+            row.className = "flex";
+            row.innerHTML = `
+              <div><b>${name}</b> hat 100 % erreicht – „${zielTitel}“.</div>
+              <div class="flex-buttons">
+                <button class="small-button" onclick="vergebeFinale5('${name}')">Bonus +5</button>
+                <button class="small-button" onclick="naechstesZiel('${name}')">Nächstes Ziel</button>
+              </div>`;
+            box.appendChild(row);
+            count++;
+          }
+        });
+      }
+      section.style.display = count > 0 ? "block" : "none";
+    }
+
+    /* Bonus +5 manuell */
     window.vergebeFinale5 = async function(name){
       const s = await get2(ref2(db2, `kinder/${name}`));
       if (!s.exists()) return;
@@ -209,6 +230,8 @@
       alert(`${name}: +5 Mausdollar vergeben.`);
       renderAbschluesse();
     };
+
+    /* Nächstes Ziel manuell setzen (Index +1) */
     window.naechstesZiel = async function(name){
       const s = await get2(ref2(db2, `kinder/${name}`));
       if (!s.exists()) return;
@@ -225,44 +248,63 @@
       renderAbschluesse();
     };
 
-    /* Init */
-    window.addEventListener("DOMContentLoaded", () => {
-      ladeShopBestellungen();
-      ladeMausdollarAnfragen();
-      ladeAktuelleAusleihen();
-      ladeKinderKonten();
-      ladeKinderHinzufuegen();
-      ladeSpielzeugeHinzufuegen();
-      ladeHistorie();
-      ladeKontoLoeschen();
-      renderAbschluesse();
+    /* MausCity-Konten rendern (mit Z-Button und Farbauswahl) */
+    function ladeKinderKonten() {
+      const bereich = document.getElementById("mauscity-konten-liste");
+      const eigeneKinder = new Set();
+      onValue(ref1(db1, "kinder"), (snapshot) => {
+        eigeneKinder.clear();
+        snapshot.forEach(childSnap => { eigeneKinder.add(childSnap.key); });
+        onVal2(ref2(db2, "kinder"), (snapshot2) => {
+          bereich.innerHTML = "";
+          snapshot2.forEach(childSnap2 => {
+            const name = childSnap2.key;
+            const data = childSnap2.val();
+            if (!eigeneKinder.has(name)) return;
 
-      document.getElementById('durchfuehren-btn').onclick = async ()=>{
-        await durchfuehren();
-        renderAbschluesse();
-      };
-      document.getElementById('alle-gruen-btn').onclick = alleAufGruen;
-      document.getElementById('alle-weiss-btn').onclick = alleAufWeiss;
-    });
+            const zeile = document.createElement("div");
+            zeile.className = "flex";
 
-    /* Durchführen: Farben → Ziel-Prozente */
-    async function durchfuehren() {
-      const snapshot = await get2(ref2(db2, "kinder"));
-      snapshot.forEach(childSnap => {
-        const name = childSnap.key;
-        const kid = childSnap.val() || {};
-        if (kid.farbe === undefined) return; // Auslandskonto überspringen
-        rewardMilestonesAndMaybeComplete(name, {
-          punkte: kid.punkte || 0,
-          farbe: kid.farbe,
-          activeGoalIndex: kid.activeGoalIndex ?? 0,
-          progress: kid.progress ?? 0,
-          lastRewardedMilestone: kid.lastRewardedMilestone ?? 0
-        }, clamp01((kid.progress ?? 0) + colorToDelta(kid.farbe))).catch(console.error);
+            const kontoInfo = document.createElement("div");
+            kontoInfo.innerHTML =
+              `<span style="color:${farbeToColor(data.farbe)};font-weight:bold;">${name}</span>
+               (<span style="color:${farbeToColor(data.farbe)};font-weight:bold;">${data.punkte || 0}</span>)
+               <button class="small-button" title="Aktives Ziel zeigen" onclick="zeigeAktivesZiel('${name}')">Z</button>`;
+
+            const punkteButtons = document.createElement("div");
+            punkteButtons.className = "flex-buttons";
+            const plus = document.createElement("button");
+            plus.textContent = "+";
+            plus.onclick = () => update2(ref2(db2, `kinder/${name}`), { punkte: (data.punkte || 0) + 1 });
+            const minus = document.createElement("button");
+            minus.textContent = "–";
+            minus.onclick = () => update2(ref2(db2, `kinder/${name}`), { punkte: (data.punkte || 0) - 1 });
+            punkteButtons.appendChild(plus);
+            punkteButtons.appendChild(minus);
+
+            zeile.appendChild(kontoInfo);
+            zeile.appendChild(punkteButtons);
+
+            if (!name.includes("~")) {
+              const farbButtons = document.createElement("div");
+              farbButtons.className = "flex-buttons";
+              farben.forEach(f => {
+                const btn = document.createElement("button");
+                btn.textContent = f;
+                btn.className = "color-button";
+                btn.title = "Farbe setzen";
+                btn.onclick = () => update2(ref2(db2, `kinder/${name}`), { farbe: f });
+                farbButtons.appendChild(btn);
+              });
+              zeile.appendChild(farbButtons);
+            }
+            bereich.appendChild(zeile);
+          });
+        });
       });
     }
 
-    /* Sammel-Farben */
+    /* Sammel-Aktionen Farben */
     async function alleAufGruen() {
       const snapshot = await get2(ref2(db2, "kinder"));
       snapshot.forEach(childSnap => {
@@ -313,7 +355,7 @@
           }
       });
 
-      pendingOrdersList.addEventListener('click', async (e) => {
+      pendingOrdersList?.addEventListener('click', async (e) => {
         const orderId = e.target.dataset.id;
         const userType = e.target.dataset.userType;
         const userName = e.target.dataset.userName;
@@ -397,62 +439,6 @@
       await set(neueRef, neueHistorie);
       await remove(ausleiheRef);
     };
-
-    /* Kontenliste mit Z-Button und Farbauswahl */
-    function ladeKinderKonten() {
-      const bereich = document.getElementById("mauscity-konten-liste");
-      const eigeneKinder = new Set();
-      onValue(ref1(db1, "kinder"), (snapshot) => {
-        eigeneKinder.clear();
-        snapshot.forEach(childSnap => { eigeneKinder.add(childSnap.key); });
-        onVal2(ref2(db2, "kinder"), (snapshot2) => {
-          bereich.innerHTML = "";
-          snapshot2.forEach(childSnap2 => {
-            const name = childSnap2.key;
-            const data = childSnap2.val();
-            if (!eigeneKinder.has(name)) return;
-
-            const zeile = document.createElement("div");
-            zeile.className = "flex";
-
-            const kontoInfo = document.createElement("div");
-            kontoInfo.innerHTML =
-              `<span style="color:${farbeToColor(data.farbe)};font-weight:bold;">${name}</span>
-               (<span style="color:${farbeToColor(data.farbe)};font-weight:bold;">${data.punkte || 0}</span>)
-               <button class="small-button" title="Aktives Ziel zeigen" onclick="zeigeAktivesZiel('${name}')">Z</button>`;
-
-            const punkteButtons = document.createElement("div");
-            punkteButtons.className = "flex-buttons";
-            const plus = document.createElement("button");
-            plus.textContent = "+";
-            plus.onclick = () => update2(ref2(db2, `kinder/${name}`), { punkte: (data.punkte || 0) + 1 });
-            const minus = document.createElement("button");
-            minus.textContent = "–";
-            minus.onclick = () => update2(ref2(db2, `kinder/${name}`), { punkte: (data.punkte || 0) - 1 });
-            punkteButtons.appendChild(plus);
-            punkteButtons.appendChild(minus);
-
-            zeile.appendChild(kontoInfo);
-            zeile.appendChild(punkteButtons);
-
-            if (!name.includes("~")) {
-              const farbButtons = document.createElement("div");
-              farbButtons.className = "flex-buttons";
-              farben.forEach(f => {
-                const btn = document.createElement("button");
-                btn.textContent = f;
-                btn.className = "color-button";
-                btn.title = "Farbe setzen";
-                btn.onclick = () => update2(ref2(db2, `kinder/${name}`), { farbe: f });
-                farbButtons.appendChild(btn);
-              });
-              zeile.appendChild(farbButtons);
-            }
-            bereich.appendChild(zeile);
-          });
-        });
-      });
-    }
 
     /* Kinder hinzufügen */
     function ladeKinderHinzufuegen() {
@@ -598,6 +584,29 @@
         remove(ref1(db1, "kinder/" + name)).catch(err => console.error("Fehler AdminDB:", err));
       }
     };
+
+    /* Init */
+    window.addEventListener("DOMContentLoaded", () => {
+      // Shop, Anfragen, Ausleihen
+      ladeShopBestellungen();
+      ladeMausdollarAnfragen();
+      ladeAktuelleAusleihen();
+
+      // MausCity Konten + Buttons
+      ladeKinderKonten();
+      document.getElementById('durchfuehren-btn')?.addEventListener('click', async ()=>{ await durchfuehren(); });
+      document.getElementById('alle-gruen-btn')?.addEventListener('click', alleAufGruen);
+      document.getElementById('alle-weiss-btn')?.addEventListener('click', alleAufWeiss);
+
+      // Historie, Kinder/Spielzeug, Konto löschen
+      ladeKinderHinzufuegen();
+      ladeSpielzeugeHinzufuegen();
+      ladeHistorie();
+      ladeKontoLoeschen();
+
+      // Abschlüsse
+      renderAbschluesse();
+    });
   </script>
 </head>
 <body>
@@ -623,8 +632,8 @@
     <div class="liste" id="ausleihen-liste"></div>
   </div>
 
-  <!-- NEU: Abschlüsse warten -->
-  <div class="section">
+  <!-- Dynamisch sichtbar -->
+  <div class="section" id="abschluss-section" style="display:none">
     <h2>Abschlüsse warten auf Freigabe</h2>
     <div class="liste callout" id="abschluss-wartend"></div>
   </div>
