@@ -7,33 +7,26 @@
   body{font-family:'SF Pro Display',sans-serif;background:linear-gradient(135deg,var(--brand2)10%,var(--brand1)90%) fixed;margin:0;min-height:100vh;color:var(--ink)}
   .wrap{max-width:1100px;margin:0 auto;padding:28px 16px 40px}
   header{display:flex;gap:14px;align-items:center;justify-content:center;margin-bottom:18px}
-  header h1{font-size:34px;letter-spacing:.2px;margin:0;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.15)}
-  .brush{width:38px;height:38px;flex:0 0 auto;filter:drop-shadow(0 2px 6px rgba(0,0,0,.2));animation:float 3s ease-in-out infinite}
-  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-  .card{background:var(--card);border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.15);padding:18px;animation:pop .35s ease}
-  @keyframes pop{from{transform:scale(.98);opacity:0}to{transform:scale(1);opacity:1}}
+  header h1{font-size:34px;margin:0;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.15)}
+  .brush{width:38px;height:38px;flex:0 0 auto;filter:drop-shadow(0 2px 6px rgba(0,0,0,.2))}
+  .card{background:var(--card);border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.15);padding:18px}
   .notice{font-size:20px;line-height:1.55}
-  .muted{color:var(--muted)}
   .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:16px}
   @media(min-width:700px){.grid{grid-template-columns:1fr 1fr}}
   @media(min-width:1000px){.grid{grid-template-columns:1fr 1fr 1fr}}
-  .tile{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.12);transform:translateZ(0)}
+  .tile{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.12)}
   .tile img{display:block;width:100%;height:auto;object-fit:contain;background:#f7f7f9}
   .badge{display:inline-block;margin:8px 10px;background:linear-gradient(90deg,var(--brand3),var(--brand2));color:#053;font-weight:800;border-radius:999px;padding:6px 10px;font-size:14px}
-  .btn{display:inline-block;background:#111;color:#fff;border:0;border-radius:12px;padding:14px 18px;font-weight:800;font-size:18px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.18);transition:transform .08s ease}
-  .btn:active{transform:translateY(1px)}
+  .btn{display:inline-block;background:#111;color:#fff;border:0;border-radius:12px;padding:14px 18px;font-weight:800;font-size:18px;cursor:pointer}
   .btn.alt{background:#eef2ff;color:#111}
-  .loading{position:fixed;inset:0;background:rgba(255,255,255,.92);backdrop-filter:saturate(1.2) blur(2px);display:none;align-items:center;justify-content:center;z-index:50}
-  .loaderCard{background:#fff;border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.2);padding:18px 20px;text-align:center;max-width:520px}
-  .ping{width:12px;height:12px;border-radius:50%;background:var(--brand2);display:inline-block;position:relative;margin-right:8px}
-  .ping::after{content:"";position:absolute;inset:-8px;border-radius:50%;border:2px solid var(--brand2);animation:ring 1.2s infinite}
-  @keyframes ring{0%{transform:scale(.5);opacity:.9}100%{transform:scale(1.6);opacity:0}}
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:60}
   .dialog{background:#fff;border-radius:16px;max-width:480px;width:calc(100% - 32px);padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
   .row{display:grid;grid-template-columns:1fr;gap:10px}
   label{font-weight:800}
   input,select{font-family:inherit;font-size:18px;border:1px solid #e1e1e6;border-radius:12px;padding:12px}
-  .head-note{color:#eef;text-align:center;font-size:16px;margin-top:4px}
+  .loading{position:fixed;inset:0;background:rgba(255,255,255,.92);display:none;align-items:center;justify-content:center;z-index:50}
+  .loaderCard{background:#fff;border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.2);padding:18px 20px;text-align:center;max-width:520px}
+  .muted{color:var(--muted)}
 </style>
 <script type="module">
   import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
@@ -41,27 +34,17 @@
   import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
   import { getDatabase as getDB2, ref as ref2, get as get2, onValue as onVal2, set as set2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
 
-  /* gesamt -> Codes + vollständige Kinderliste */
+  /* gesamt -> Codes */
   const app1 = initApp1({
     apiKey:"AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",
-    authDomain:"gesamt-dae4e.firebaseapp.com",
-    databaseURL:"https://gesamt-dae4e-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId:"gesamt-dae4e",
-    storageBucket:"gesamt-dae4e.appspot.com",
-    messagingSenderId:"844023612743",
-    appId:"1:844023612743:web:0821aa894541f89a7df862"
+    databaseURL:"https://gesamt-dae4e-default-rtdb.europe-west1.firebasedatabase.app"
   },"app1");
   const db1 = getDB1(app1);
 
-  /* punkte -> Malwettbewerb */
+  /* punkte -> Konten + Malwettbewerb */
   const app2 = initApp2({
     apiKey:"AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg",
-    authDomain:"punkte-45c20.firebaseapp.com",
-    databaseURL:"https://punkte-45c20-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId:"punkte-45c20",
-    storageBucket:"punkte-45c20.appspot.com",
-    messagingSenderId:"931713539549",
-    appId:"1:931713539549:web:e348bf38369639f1906a34"
+    databaseURL:"https://punkte-45c20-default-rtdb.europe-west1.firebasedatabase.app"
   },"app2");
   const db2 = getDB2(app2);
 
@@ -70,8 +53,10 @@
 
   let aktuelleId = "";
   let bilderMap = {};
-  let kinderList = [];
   let zeigeZaehler = false;
+
+  // Kontoquelle wie im Shop: punkte/kinder + punkte/auslandskonten, Codeprüfung gegen gesamt/kinder
+  let accountsMap = {}; // name -> {punkte, type}
 
   window.addEventListener("DOMContentLoaded", init);
 
@@ -81,16 +66,13 @@
       zeigeZaehler = !!(ez.exists()? ez.val(): false);
     }catch{}
 
+    // Accounts live laden (beide Pfade wie im Shop)
+    onVal2(ref2(db2, `kinder`), snap => mergeAccounts(snap, "kinder"));
+    onVal2(ref2(db2, `auslandskonten`), snap => mergeAccounts(snap, "auslandskonten"));
+
     const cur = await get2(ref2(db2, `${ns}/aktuelleId`));
     aktuelleId = cur.exists()? cur.val() : "";
     if(!aktuelleId){ renderNotice("Momentan ist kein aktiver Malwettbewerb."); return; }
-
-    /* ALLE Kinder live aus gesamt/kinder laden */
-    onVal1(ref1(db1, `kinder`), s=>{
-      const list=[]; s.forEach(ch=>list.push(ch.key));
-      list.sort((a,b)=>a.localeCompare(b));
-      kinderList = list;
-    });
 
     const wSnap = await get2(ref2(db2, `${ns}/wettbewerbe/${aktuelleId}`));
     const w = wSnap.val()||{};
@@ -139,23 +121,29 @@
     renderNotice("Der Malwettbewerb ist beendet.");
   }
 
+  function mergeAccounts(snap, type){
+    const val = snap.exists()? snap.val() : {};
+    // zusammenführen
+    Object.keys(val).forEach(name=>{
+      accountsMap[name] = { punkte: val[name]?.punkte ?? 0, type };
+    });
+  }
+
   function daysCeil(ms){ return Math.max(1, Math.ceil(ms/(1000*60*60*24))); }
 
   function renderNotice(html){
     $("header").innerHTML = `
       <svg class="brush" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M50 6c4 0 8 4 8 8 0 3-2 6-4 8L24 52c-2 2-5 3-8 3-6 0-10-5-10-11 0-3 1-6 3-8L42 10c2-2 5-4 8-4Z" fill="url(#g)"/>
-        <defs><linearGradient id="g" x1="50" y1="6" x2="14" y2="58" gradientUnits="userSpaceOnUse">
-          <stop stop-color="#6ee7b7"/><stop offset=".5" stop-color="#ff7ab6"/><stop offset="1" stop-color="#7aa8ff"/></linearGradient></defs>
+        <defs><linearGradient id="g2" x1="50" y1="6" x2="14" y2="58"><stop stop-color="#6ee7b7"/><stop offset=".5" stop-color="#ff7ab6"/><stop offset="1" stop-color="#7aa8ff"/></linearGradient></defs>
+        <path d="M50 6c4 0 8 4 8 8 0 3-2 6-4 8L24 52c-2 2-5 3-8 3-6 0-10-5-10-11 0-3 1-6 3-8L42 10c2-2 5-4 8-4Z" fill="url(#g2)"/>
       </svg>
       <h1>Malwettbewerb</h1>`;
-    $(".head-note").innerHTML = "Viel Erfolg und viel Spaß beim Malen!";
     $(".content").innerHTML = `<div class="card"><div class="notice">${html}</div></div>`;
   }
 
   function showLoading(txt){
     const l=$("#loading");
-    l.innerHTML = `<div class="loaderCard"><div><span class="ping"></span><strong>${txt}</strong></div><div class="muted" style="margin-top:6px">Die Seite wird sichtbar, sobald alles geladen ist.</div></div>`;
+    l.innerHTML = `<div class="loaderCard"><strong>${txt}</strong><div class="muted" style="margin-top:6px">Die Seite wird sichtbar, sobald alles geladen ist.</div></div>`;
     l.style.display="flex";
   }
   function hideLoading(){ $("#loading").style.display="none"; }
@@ -164,8 +152,7 @@
     await Promise.all(urls.map(u=>new Promise((res,rej)=>{
       const img = new Image();
       img.onload=()=>res(); img.onerror=rej;
-      img.decoding="async"; img.loading="eager";
-      img.src=u;
+      img.decoding="async"; img.loading="eager"; img.src=u;
     })));
   }
 
@@ -213,8 +200,7 @@
     if(ids.length===0){ $(".content").innerHTML = `<div class="card"><div class="notice">Die Gewinner werden vorbereitet.</div></div>`; return; }
     const grid = document.createElement("div"); grid.className="grid";
     ids.forEach((id,idx)=>{
-      const url = (w.bilder||{})[id]?.url;
-      if(!url) return;
+      const url = (w.bilder||{})[id]?.url; if(!url) return;
       const tile = document.createElement("div");
       tile.className="tile";
       tile.innerHTML = `<img src="${url}" alt="Gewinner"><div class="card" style="border-radius:0 0 16px 16px"><strong>Platz ${idx+1}</strong></div>`;
@@ -227,8 +213,13 @@
     const m = $("#modal"); m.style.display="flex";
     $("#vprev").src=url;
     $("#confirmText").textContent = "Möchtest du für dieses Bild abstimmen? Du kannst nur einmal abstimmen.";
+
+    // Dropdown aus punkte/kinder + punkte/auslandskonten (wie Shop)
     const sel = $("#kindSel"); sel.innerHTML="";
-    kinderList.forEach(name=>{ const o=document.createElement("option"); o.value=name; o.textContent=name; sel.appendChild(o); });
+    Object.keys(accountsMap).sort((a,b)=>a.localeCompare(b)).forEach(name=>{
+      const o=document.createElement("option"); o.value=name; o.textContent=name; sel.appendChild(o);
+    });
+
     $("#code").value="";
     $("#sendBtn").onclick = () => sendVote(bildId);
   }
@@ -236,21 +227,29 @@
   async function sendVote(bildId){
     const name = $("#kindSel").value;
     if(!name) return;
+
+    // einmalige Stimme pro Wettbewerb
     if(await hasVoted(name)){
       alert("Du hast bereits für diesen Malwettbewerb abgestimmt. Du kannst beim nächsten Mal wieder abstimmen.");
       closeModal(); return;
     }
-    const codeSnap = await get1(ref1(db1, `kinder/${name}`));
-    const stored = codeSnap.exists()? (codeSnap.val().code||"") : "";
+
+    // Codeprüfung wie Shop: gesamt/kinder/{name}/code
     const entered = $("#code").value.trim();
+    const codeSnap = await get1(ref1(db1, `kinder/${name}/code`));
+    const stored = codeSnap.exists()? (codeSnap.val()||"") : "";
     if(!stored){ alert("Kein Sicherheitscode hinterlegt."); return; }
     if(entered !== stored){ alert("Falscher Code."); return; }
+
+    // race-sichere Zweitprüfung
     if(await hasVoted(name)){
       alert("Du hast bereits für diesen Malwettbewerb abgestimmt. Du kannst beim nächsten Mal wieder abstimmen.");
       closeModal(); return;
     }
-    const vote = { bildId, zeit: new Date().toISOString() };
-    await set2(ref2(db2, `${ns}/stimmen/${aktuelleId}/${encodeKey(name)}`), vote);
+
+    await set2(ref2(db2, `${ns}/stimmen/${aktuelleId}/${encodeKey(name)}`), {
+      bildId, zeit: new Date().toISOString()
+    });
     alert("Stimme versendet. Danke.");
     closeModal();
   }
@@ -268,19 +267,17 @@
   <div class="wrap">
     <header>
       <svg class="brush" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs><linearGradient id="g2" x1="50" y1="6" x2="14" y2="58"><stop stop-color="#6ee7b7"/><stop offset=".5" stop-color="#ff7ab6"/><stop offset="1" stop-color="#7aa8ff"/></linearGradient></defs>
         <path d="M50 6c4 0 8 4 8 8 0 3-2 6-4 8L24 52c-2 2-5 3-8 3-6 0-10-5-10-11 0-3 1-6 3-8L42 10c2-2 5-4 8-4Z" fill="url(#g2)"/>
-        <defs><linearGradient id="g2" x1="50" y1="6" x2="14" y2="58" gradientUnits="userSpaceOnUse">
-          <stop stop-color="#6ee7b7"/><stop offset=".5" stop-color="#ff7ab6"/><stop offset="1" stop-color="#7aa8ff"/></linearGradient></defs>
       </svg>
       <h1>Malwettbewerb</h1>
     </header>
-    <div class="head-note"> </div>
     <div class="content">
       <div class="card"><div class="notice">Lade…</div></div>
     </div>
   </div>
 
-  <!-- Modal -->
+  <!-- Modal Abstimmen -->
   <div id="modal" class="modal">
     <div class="dialog">
       <div style="display:flex;gap:12px;align-items:center;margin-bottom:8px">
@@ -298,5 +295,5 @@
   </div>
 
   <!-- Loader -->
-  <div id="loading" class="loading"></div>
+  <div id="loading" class="loading"><div class="loaderCard">Lade…</div></div>
 </body></html>
