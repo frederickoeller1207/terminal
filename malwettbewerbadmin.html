@@ -1,355 +1,394 @@
-<!DOCTYPE html><html lang="de"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Malwettbewerb – Admin</title>
-<link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600&display=swap" rel="stylesheet">
-<style>
-  :root{--c:#007aff}
-  body{font-family:'SF Pro Display',sans-serif;background:#f6f7f9;color:#222;margin:0;padding:16px}
-  h1{font-size:22px;margin:6px 0 14px}
-  .card{background:#fff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.06);padding:14px;margin-bottom:14px}
-  label{font-weight:600;font-size:14px;display:block;margin:8px 0 4px}
-  input,button{font-family:inherit;font-size:14px}
-  input[type="text"],input[type="url"],input[type="datetime-local"]{width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:10px;padding:10px}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-  button{border:0;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
-  .pri{background:var(--c);color:#fff}
-  .sec{background:#f0f0f0}
-  .list .item{display:flex;align-items:center;justify-content:space-between;border-top:1px solid #f3f3f3;padding:8px 0}
-  .imgline{display:flex;align-items:center;gap:10px;max-width:100%;overflow:hidden}
-  .imgline img{width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid #eee;flex:0 0 auto}
-  .muted{color:#666;font-size:13px}
-  .grid{display:grid;grid-template-columns:1fr;gap:8px}
-  @media(min-width:720px){.grid{grid-template-columns:1fr 1fr}}
-  select{width:100%;padding:10px;border:1px solid #ddd;border-radius:10px}
-  .pill{display:inline-block;background:#eef5ff;color:#2a5bd7;border-radius:999px;padding:4px 10px;font-weight:700}
-</style>
-<script type="module">
-  import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-  import { getDatabase as getDB1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
-  import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-  import { getDatabase as getDB2, ref as ref2, onValue as onVal2, set as set2, update as update2, push as push2, get as get2, remove as remove2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Malwettbewerb – Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --primary:#007aff; --primary2:#005bb5; --bg:#f4f6f8; --card:#fff; --ink:#1f2328;
+      --muted:#667085; --danger:#ff3b30; --ring:0 8px 30px rgba(16,24,40,.08)
+    }
+    *{box-sizing:border-box}
+    body{font-family:'SF Pro Display',sans-serif;background:var(--bg);color:var(--ink);margin:0;padding:16px}
+    h1{margin:6px 0 16px 0;font-size:26px}
+    h2{font-size:20px;margin:0 0 12px 0}
+    .section{background:var(--card);border-radius:14px;box-shadow:var(--ring);padding:16px;margin-bottom:16px}
+    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    select,input[type="text"],input[type="datetime-local"]{width:100%;max-width:360px;padding:10px 12px;border:1px solid #d0d5dd;border-radius:10px;font-size:15px}
+    button{background:var(--primary);color:#fff;border:0;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
+    button.secondary{background:#fff;color:#111;border:1px solid #d0d5dd}
+    button.danger{background:var(--danger)}
+    .list{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+    .item{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid #eee;border-radius:12px;padding:10px}
+    .thumb{width:48px;height:48px;flex:0 0 48px;border-radius:8px;object-fit:cover;background:#f2f2f2}
+    .spacer{flex:1}
+    .muted{color:var(--muted);font-size:14px}
+    .badge{background:#eef2ff;color:#344054;border-radius:999px;padding:4px 10px;font-weight:800;font-size:13px}
+    .grid-2{display:grid;grid-template-columns:1fr;gap:10px}
+    @media(min-width:760px){.grid-2{grid-template-columns:1fr 1fr}}
+    .toggle{display:flex;gap:8px;align-items:center}
+    /* Modal für Wählerliste */
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:80}
+    .dialog{background:#fff;border-radius:14px;box-shadow:0 30px 80px rgba(0,0,0,.35);width:min(92vw,520px);padding:16px}
+    .dialog h3{margin:0 0 10px 0}
+    .chips{display:flex;flex-wrap:wrap;gap:8px}
+    .chip{background:#f2f4f7;border:1px solid #e4e7ec;border-radius:999px;padding:6px 10px;font-weight:700}
+  </style>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+    import { getDatabase, ref, onValue, get, set, update, remove, push } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
 
-  /* DBs wie im System */
-  const app1 = initApp1({
-    apiKey:"AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",
-    authDomain:"gesamt-dae4e.firebaseapp.com",
-    databaseURL:"https://gesamt-dae4e-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId:"gesamt-dae4e",
-    storageBucket:"gesamt-dae4e.appspot.com",
-    messagingSenderId:"844023612743",
-    appId:"1:844023612743:web:0821aa894541f89a7df862"
-  },"app1");
-  getDB1(app1); // hier nicht genutzt, Platzhalter für gleiche Struktur
+    // DB: punkte (alles vom Malwettbewerb)
+    const app = initializeApp({
+      apiKey: "AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg",
+      databaseURL: "https://punkte-45c20-default-rtdb.europe-west1.firebasedatabase.app"
+    }, "punkte");
+    const db = getDatabase(app);
 
-  const app2 = initApp2({
-    apiKey:"AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg",
-    authDomain:"punkte-45c20.firebaseapp.com",
-    databaseURL:"https://punkte-45c20-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId:"punkte-45c20",
-    storageBucket:"punkte-45c20.appspot.com",
-    messagingSenderId:"931713539549",
-    appId:"1:931713539549:web:e348bf38369639f1906a34"
-  },"app2");
-  const db2 = getDB2(app2);
+    const ns = "malwettbewerb";
 
-  const ns = "malwettbewerb";
-  const el = (q)=>document.querySelector(q);
+    // UI refs
+    const el = (id)=>document.getElementById(id);
 
-  let aktuelleSelect, wListe, bilderListe, stimmenListe;
+    let alleWettbewerbe = {};   // {id:{phasen, bilder, gewinner}}
+    let aktuelleId = null;
 
-  async function ensureWettbewerb(id){
-    if(!id) return;
-    const p = ref2(db2, `${ns}/wettbewerbe/${id}`);
-    const ex = await get2(p);
-    if(!ex.exists()) await set2(p, { phasen:{}, bilder:{} });
-  }
-  function fmt(x){ if(!x) return "—"; try{ return new Date(x).toLocaleString(); }catch{ return "—"; } }
-  function toLocalDT(x){ if(!x) return ""; const d=new Date(x); const pad=n=>String(n).padStart(2,'0');
-    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }
-
-  window.addEventListener("DOMContentLoaded", () => {
-    aktuelleSelect = el("#aktuelleId");
-    wListe = el("#wettbewerbe");
-    bilderListe = el("#bilder");
-    stimmenListe = el("#stimmen");
-
-    /* aktuelleId beobachten und ggf. Stub anlegen */
-    onVal2(ref2(db2, `${ns}/aktuelleId`), async s=>{
-      const cur = s.exists()? s.val() : "";
-      aktuelleSelect.dataset.current = cur;
-      if (cur) await ensureWettbewerb(cur);
-    });
-
-    /* Wettbewerbe laden; aktuelleId immer mit anzeigen */
-    onVal2(ref2(db2, `${ns}/wettbewerbe`), async s=>{
-      const data = s.val() || {};
-      const ids = Object.keys(data);
-      const cur = aktuelleSelect.dataset.current || "";
-      if (cur && !ids.includes(cur)) { await ensureWettbewerb(cur); data[cur]={phasen:{},bilder:{}}; ids.push(cur); }
-
-      renderWettbewerbListe(data);
-      renderAktuelleId(ids);
-
-      const sel = aktuelleSelect.value;
-      if (sel) { loadDetail(sel); }
-    });
-
-    /* Stimmenübersicht */
-    onVal2(ref2(db2, `${ns}/stimmen`), s=>{
-      const votes = s.val()||{};
-      renderStimmen(votes);
-    });
-
-    /* Buttons */
-    el("#neuBtn").onclick = createWettbewerb;
-    el("#savePhase").onclick = savePhasen;
-    el("#addBild").onclick = addBild;
-    el("#setAktuelle").onclick = setAktuelle;
-    el("#delWettb").onclick = delWettbewerb;
-    el("#saveGewinner").onclick = saveGewinner;
-    el("#toggleZaehler").onchange = e=>{
-      update2(ref2(db2, `${ns}/einstellungen`), { zeigeZaehler: !!e.target.checked });
+    // Util: datetime-local ⇄ ISO
+    const toLocalValue = (iso)=> {
+      if(!iso) return "";
+      const d = new Date(iso);
+      const pad = (n)=>String(n).padStart(2,"0");
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
     };
-    onVal2(ref2(db2, `${ns}/einstellungen/zeigeZaehler`), s=>{
-      el("#toggleZaehler").checked = !!(s.exists()? s.val(): false);
+    const fromLocalValue = (val)=> val ? new Date(val).toISOString() : null;
+
+    // Util: Key-Encoding wie Kinderseite
+    const decodeKey = (k)=> k.replaceAll("_","/");
+    const encodeKey = (k)=> k.replaceAll("/","_");
+
+    // Init
+    window.addEventListener("DOMContentLoaded", async ()=>{
+      // akt. ID
+      onValue(ref(db, `${ns}/aktuelleId`), s=>{
+        aktuelleId = s.exists()? s.val() : null;
+        renderAktuelleIdSelect();
+        renderAlles();
+      });
+
+      // alle Wettbewerbe
+      onValue(ref(db, `${ns}/wettbewerbe`), s=>{
+        alleWettbewerbe = s.val() || {};
+        renderAktuelleIdSelect();
+        renderAlles();
+      });
+
+      // Zähler-Einstellung laden
+      onValue(ref(db, `${ns}/einstellungen/zeigeZaehler`), s=>{
+        el("toggleZaehler").checked = !!(s.exists()? s.val(): false);
+      });
     });
-  });
 
-  function renderAktuelleId(ids=[]){
-    const current = aktuelleSelect.dataset.current || "";
-    const old = aktuelleSelect.value;
-    aktuelleSelect.innerHTML = "";
-    const opt0 = document.createElement("option");
-    opt0.value=""; opt0.textContent="— auswählen —";
-    aktuelleSelect.appendChild(opt0);
-    ids.sort().forEach(id=>{
-      const o = document.createElement("option");
-      o.value=id; o.textContent=id + (id===current ? "  • aktuell" : "");
-      aktuelleSelect.appendChild(o);
-    });
-    aktuelleSelect.value = old && ids.includes(old) ? old : current || "";
-  }
+    // Render: Auswahl aktuelle ID
+    function renderAktuelleIdSelect(){
+      const sel = el("aktSel");
+      const ids = Object.keys(alleWettbewerbe||{});
+      sel.innerHTML = "";
+      const opt0 = document.createElement("option");
+      opt0.value = "";
+      opt0.textContent = "— auswählen —";
+      sel.appendChild(opt0);
+      ids.sort().forEach(id=>{
+        const o = document.createElement("option");
+        o.value = id;
+        o.textContent = id;
+        if(aktuelleId === id) o.selected = true;
+        sel.appendChild(o);
+      });
+      el("setAktivBtn").disabled = sel.value==="";
+    }
 
-  function renderWettbewerbListe(data){
-    wListe.innerHTML = "";
-    Object.keys(data).sort().forEach(id=>{
-      const w = data[id];
-      const div = document.createElement("div");
-      div.className = "item";
-      div.innerHTML = `
-        <div>
-          <div><b>${id}</b> ${id=== (aktuelleSelect.dataset.current||"") ? '<span class="pill">aktuell</span>': ''}</div>
-          <div class="muted">
-            Einwurf: ${fmt(w?.phasen?.einwurfStart)} |
-            Abstimmung: ${fmt(w?.phasen?.abstimmStart)} |
-            Gewinner: ${fmt(w?.phasen?.gewinnerStart)} |
-            Ende: ${fmt(w?.phasen?.ende)}
-          </div>
-        </div>
-        <div><button class="sec" onclick="window.selectW('${id}')">Bearbeiten</button></div>`;
-      wListe.appendChild(div);
-    });
-    window.selectW = (id)=>{
-      aktuelleSelect.value = id;
-      loadDetail(id);
-    };
-  }
-
-  async function loadDetail(id){
-    const pSnap = await get2(ref2(db2, `${ns}/wettbewerbe/${id}/phasen`));
-    const p = pSnap.val()||{};
-    el("#pEinwurf").value = toLocalDT(p.einwurfStart);
-    el("#pAbstimm").value = toLocalDT(p.abstimmStart);
-    el("#pGewinner").value = toLocalDT(p.gewinnerStart);
-    el("#pEnde").value = toLocalDT(p.ende);
-
-    const b = await get2(ref2(db2, `${ns}/wettbewerbe/${id}/bilder`));
-    renderBilder(b.val()||{});
-
-    const g = await get2(ref2(db2, `${ns}/wettbewerbe/${id}/gewinner`));
-    const v = g.val()||{};
-    el("#gew1").value = v.platz1 || "";
-    el("#gew2").value = v.platz2 || "";
-    el("#gew3").value = v.platz3 || "";
-  }
-
-  async function createWettbewerb(){
-    const id = prompt("Neue ID, z.B. mw_2025_09_01");
-    if(!id) return;
-    try{
-      await ensureWettbewerb(id);
-      await set2(ref2(db2, `${ns}/aktuelleId`), id);
-      alert("Wettbewerb angelegt und als aktuell gesetzt.");
-    }catch(e){ alert("Fehler: "+(e?.message||e)); }
-  }
-
-  async function setAktuelle(){
-    const id = el("#aktuelleId").value;
-    if(!id) return;
-    try{
-      await ensureWettbewerb(id);
-      await set2(ref2(db2, `${ns}/aktuelleId`), id);
-      alert("Aktueller Wettbewerb gesetzt.");
-    }catch(e){ alert("Fehler: "+(e?.message||e)); }
-  }
-
-  async function savePhasen(){
-    const id = el("#aktuelleId").value || aktuelleSelect.dataset.current;
-    if(!id) return alert("Wettbewerb wählen.");
-    try{
-      const ph = {
-        einwurfStart: new Date(el("#pEinwurf").value).toISOString(),
-        abstimmStart: new Date(el("#pAbstimm").value).toISOString(),
-        gewinnerStart: new Date(el("#pGewinner").value).toISOString(),
-        ende: new Date(el("#pEnde").value).toISOString()
-      };
-      await update2(ref2(db2, `${ns}/wettbewerbe/${id}/phasen`), ph);
-      alert("Phasen gespeichert.");
-    }catch(e){ alert("Fehler: "+(e?.message||e)); }
-  }
-
-  function renderBilder(bilder){
-    bilderListe.innerHTML = "";
-    const keys = Object.keys(bilder);
-    if(keys.length===0){ bilderListe.innerHTML = '<div class="muted">Noch keine Bilder.</div>'; return; }
-    keys.forEach(k=>{
-      const u = bilder[k].url;
-      const row = document.createElement("div");
-      row.className="item";
-      row.innerHTML = `
-        <div class="imgline">
-          <img src="${u}" alt="Bild">
-          <div class="muted" style="overflow:hidden;text-overflow:ellipsis">${u}</div>
-        </div>
-        <div>
-          <button class="sec" onclick="window.delBild('${k}')">Löschen</button>
-        </div>`;
-      bilderListe.appendChild(row);
-    });
-    window.delBild = async (bid)=>{
-      const id = el("#aktuelleId").value || aktuelleSelect.dataset.current;
+    // Setze aktuelle ID
+    el("setAktivBtn").onclick = async ()=>{
+      const id = el("aktSel").value;
       if(!id) return;
-      if(!confirm("Bild löschen?")) return;
-      try{ await remove2(ref2(db2, `${ns}/wettbewerbe/${id}/bilder/${bid}`)); }catch(e){ alert("Fehler: "+(e?.message||e)); }
+      await set(ref(db, `${ns}/aktuelleId`), id);
     };
-  }
 
-  async function addBild(){
-    const id = el("#aktuelleId").value || aktuelleSelect.dataset.current;
-    if(!id) return alert("Wettbewerb wählen.");
-    const url = document.querySelector("#bildUrl").value.trim();
-    if(!url) return;
-    try{
-      const key = push2(ref2(db2, `${ns}/wettbewerbe/${id}/bilder`)).key;
-      await set2(ref2(db2, `${ns}/wettbewerbe/${id}/bilder/${key}`), { url, addedAt: new Date().toISOString() });
-      document.querySelector("#bildUrl").value="";
-    }catch(e){ alert("Fehler: "+(e?.message||e)); }
-  }
-
-  function renderStimmen(votesAll){
-    const id = el("#aktuelleId").value || aktuelleSelect.dataset.current;
-    stimmenListe.innerHTML = "";
-    if(!id || !votesAll[id]){ stimmenListe.innerHTML = '<div class="muted">Keine Stimmen.</div>'; return; }
-    const votes = votesAll[id];
-    const perImg = {};
-    Object.keys(votes).forEach(kind=>{
-      const b = votes[kind].bildId;
-      perImg[b] = (perImg[b]||0)+1;
-    });
-    const rows = Object.entries(perImg).sort((a,b)=>b[1]-a[1]);
-    rows.forEach(([bid,count])=>{
-      const div = document.createElement("div");
-      div.className="item";
-      div.innerHTML = `<div><b>${bid}</b></div><div>${count}</div>`;
-      stimmenListe.appendChild(div);
-    });
-  }
-
-  async function saveGewinner(){
-    const id = el("#aktuelleId").value || aktuelleSelect.dataset.current;
-    if(!id) return alert("Wettbewerb wählen.");
-    try{
-      const data = {
-        platz1: el("#gew1").value || null,
-        platz2: el("#gew2").value || null,
-        platz3: el("#gew3").value || null
+    // Neuen Wettbewerb anlegen
+    el("neuBtn").onclick = async ()=>{
+      const neueId = String(Math.floor(Math.random()*1e6)).padStart(5,"0");
+      const basis = {
+        phasen: {
+          einwurfStart: new Date(Date.now()+60*60*1000).toISOString(),
+          abstimmStart: new Date(Date.now()+48*60*60*1000).toISOString(),
+          gewinnerStart: new Date(Date.now()+72*60*60*1000).toISOString(),
+          ende: new Date(Date.now()+96*60*60*1000).toISOString()
+        },
+        bilder: {},
+        gewinner: {}
       };
-      await set2(ref2(db2, `${ns}/wettbewerbe/${id}/gewinner`), data);
-      alert("Gewinner gespeichert.");
-    }catch(e){ alert("Fehler: "+(e?.message||e)); }
-  }
+      await set(ref(db, `${ns}/wettbewerbe/${neueId}`), basis);
+      await set(ref(db, `${ns}/aktuelleId`), neueId);
+    };
 
-  async function delWettbewerb(){
-    const id = el("#aktuelleId").value || aktuelleSelect.dataset.current;
-    if(!id) return;
-    if(!confirm("Wettbewerb vollständig löschen?")) return;
-    try{
-      await remove2(ref2(db2, `${ns}/wettbewerbe/${id}`));
-      await remove2(ref2(db2, `${ns}/stimmen/${id}`));
-      const curSnap = await get2(ref2(db2, `${ns}/aktuelleId`));
-      if(curSnap.exists() && curSnap.val()===id){ await set2(ref2(db2, `${ns}/aktuelleId`), ""); }
-      alert("Gelöscht.");
-    }catch(e){ alert("Fehler: "+(e?.message||e)); }
-  }
-  window.selectW = ()=>{}; // placeholder for linter
-</script>
+    // Wettbewerb löschen
+    el("delBtn").onclick = async ()=>{
+      const id = el("aktSel").value || aktuelleId;
+      if(!id) return;
+      if(!confirm(`Wettbewerb ${id} wirklich löschen?`)) return;
+      await remove(ref(db, `${ns}/wettbewerbe/${id}`));
+      const cur = await get(ref(db, `${ns}/aktuelleId`));
+      if(cur.exists() && cur.val()===id) await set(ref(db, `${ns}/aktuelleId`), null);
+    };
+
+    // Zähler öffentlich
+    el("toggleZaehler").onchange = async (e)=>{
+      await set(ref(db, `${ns}/einstellungen/zeigeZaehler`), !!e.target.checked);
+    };
+
+    // Alles rendern (Phasen, Bilder, Stimmen, Gewinner)
+    function renderAlles(){
+      const id = aktuelleId;
+      const w = id ? alleWettbewerbe[id] : null;
+
+      // Phasen
+      if(!w){
+        ["einwurf","abstimm","gewinner","ende"].forEach(k=> el(k).value="");
+      }else{
+        el("einwurf").value  = toLocalValue(w.phasen?.einwurfStart);
+        el("abstimm").value  = toLocalValue(w.phasen?.abstimmStart);
+        el("gewinner").value = toLocalValue(w.phasen?.gewinnerStart);
+        el("ende").value     = toLocalValue(w.phasen?.ende);
+      }
+      // Bilderliste
+      renderBilder();
+      // Stimmenübersicht
+      renderStimmenUebersicht();
+      // Gewinner
+      renderGewinner();
+    }
+
+    // Phasen speichern
+    el("savePhasen").onclick = async ()=>{
+      if(!aktuelleId) return;
+      const upd = {
+        [`${ns}/wettbewerbe/${aktuelleId}/phasen/einwurfStart`]: fromLocalValue(el("einwurf").value),
+        [`${ns}/wettbewerbe/${aktuelleId}/phasen/abstimmStart`]: fromLocalValue(el("abstimm").value),
+        [`${ns}/wettbewerbe/${aktuelleId}/phasen/gewinnerStart`]: fromLocalValue(el("gewinner").value),
+        [`${ns}/wettbewerbe/${aktuelleId}/phasen/ende`]: fromLocalValue(el("ende").value)
+      };
+      await update(ref(db), upd);
+    };
+
+    // Bilder rendern + hinzufügen/entfernen
+    function renderBilder(){
+      const box = el("bilderList"); box.innerHTML="";
+      const w = alleWettbewerbe[aktuelleId] || { bilder:{} };
+      const bilder = w.bilder || {};
+      Object.keys(bilder).forEach(bid=>{
+        const row = document.createElement("div");
+        row.className="item";
+        row.innerHTML = `
+          <img class="thumb" src="${bilder[bid].url}" alt="">
+          <div class="spacer">
+            <div class="muted">${bilder[bid].url}</div>
+          </div>
+          <button class="secondary danger" data-del="${bid}">Löschen</button>`;
+        box.appendChild(row);
+      });
+      box.querySelectorAll("[data-del]").forEach(btn=>{
+        btn.onclick = async ()=>{
+          const bid = btn.dataset.del;
+          await remove(ref(db, `${ns}/wettbewerbe/${aktuelleId}/bilder/${bid}`));
+          // zugehörige Stimmen optional behalten; hier nicht löschen
+        };
+      });
+    }
+
+    el("addBildBtn").onclick = async ()=>{
+      if(!aktuelleId) return;
+      const url = el("bildUrl").value.trim();
+      if(!url) return;
+      const id = push(ref(db, "tmp")).key; // generate id
+      await set(ref(db, `${ns}/wettbewerbe/${aktuelleId}/bilder/${id}`), { url });
+      el("bildUrl").value="";
+    };
+
+    // Stimmen-Übersicht: Thumbnails + Counts + Overlay mit Wählerliste
+    async function renderStimmenUebersicht(){
+      const box = el("votesList"); box.innerHTML="";
+      if(!aktuelleId) return;
+      const w = alleWettbewerbe[aktuelleId] || {};
+      const bilder = w.bilder || {};
+
+      const sSnap = await get(ref(db, `${ns}/stimmen/${aktuelleId}`));
+      const stimmen = sSnap.exists()? sSnap.val() : {};
+      // pro Bild Id sammeln
+      const per = {}; // {bildId:{count,names:[]}}
+      Object.keys(stimmen).forEach(k=>{
+        const v = stimmen[k]; // {bildId, zeit}
+        if(!v || !v.bildId) return;
+        if(!per[v.bildId]) per[v.bildId] = { count:0, names:[] };
+        per[v.bildId].count++;
+        per[v.bildId].names.push(decodeKey(k));
+      });
+
+      // Reihenfolge: nach Count absteigend, sonst Einfüge
+      const ids = Object.keys(bilder);
+      ids.sort((a,b)=>(per[b]?.count||0)-(per[a]?.count||0));
+
+      ids.forEach(bid=>{
+        const row = document.createElement("div");
+        row.className="item";
+        const c = per[bid]?.count || 0;
+        row.innerHTML = `
+          <img class="thumb" src="${bilder[bid].url}" alt="">
+          <div class="spacer">
+            <div><strong>Bild-ID:</strong> <span class="muted">${bid}</span></div>
+          </div>
+          <span class="badge">${c} Stimme${c===1?"":"n"}</span>
+          <button class="secondary" data-show="${bid}">Wähler anzeigen</button>
+        `;
+        box.appendChild(row);
+      });
+
+      box.querySelectorAll("[data-show]").forEach(btn=>{
+        btn.onclick = ()=>{
+          const bid = btn.dataset.show;
+          const names = (per[bid]?.names || []).sort((a,b)=>{
+            const ta=a.startsWith("~"), tb=b.startsWith("~");
+            if(ta!==tb) return ta?1:-1;
+            return a.localeCompare(b,'de',{sensitivity:'base'});
+          });
+          // Modal füllen
+          document.querySelector("#voteModal img").src = (alleWettbewerbe[aktuelleId].bilder[bid]?.url)||"";
+          el("voteList").innerHTML = names.length? names.map(n=>`<span class="chip">${n}</span>`).join("") : `<span class="muted">Noch keine Stimmen.</span>`;
+          el("voteModal").style.display="flex";
+        };
+      });
+    }
+
+    // Gewinner rendern + speichern
+    function renderGewinner(){
+      const w = alleWettbewerbe[aktuelleId] || { bilder:{}, gewinner:{} };
+      const bilder = w.bilder || {};
+      const ids = Object.keys(bilder);
+
+      ["g1","g2","g3"].forEach((sid,i)=>{
+        const sel = el(sid); sel.innerHTML="";
+        const o0 = document.createElement("option"); o0.value=""; o0.textContent="— auswählen —"; sel.appendChild(o0);
+        ids.forEach(id=>{
+          const o = document.createElement("option"); o.value=id; o.textContent=id;
+          sel.appendChild(o);
+        });
+      });
+
+      if(w.gewinner){
+        el("g1").value = w.gewinner.platz1 || "";
+        el("g2").value = w.gewinner.platz2 || "";
+        el("g3").value = w.gewinner.platz3 || "";
+      }
+
+      const prev = el("gewinnerPreview"); prev.innerHTML="";
+      ["platz1","platz2","platz3"].forEach((k,idx)=>{
+        const id = w.gewinner?.[k];
+        if(id && bilder[id]){
+          const row = document.createElement("div");
+          row.className="item";
+          row.innerHTML = `<img class="thumb" src="${bilder[id].url}"><div><strong>Platz ${idx+1}</strong><div class="muted">${id}</div></div>`;
+          prev.appendChild(row);
+        }
+      });
+    }
+
+    el("saveGewinner").onclick = async ()=>{
+      if(!aktuelleId) return;
+      const data = {
+        platz1: el("g1").value || null,
+        platz2: el("g2").value || null,
+        platz3: el("g3").value || null
+      };
+      await set(ref(db, `${ns}/wettbewerbe/${aktuelleId}/gewinner`), data);
+      renderGewinner();
+    };
+
+    // Modal schließen
+    window.closeModal=()=>{ el("voteModal").style.display="none"; };
+  </script>
 </head>
 <body>
   <h1>Malwettbewerb – Admin</h1>
 
-  <div class="card">
-    <label for="aktuelleId">Aktueller Wettbewerb</label>
+  <div class="section">
+    <h2>Aktueller Wettbewerb</h2>
     <div class="row">
-      <select id="aktuelleId"></select>
-      <button id="setAktuelle" class="pri">Setzen</button>
+      <select id="aktSel"></select>
+      <button id="setAktivBtn">Setzen</button>
     </div>
-    <div style="margin-top:8px" class="row">
-      <button id="neuBtn" class="sec">Neuen Wettbewerb anlegen</button>
-      <button id="delWettb" class="sec">Wettbewerb löschen</button>
+    <div class="row" style="margin-top:10px">
+      <button id="neuBtn" class="secondary">Neuen Wettbewerb anlegen</button>
+      <button id="delBtn" class="danger">Wettbewerb löschen</button>
     </div>
   </div>
 
-  <div class="card">
-    <h2 style="margin:0 0 8px">Phasen</h2>
-    <div class="row grid">
-      <div><label>Einwurfphase start</label><input id="pEinwurf" type="datetime-local"></div>
-      <div><label>Abstimmphase start</label><input id="pAbstimm" type="datetime-local"></div>
-      <div><label>Gewinnerphase start</label><input id="pGewinner" type="datetime-local"></div>
-      <div><label>Ende</label><input id="pEnde" type="datetime-local"></div>
+  <div class="grid-2">
+    <div class="section">
+      <h2>Phasen</h2>
+      <div class="row"><span class="muted">Einwurfphase start</span></div>
+      <input id="einwurf" type="datetime-local">
+      <div class="row" style="margin-top:8px"><span class="muted">Abstimmphase start</span></div>
+      <input id="abstimm" type="datetime-local">
+      <div class="row" style="margin-top:8px"><span class="muted">Gewinnerphase start</span></div>
+      <input id="gewinner" type="datetime-local">
+      <div class="row" style="margin-top:8px"><span class="muted">Ende</span></div>
+      <input id="ende" type="datetime-local">
+      <div class="row" style="margin-top:10px"><button id="savePhasen">Speichern</button></div>
     </div>
-    <div style="margin-top:10px"><button id="savePhase" class="pri">Speichern</button></div>
-  </div>
 
-  <div class="card">
-    <h2 style="margin:0 0 8px">Bilder</h2>
-    <label>Bild-URL hinzufügen</label>
-    <div class="row">
-      <input id="bildUrl" type="url" placeholder="https://…">
-      <button id="addBild" class="sec">Hinzufügen</button>
+    <div class="section">
+      <h2>Bilder</h2>
+      <div class="row">
+        <input id="bildUrl" type="text" placeholder="https://…">
+        <button id="addBildBtn" class="secondary">Hinzufügen</button>
+      </div>
+      <div id="bilderList" class="list"></div>
     </div>
-    <div id="bilder" class="list" style="margin-top:8px"></div>
   </div>
 
-  <div class="card">
-    <h2 style="margin:0 0 8px">Stimmen (Übersicht)</h2>
-    <label><input id="toggleZaehler" type="checkbox"> Zähler öffentlich zeigen (Kinderansicht) – standard AUS</label>
-    <div id="stimmen" class="list" style="margin-top:8px"></div>
+  <div class="section">
+    <h2>Stimmen (Übersicht)</h2>
+    <label class="toggle">
+      <input id="toggleZaehler" type="checkbox" />
+      <span>Zähler öffentlich zeigen (Kinderansicht) – standard AUS</span>
+    </label>
+    <div id="votesList" class="list" style="margin-top:10px"></div>
   </div>
 
-  <div class="card">
-    <h2 style="margin:0 0 8px">Gewinner auswählen</h2>
-    <div class="row3">
-      <div><label>Platz 1</label><select id="gew1"></select></div>
-      <div><label>Platz 2</label><select id="gew2"></select></div>
-      <div><label>Platz 3</label><select id="gew3"></select></div>
+  <div class="section">
+    <h2>Gewinner auswählen</h2>
+    <div class="row" style="gap:12px;flex-wrap:wrap">
+      <div><div class="muted">Platz 1</div><select id="g1" style="min-width:200px"></select></div>
+      <div><div class="muted">Platz 2</div><select id="g2" style="min-width:200px"></select></div>
+      <div><div class="muted">Platz 3</div><select id="g3" style="min-width:200px"></select></div>
+      <div class="spacer"></div>
+      <button id="saveGewinner">Speichern</button>
     </div>
-    <div style="margin-top:10px"><button id="saveGewinner" class="pri">Speichern</button></div>
-    <div class="muted" style="margin-top:8px">Kinder sehen in der Gewinnerphase nur die drei ausgewählten Bilder.</div>
+    <div id="gewinnerPreview" class="list" style="margin-top:10px"></div>
   </div>
 
-  <div class="card">
-    <h2 style="margin:0 0 8px">Wettbewerbe</h2>
-    <div id="wettbewerbe" class="list"></div>
+  <!-- Modal: Wählerliste zu einem Bild -->
+  <div id="voteModal" class="overlay">
+    <div class="dialog">
+      <div class="row" style="align-items:center;gap:12px">
+        <img src="" alt="" style="width:56px;height:56px;border-radius:10px;object-fit:cover;background:#f2f2f2">
+        <h3 style="margin:0">Stimmen – Details</h3>
+        <div class="spacer"></div>
+        <button class="secondary" onclick="closeModal()">Schließen</button>
+      </div>
+      <div id="voteList" class="chips" style="margin-top:12px"></div>
+    </div>
   </div>
-</body></html>
+</body>
+</html>
