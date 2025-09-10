@@ -1,252 +1,203 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<title>Mäusegruppe – Nachrichten & Briefkasten</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MausBriefkasten</title>
 <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg:#f9f9fb; --card:#fff; --border:#ddd; --primary:#007aff;
-    --waTop:#075e54; --bubbleMe:#dcf8c6; --bubbleOther:#ffffff;
-  }
-  body{font-family:'SF Pro Display',sans-serif;margin:0;background:var(--bg);color:#1c1c1e}
-  .header{background:var(--waTop);color:#fff;padding:14px;font-weight:600;display:flex;align-items:center;gap:10px}
-  .header button{background:none;border:none;color:#fff;font-size:20px;cursor:pointer}
-  .screen{display:none}
-  .screen.active{display:block}
-  .container{padding:16px;max-width:720px;margin:0 auto}
-  /* Terminal-Buttons */
-  .btn{display:block;width:100%;padding:18px 24px;margin:10px 0;background:#fff;border:1px solid var(--border);border-radius:12px;font-size:20px;font-weight:600;cursor:pointer;text-align:center}
-  .btn.primary{border-color:var(--primary);color:var(--primary)}
-  /* Listen */
-  .list{display:flex;flex-direction:column;gap:10px}
-  .list button{display:block;width:100%;text-align:left;padding:14px;background:#fff;border:1px solid var(--border);border-radius:12px;font-size:16px;cursor:pointer}
-  .pin-wrap{display:flex;gap:8px;align-items:center;margin-top:12px}
-  .pin-wrap input{flex:1;min-width:160px;padding:10px;border:1px solid var(--border);border-radius:10px;font-size:16px}
-  /* Chatliste Cards */
-  .item{display:flex;align-items:center;gap:10px;padding:12px;border-radius:12px;border:1px solid var(--border);background:#fff}
-  .avatar{width:36px;height:36px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-weight:600}
-  /* Chatfenster */
-  #chatWindow{height:100vh;display:none;flex-direction:column;background:#ece5dd}
-  #messages{flex:1;overflow-y:auto;padding:10px}
-  .msg{max-width:72%;margin:6px 0;padding:10px 14px;border-radius:16px;font-size:15px}
-  .me{align-self:flex-end;background:var(--bubbleMe);border-bottom-right-radius:0}
-  .other{align-self:flex-start;background:var(--bubbleOther);border-bottom-left-radius:0}
-  .msg small{display:block;font-size:11px;color:#555;margin-top:4px;text-align:right}
-  .composer{display:flex;gap:8px;padding:8px;background:#f0f0f0;position:sticky;bottom:0}
-  .composer input{flex:1;border:1px solid var(--border);border-radius:20px;padding:10px 14px;font-size:15px}
-  .composer button{background:var(--waTop);border:none;color:#fff;padding:10px 16px;border-radius:20px;font-weight:600;cursor:pointer}
-  /* Briefkasten */
-  .card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px}
-  textarea{width:100%;min-height:120px;padding:12px;border:1px solid var(--border);border-radius:10px;font-size:16px;resize:vertical}
-  .hint{font-size:13px;color:#6b7280;margin-top:6px}
+  :root{--brand1:#7aa8ff;--brand2:#6ee7b7;--ink:#1b1b1f;--card:#fff;--muted:#666}
+  *{box-sizing:border-box}
+  body{font-family:'SF Pro Display',sans-serif;margin:0;background:linear-gradient(135deg,var(--brand1),#ff7ab6);min-height:100vh;color:var(--ink)}
+  .wrap{max-width:900px;margin:0 auto;padding:28px 16px 40px}
+  header{display:flex;gap:12px;align-items:center;justify-content:center;margin-bottom:18px;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.15)}
+  header h1{margin:0;font-size:32px}
+  .mail{width:40px;height:40px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.25))}
+  .card{background:var(--card);border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.15);padding:18px}
+  p.lead{font-size:18px;line-height:1.5;margin:0 0 14px}
+  .btn{appearance:none;border:0;border-radius:12px;padding:14px 18px;font-weight:800;font-size:18px;cursor:pointer;color:#fff;background:#111;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+  .btn:active{transform:translateY(1px)}
+  .muted{color:var(--muted)}
+  /* Modal */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:50}
+  .dialog{background:#fff;border-radius:16px;max-width:520px;width:calc(100% - 32px);padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+  .grid{display:grid;grid-template-columns:1fr;gap:12px}
+  label{font-weight:700}
+  input,select,textarea{font-family:inherit;font-size:16px;border:1px solid #e5e7eb;border-radius:10px;padding:12px}
+  textarea{min-height:140px;resize:vertical}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .btnRow{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-top:6px}
+  /* Toast */
+  .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#111;color:#fff;padding:12px 16px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:80}
+  .toast.show{opacity:1}
 </style>
-</head>
-<body>
-
-<!-- Start -->
-<div id="startView" class="screen active">
-  <div class="header">Was möchtest du nutzen?</div>
-  <div class="container">
-    <button class="btn primary" id="btnBriefkasten">Digitaler Briefkasten</button>
-    <button class="btn" id="btnNachrichten">Nachrichten</button>
-    <button class="btn" onclick="window.location.href='index.html'">Zurück zum Terminal</button>
-  </div>
-</div>
-
-<!-- Briefkasten -->
-<div id="briefkastenView" class="screen">
-  <div class="header"><button id="backFromBrief">←</button><div>Digitaler Briefkasten</div></div>
-  <div class="container">
-    <div class="card">
-      <div style="font-weight:600;margin-bottom:8px">Anonym eine Nachricht senden</div>
-      <textarea id="bkText" placeholder="Schreibe hier deine Nachricht..."></textarea>
-      <div class="hint">Die Nachricht geht an <b>Herr Köller und Frau Stanojevic</b>. Dein Name wird nicht gespeichert.</div>
-      <button class="btn primary" id="bkSend" style="margin-top:12px">Senden</button>
-      <div id="bkStatus" class="hint"></div>
-    </div>
-  </div>
-</div>
-
-<!-- Login: Namenliste + PIN -->
-<div id="loginView" class="screen">
-  <div class="header"><button id="backFromLogin">←</button><div>Wähle deinen Namen</div></div>
-  <div class="container">
-    <div id="nameList" class="list"></div>
-    <div class="pin-wrap" id="pinWrap" style="display:none">
-      <input id="pinInput" type="number" inputmode="numeric" placeholder="PIN eingeben">
-      <button class="btn primary" id="pinOk" style="width:auto">OK</button>
-    </div>
-  </div>
-</div>
-
-<!-- Chatliste -->
-<div id="chatListView" class="screen">
-  <div class="header"><button id="backToLogin">←</button><div id="chatListTitle">Nachrichten</div></div>
-  <div class="container">
-    <div id="chatList" class="list"></div>
-    <button class="btn primary" id="btnNewChat">➕ Neue Nachricht</button>
-  </div>
-</div>
-
-<!-- Einzelchat -->
-<div id="chatWindow">
-  <div class="header"><button id="btnBackList">←</button><div id="chatTitle"></div></div>
-  <div id="messages"></div>
-  <div class="composer">
-    <input id="msgInput" placeholder="Nachricht eingeben...">
-    <button id="sendBtn">Senden</button>
-  </div>
-</div>
-
 <script type="module">
-  import { initializeApp as init1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+  import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
   import { getDatabase as getDB1, ref as ref1, get as get1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
-  import { initializeApp as init2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-  import { getDatabase as getDB2, ref as ref2, onValue, get, set, push, update } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+  import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+  import { getDatabase as getDB2, ref as ref2, onValue, push, set } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
 
-  // app1: PINs, app2: Konten/Chats/Briefkasten
-  const app1 = init1({ apiKey:"AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU", databaseURL:"https://gesamt-dae4e-default-rtdb.europe-west1.firebasedatabase.app" },"a1");
-  const db1  = getDB1(app1);
-  const app2 = init2({ apiKey:"AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg", databaseURL:"https://punkte-45c20-default-rtdb.europe-west1.firebasedatabase.app" },"a2");
-  const db2  = getDB2(app2);
+  // Apps: gesamt (Codes) + punkte (Konten + Briefkasten)
+  const appGesamt = initApp1({
+    apiKey:"AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",
+    databaseURL:"https://gesamt-dae4e-default-rtdb.europe-west1.firebasedatabase.app"
+  },"gesamtApp");
+  const dbGesamt = getDB1(appGesamt);
 
-  // State
-  let ALL_KIDS = [];  // Quelle: app2/kinder
-  let currentKid = null, currentPeer = null;
+  const appPunkte = initApp2({
+    apiKey:"AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg",
+    databaseURL:"https://punkte-45c20-default-rtdb.europe-west1.firebasedatabase.app"
+  },"punkteApp");
+  const dbPunkte = getDB2(appPunkte);
 
-  // Helpers
-  const V = id => document.getElementById(id);
-  const show = id => { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); V(id).classList.add('active'); };
-  const showChatWindow = on => V('chatWindow').style.display = on ? 'flex' : 'none';
-  const cid = (a,b)=> [a,b].sort((x,y)=>x.localeCompare(y,'de')).join("|");
+  const $ = (q)=>document.querySelector(q);
 
-  // Navigation
-  V('btnBriefkasten').onclick = ()=> show('briefkastenView');
-  V('btnNachrichten').onclick = ()=> show('loginView');
-  V('backFromBrief').onclick  = ()=> show('startView');
-  V('backFromLogin').onclick  = ()=> show('startView');
-  V('btnBackList').onclick    = ()=> showChatWindow(false);
-  V('backToLogin').onclick    = ()=> { currentKid=null; show('loginView'); showChatWindow(false); };
+  const accounts = new Map(); // name -> {punkte, type}
+  onValue(ref2(dbPunkte,"kinder"), s => mergeAccounts(s,"kinder"));
+  onValue(ref2(dbPunkte,"auslandskonten"), s => mergeAccounts(s,"auslandskonten"));
 
-  // Briefkasten
-  V('bkSend').onclick = async ()=>{
-    const txt = (V('bkText').value||"").trim();
-    if(!txt){ V('bkStatus').textContent="Bitte Nachricht eingeben."; return; }
-    const mRef = push(ref2(db2,'briefkasten'));
-    await set(mRef,{ text:txt, ts:Date.now() });
-    V('bkText').value=""; V('bkStatus').textContent="Nachricht wurde gesendet.";
-    setTimeout(()=>V('bkStatus').textContent="", 2500);
+  function mergeAccounts(snap,type){
+    const val = snap.exists()? snap.val(): {};
+    Object.keys(val).forEach(n=>accounts.set(n,{ punkte: val[n]?.punkte ?? 0, type }));
+  }
+
+  function sortedNames(){
+    return Array.from(accounts.keys()).sort((a,b)=>{
+      const at=a.startsWith("~"), bt=b.startsWith("~");
+      if(at!==bt) return at?1:-1;
+      const na=at?a.slice(1):a, nb=bt?b.slice(1):b;
+      return na.localeCompare(nb,'de',{sensitivity:'base'});
+    });
+  }
+
+  function toast(msg){
+    const t = $("#toast"); t.textContent=msg; t.classList.add("show");
+    setTimeout(()=>t.classList.remove("show"), 1800);
+  }
+
+  // Modal öffnen
+  window.openCompose = ()=>{
+    $("#compose").style.display="flex";
+    // Namen füllen
+    const sel = $("#nameSel"); sel.innerHTML="";
+    sortedNames().forEach(n=>{ const o=document.createElement("option"); o.value=n; o.textContent=n; sel.appendChild(o); });
+    $("#pin").value="";
+    $("#topic").value="Wünsche";
+    $("#topicCustomWrap").style.display="none";
+    $("#topicCustom").value="";
+    $("#msg").value="";
   };
 
-  // Namen laden **wie Konto einsehen**: app2/kinder (alle Konten)
-  onValue(ref2(db2,"kinder"), (snap)=>{
-    ALL_KIDS.length = 0;
-    if (snap.exists()) snap.forEach(ch => ALL_KIDS.push(ch.key));
-    renderNameList();
-  });
-
-  function renderNameList(){
-    const list = V('nameList'); list.innerHTML="";
-    ALL_KIDS.sort((a,b)=>a.localeCompare(b,'de')).forEach(name=>{
-      const btn=document.createElement('button'); btn.textContent=name;
-      btn.onclick=()=>openPin(name);
-      list.appendChild(btn);
-    });
-  }
-
-  // PIN gegen app1 prüfen
-  function openPin(name){
-    V('pinWrap').style.display='flex';
-    V('pinInput').value=""; V('pinInput').focus();
-
-    const submit = async ()=>{
-      const pin = String(V('pinInput').value||"").trim();
-      const s   = await get1(ref1(db1,`kinder/${name}`));
-      const real= s.exists()? String((s.val()||{}).code||"") : "";
-      if (real && pin===real){
-        currentKid = name;
-        V('pinWrap').style.display='none';
-        V('chatListTitle').textContent = `Nachrichten – ${currentKid}`;
-        show('chatListView'); loadThreads();
-      } else {
-        alert("Kein oder falscher PIN hinterlegt.");
-      }
-    };
-    V('pinOk').onclick = submit;
-    V('pinInput').onkeypress = e=>{ if(e.key==="Enter") submit(); };
-  }
-
-  // Threads für currentKid
-  function loadThreads(){
-    const list = V('chatList'); list.innerHTML="";
-    onValue(ref2(db2,`threadsByKid/${currentKid}`),(snap)=>{
-      list.innerHTML="";
-      const peers = snap.exists()? Object.keys(snap.val()) : [];
-      if (peers.length===0){
-        const empty=document.createElement('div'); empty.className='item'; empty.textContent="Noch keine Chats";
-        list.appendChild(empty);
-      } else {
-        peers.sort((a,b)=>a.localeCompare(b,'de'));
-        peers.forEach(p=>{
-          const row=document.createElement('div'); row.className='item'; row.onclick=()=>openChat(p);
-          const av=document.createElement('div'); av.className='avatar'; av.textContent=p.slice(0,1).toUpperCase();
-          const label=document.createElement('div'); label.textContent=p;
-          row.appendChild(av); row.appendChild(label); list.appendChild(row);
-        });
-      }
-    });
-  }
-
-  // Neuer Chat
-  V('btnNewChat').onclick = ()=>{
-    const row=document.createElement('div'); row.className='item';
-    const sel=document.createElement('select');
-    sel.style.flex='1'; sel.style.padding='10px'; sel.style.border='1px solid var(--border)'; sel.style.borderRadius='10px';
-    sel.innerHTML = `<option value="">Empfänger wählen…</option>` +
-      ALL_KIDS.filter(n=>n!==currentKid).map(n=>`<option>${n}</option>`).join("");
-    const ok=document.createElement('button'); ok.className='btn primary'; ok.textContent='Chat öffnen';
-    ok.onclick=()=>{ if(sel.value){ openChat(sel.value); row.remove(); } };
-    row.appendChild(sel); row.appendChild(ok);
-    V('chatList').prepend(row);
+  // Thema: Eigenes Thema → Eingabefeld zeigen
+  window.onTopicChange = ()=>{
+    const v = $("#topic").value;
+    $("#topicCustomWrap").style.display = (v==="__custom__") ? "block" : "none";
   };
-
-  // Chat öffnen
-  function openChat(peer){
-    currentPeer = peer;
-    V('chatTitle').textContent = peer;
-    showChatWindow(true);
-    const box = V('messages');
-    onValue(ref2(db2,`chats/${cid(currentKid,peer)}`),(snap)=>{
-      box.innerHTML="";
-      const msgs=[]; if(snap.exists()) snap.forEach(ch=>msgs.push(ch.val()));
-      msgs.sort((a,b)=>(a.ts||0)-(b.ts||0));
-      msgs.forEach(m=>{
-        const d=document.createElement('div'); d.className='msg '+(m.from===currentKid?'me':'other');
-        const time=new Date(m.ts||Date.now()).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
-        d.innerHTML = `${m.text}<small>${time}</small>`;
-        box.appendChild(d);
-      });
-      box.scrollTop=box.scrollHeight;
-    });
-  }
 
   // Senden
-  async function sendMsg(from,to,text){
-    const mRef = push(ref2(db2,`chats/${cid(from,to)}`));
-    await set(mRef,{ from,to,text,ts:Date.now(),fromType:"kid" });
-    await Promise.all([
-      update(ref2(db2,`threadsByKid/${from}`),{ [to]: true }),
-      update(ref2(db2,`threadsByKid/${to}`),  { [from]: true })
-    ]);
-  }
-  V('sendBtn').onclick = ()=>{
-    const t=(V('msgInput').value||"").trim();
-    if(!t || !currentKid || !currentPeer) return;
-    sendMsg(currentKid,currentPeer,t);
-    V('msgInput').value="";
+  window.sendMsg = async ()=>{
+    const name = $("#nameSel").value;
+    const pinEntered = ($("#pin").value||"").trim();
+    const topic = $("#topic").value;
+    const own = ($("#topicCustom").value||"").trim();
+    const text = ($("#msg").value||"").trim();
+
+    if(!name || !pinEntered){ toast("Bitte Name und PIN eingeben."); return; }
+    if(topic==="__custom__" && !own){ toast("Bitte eigenes Thema eingeben."); return; }
+    if(!text){ toast("Bitte eine Nachricht schreiben."); return; }
+
+    // PIN prüfen (aus gesamt/kinder/{name}/code)
+    const codeSnap = await get1(ref1(dbGesamt, `kinder/${name}/code`));
+    const correct = codeSnap.exists()? (codeSnap.val()||"") : "";
+    if(!correct){ toast("Kein PIN hinterlegt."); return; }
+    if(pinEntered !== correct){ toast("Falscher PIN."); return; }
+
+    // Nachricht speichern
+    const now = new Date().toISOString();
+    const data = {
+      absender: name,
+      userType: accounts.get(name)?.type || "kinder",
+      thema: topic==="__custom__" ? own : topic,
+      text,
+      zeit: now
+    };
+    const ref = push(ref2(dbPunkte, "briefkasten/nachrichten"));
+    await set(ref, data);
+
+    $("#compose").style.display="none";
+    toast("Nachricht eingeworfen.");
   };
+
+  // Modal schließen
+  window.closeCompose = ()=>{ $("#compose").style.display="none"; };
 </script>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <svg class="mail" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M3 6h18v12H3z" stroke="#fff" stroke-width="2" />
+        <path d="M3 7l9 7 9-7" stroke="#fff" stroke-width="2" />
+      </svg>
+      <h1>MausBriefkasten</h1>
+    </header>
+
+    <div class="card">
+      <p class="lead">
+        Hier kannst du etwas in den <b>digitalen Briefkasten</b> einwerfen und eine Nachricht an
+        <b>Herr Köller</b> und <b>Frau Stanojevic</b> schreiben.
+      </p>
+      <button class="btn" onclick="openCompose()">Neue Nachricht</button>
+      <p class="muted" style="margin-top:10px">Unbegrenzt Nachrichten möglich.</p>
+    </div>
+  </div>
+
+  <!-- Compose Modal -->
+  <div id="compose" class="modal">
+    <div class="dialog">
+      <h2 style="margin:0 0 8px">Neue Nachricht</h2>
+      <div class="grid">
+        <div class="row2">
+          <div>
+            <label for="nameSel">Absender</label>
+            <select id="nameSel"></select>
+          </div>
+          <div>
+            <label for="pin">PIN</label>
+            <input id="pin" type="tel" inputmode="numeric" placeholder="Sicherheitscode">
+          </div>
+        </div>
+
+        <div>
+          <label for="topic">Thema</label>
+          <select id="topic" onchange="onTopicChange()">
+            <option>Wünsche</option>
+            <option>Beschwerden oder Sorgen</option>
+            <option>Fragen</option>
+            <option>Ideen</option>
+            <option>Quiz Vorschläge</option>
+            <option value="__custom__">Eigenes Thema …</option>
+          </select>
+        </div>
+
+        <div id="topicCustomWrap" style="display:none">
+          <label for="topicCustom">Eigenes Thema</label>
+          <input id="topicCustom" type="text" placeholder="Thema eingeben">
+        </div>
+
+        <div>
+          <label for="msg">Nachricht</label>
+          <textarea id="msg" placeholder="Schreibe deine Nachricht …"></textarea>
+        </div>
+
+        <div class="btnRow">
+          <button class="btn" onclick="sendMsg()">Absenden</button>
+          <button class="btn" style="background:#e5e7eb;color:#111" onclick="closeCompose()">Schließen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">Hinweis</div>
 </body>
 </html>
