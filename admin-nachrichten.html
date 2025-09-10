@@ -1,186 +1,112 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<title>Admin – Nachrichten</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MausBriefkasten – Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  body{font-family:'SF Pro Display',sans-serif;background:#f4f4f4;color:#1c1c1e;margin:0;padding:16px}
-  h1{font-size:22px;text-align:center;margin:0 0 12px;color:#007aff}
-  .grid{display:grid;grid-template-columns:320px 1fr;gap:12px}
-  .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,.08);padding:12px}
-  .kid{display:flex;justify-content:space-between;align-items:center;border:1px solid #eee;border-radius:10px;padding:8px;margin:6px 0;cursor:pointer}
-  .threads{display:flex;flex-wrap:wrap;gap:6px}
-  .threadBtn{padding:6px 10px;border:1px solid #ddd;border-radius:999px;background:#fff;cursor:pointer}
-  .chat{background:#fff;border:1px solid #eee;border-radius:12px;padding:12px}
-  .msg{margin:6px 0;padding:8px;border:1px solid #eee;border-radius:10px}
-  .me{background:#eef2ff}
-  .other{background:#f3f4f6}
-  .row{display:flex;gap:8px;align-items:center}
-  select, input{padding:8px;border:1px solid #ccc;border-radius:10px}
-  button{padding:8px 12px;border:none;border-radius:10px;background:#007aff;color:#fff;font-weight:600;cursor:pointer}
+  :root{--bg:#f5f7fb;--ink:#1b1b1f;--card:#fff;--muted:#666;--accent:#007aff}
+  *{box-sizing:border-box}
+  body{font-family:'SF Pro Display',sans-serif;margin:0;background:var(--bg);color:var(--ink)}
+  .wrap{max-width:1000px;margin:0 auto;padding:22px 14px 40px}
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  h1{font-size:24px;margin:0}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  select,input{font-family:inherit;font-size:14px;border:1px solid #e5e7eb;border-radius:10px;padding:8px 10px;background:#fff}
+  .list{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+  .card{background:var(--card);border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.08);padding:14px}
+  .meta{display:flex;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+  .badge{display:inline-block;background:#eef2ff;color:#2c3e7d;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:800}
+  .msg{white-space:pre-wrap;margin-top:8px;font-size:16px;line-height:1.5}
+  .count{font-size:13px;color:var(--muted)}
 </style>
-</head>
-<body>
-<h1>Admin – Nachrichten</h1>
-<div class="grid">
-  <div class="card">
-    <div style="font-weight:600;margin-bottom:8px">Kinder (nach Kontaktanzahl)</div>
-    <div id="kidList"></div>
-  </div>
-  <div class="card">
-    <div class="row" style="justify-content:space-between; margin-bottom:8px">
-      <div id="context">—</div>
-      <div class="row">
-        <select id="adminSender">
-          <option>Hr. Köller</option>
-          <option>Fr. Stanojevic</option>
-        </select>
-        <button id="btnBroadcast">Neue Nachricht</button>
-      </div>
-    </div>
-    <div id="threads" class="threads"></div>
-    <div id="chat" class="chat" style="margin-top:8px"></div>
-    <div id="composer" class="row" style="margin-top:8px">
-      <input id="msgInput" placeholder="Nachricht…">
-      <button id="sendBtn">Senden</button>
-    </div>
-  </div>
-</div>
-
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-  import { getDatabase, ref, onValue, get, set, push, update } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+  import { getDatabase, ref, onValue, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
 
-  const app = initializeApp({ apiKey:"AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg", databaseURL:"https://punkte-45c20-default-rtdb.europe-west1.firebasedatabase.app" });
-  const db  = getDatabase(app);
+  const appPunkte = initializeApp({
+    apiKey:"AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg",
+    databaseURL:"https://punkte-45c20-default-rtdb.europe-west1.firebasedatabase.app"
+  },"punkteAdmin");
+  const db = getDatabase(appPunkte);
 
-  const kidList = document.getElementById("kidList");
-  const threadsEl = document.getElementById("threads");
-  const chatEl = document.getElementById("chat");
-  const msgInput = document.getElementById("msgInput");
-  const sendBtn = document.getElementById("sendBtn");
-  const ctx = document.getElementById("context");
-  const adminSender = document.getElementById("adminSender");
-  const btnBroadcast = document.getElementById("btnBroadcast");
+  const $=(q)=>document.querySelector(q);
+  const listEl = $("#list");
+  const filterTopic = $("#filterTopic");
+  const searchInput = $("#search");
 
-  let ALL_KIDS = [];
-  let currentKid = null; // wessen Postfach wir ansehen
-  let currentPeer = null;
+  let allMsgs = [];
 
-  function convId(a,b){ return [a,b].sort((x,y)=>x.localeCompare(y,'de')).join("|"); }
+  function fmtDate(iso){
+    try{
+      const d = new Date(iso);
+      return d.toLocaleString('de-DE', { dateStyle:'short', timeStyle:'short' });
+    }catch{ return iso||""; }
+  }
 
-  // Liste nach Anzahl Kontakte sortieren
-  async function loadKids(){
-    const s = await get(ref(db,"kinder"));
-    const kids = [];
-    if (s.exists()){
-      s.forEach(ch=>{ const v=ch.val()||{}; if (v.farbe!==undefined) kids.push(ch.key); });
-    }
-    // hole Kontaktzahlen
-    const rows = await Promise.all(kids.map(async k=>{
-      const t = await get(ref(db,`threadsByKid/${k}`));
-      const n = t.exists() ? Object.keys(t.val()).length : 0;
-      return { name:k, contacts:n };
-    }));
-    rows.sort((a,b)=> b.contacts - a.contacts || a.name.localeCompare(b.name,'de'));
-    ALL_KIDS = rows.map(r=>r.name);
-    kidList.innerHTML="";
-    rows.forEach(r=>{
-      const div=document.createElement("div"); div.className="kid";
-      div.innerHTML = `<div><b>${r.name}</b></div><div>${r.contacts} Kontakte</div>`;
-      div.onclick=()=>openMailbox(r.name);
-      kidList.appendChild(div);
+  function render(){
+    const topic = filterTopic.value;
+    const q = (searchInput.value||"").toLowerCase();
+    listEl.innerHTML = "";
+
+    const rows = allMsgs
+      .filter(m => topic==="" || m.thema===topic)
+      .filter(m => !q || m.absender.toLowerCase().includes(q) || m.text.toLowerCase().includes(q) || m.thema.toLowerCase().includes(q));
+
+    $("#count").textContent = `${rows.length} Nachricht(en)`;
+
+    rows.forEach(m=>{
+      const card = document.createElement("div");
+      card.className="card";
+      card.innerHTML = `
+        <div class="row" style="justify-content:space-between">
+          <div class="row">
+            <span class="badge">${m.thema}</span>
+            <span class="meta">von <strong>${m.absender}</strong> • ${fmtDate(m.zeit)}</span>
+          </div>
+        </div>
+        <div class="msg">${escapeHtml(m.text)}</div>
+      `;
+      listEl.appendChild(card);
     });
   }
 
-  function openMailbox(name){
-    currentKid = name; currentPeer = null;
-    ctx.textContent = `Postfach von ${name}`;
-    threadsEl.innerHTML=""; chatEl.innerHTML="Wähle einen Chat.";
-    onValue(ref(db,`threadsByKid/${name}`), async (snap)=>{
-      threadsEl.innerHTML="";
-      const peers = snap.exists()?Object.keys(snap.val()):[];
-      // sortiere nach letzter Aktivität
-      const rows = await Promise.all(peers.map(async p=>{
-        const last = await getLastTs(name,p);
-        return {p,last};
-      }));
-      rows.sort((a,b)=>(b.last||0)-(a.last||0));
-      rows.forEach(({p})=>{
-        const b=document.createElement("button"); b.className="threadBtn"; b.textContent=p;
-        b.onclick=()=>openChat(name,p);
-        threadsEl.appendChild(b);
-      });
-    });
+  function escapeHtml(s){
+    return (s||"").replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
   }
 
-  async function getLastTs(a,b){
-    const s = await get(ref(db,`chats/${convId(a,b)}`)); let t=0;
-    if (s.exists()) s.forEach(ch=>{ const v=ch.val()||{}; t=Math.max(t, v.ts||0); });
-    return t;
-  }
+  // Laden, neueste oben
+  onValue(query(ref(db,"briefkasten/nachrichten"), limitToLast(1000)), snap=>{
+    const val = snap.val()||{};
+    const arr = Object.keys(val).map(k=>({ id:k, ...val[k] }));
+    arr.sort((a,b)=> (b.zeit||"").localeCompare(a.zeit||""));
+    allMsgs = arr;
+    // Themenliste bauen
+    const topics = Array.from(new Set(arr.map(x=>x.thema))).sort((a,b)=>a.localeCompare(b,'de',{sensitivity:'base'}));
+    const cur = filterTopic.value;
+    filterTopic.innerHTML = `<option value="">Alle Themen</option>` + topics.map(t=>`<option>${t}</option>`).join("");
+    filterTopic.value = cur || "";
+    render();
+  });
 
-  function openChat(owner, peer){
-    currentPeer = peer;
-    chatEl.innerHTML="";
-    onValue(ref(db,`chats/${convId(owner,peer)}`),(snap)=>{
-      chatEl.innerHTML="";
-      const msgs=[];
-      if (snap.exists()) snap.forEach(ch=>msgs.push(ch.val()));
-      msgs.sort((a,b)=>(a.ts||0)-(b.ts||0));
-      msgs.forEach(m=>{
-        const d=document.createElement("div"); d.className="msg "+(m.from===owner?"other":"me");
-        const who = m.fromType==="admin" ? (m.from || "Admin") : m.from;
-        d.innerHTML = `<div style="font-size:12px;color:#6b7280">${who}</div><div>${m.text}</div>`;
-        chatEl.appendChild(d);
-      });
-      chatEl.scrollTop=chatEl.scrollHeight;
-    });
-  }
-
-  async function sendAsAdmin(){
-    if (!currentKid || !currentPeer) return;
-    const sender = adminSender.value || "Admin";
-    const text = msgInput.value.trim(); if (!text) return;
-    const cid = convId(currentKid,currentPeer);
-    const mRef = push(ref(db,`chats/${cid}`));
-    const msg = { from: sender, to: (currentPeer===currentKid?currentPeer:currentKid), text, ts: Date.now(), fromType: "admin" };
-    await set(mRef, msg);
-    await Promise.all([
-      update(ref(db,`threadsByKid/${currentKid}`), { [currentPeer]: true }),
-      update(ref(db,`threadsByKid/${currentPeer}`), { [currentKid]: true })
-    ]);
-    msgInput.value="";
-  }
-  sendBtn.onclick = sendAsAdmin;
-
-  // neue Nachricht starten (Admin)
-  btnBroadcast.onclick = ()=>{
-    if (!currentKid) return;
-    const select = document.createElement("select");
-    select.innerHTML = `<option value="">Empfänger wählen…</option>` + ALL_KIDS.filter(n=>n!==currentKid).map(n=>`<option>${n}</option>`).join("");
-    const inp=document.createElement("input"); inp.placeholder="Nachricht…";
-    const btn=document.createElement("button"); btn.textContent="Senden";
-    btn.onclick = async ()=>{
-      if (!select.value || !inp.value.trim()) return;
-      const sender = adminSender.value || "Admin";
-      const cid = convId(currentKid, select.value);
-      const mRef = push(ref(db,`chats/${cid}`));
-      await set(mRef, { from: sender, to: select.value, text: inp.value.trim(), ts: Date.now(), fromType:"admin" });
-      await Promise.all([
-        update(ref(db,`threadsByKid/${currentKid}`), { [select.value]: true }),
-        update(ref(db,`threadsByKid/${select.value}`), { [currentKid]: true })
-      ]);
-      select.remove(); inp.remove(); btn.remove();
-    };
-    threadsEl.parentElement.insertBefore(btn, threadsEl);
-    threadsEl.parentElement.insertBefore(inp, threadsEl);
-    threadsEl.parentElement.insertBefore(select, threadsEl);
-  };
-
-  loadKids();
+  filterTopic.addEventListener("change", render);
+  searchInput.addEventListener("input", render);
 </script>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>MausBriefkasten – Admin</h1>
+      <div class="row">
+        <select id="filterTopic">
+          <option value="">Alle Themen</option>
+        </select>
+        <input id="search" type="search" placeholder="Suche in Absender, Thema, Nachricht">
+      </div>
+    </header>
+    <div class="count" id="count">0 Nachricht(en)</div>
+    <div id="list" class="list"></div>
+  </div>
 </body>
 </html>
