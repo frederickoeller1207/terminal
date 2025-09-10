@@ -1,0 +1,354 @@
+<!DOCTYPE html><html lang="de"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Malwettbewerb – Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{--c:#007aff}
+  body{font-family:'SF Pro Display',sans-serif;background:#f6f7f9;color:#222;margin:0;padding:16px}
+  h1{font-size:22px;margin:6px 0 14px}
+  .card{background:#fff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.06);padding:14px;margin-bottom:14px}
+  label{font-weight:600;font-size:14px;display:block;margin:8px 0 4px}
+  input,button{font-family:inherit;font-size:14px}
+  input[type="text"],input[type="url"],input[type="datetime-local"]{width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:10px;padding:10px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  button{border:0;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
+  .pri{background:var(--c);color:#fff}
+  .sec{background:#f0f0f0}
+  .list .item{display:flex;align-items:center;justify-content:space-between;border-top:1px solid #f3f3f3;padding:8px 0}
+  .imgline{display:flex;align-items:center;gap:10px;max-width:100%;overflow:hidden}
+  .imgline img{width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid #eee;flex:0 0 auto}
+  .muted{color:#666;font-size:13px}
+  .grid{display:grid;grid-template-columns:1fr;gap:8px}
+  @media(min-width:720px){.grid{grid-template-columns:1fr 1fr}}
+  select{width:100%;padding:10px;border:1px solid #ddd;border-radius:10px}
+  .pill{display:inline-block;background:#eef5ff;color:#2a5bd7;border-radius:999px;padding:4px 10px;font-weight:700}
+</style>
+<script type="module">
+  import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+  import { getDatabase as getDB1, ref as ref1, get as get1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+  import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+  import { getDatabase as getDB2, ref as ref2, onValue as onVal2, set as set2, update as update2, push as push2, get as get2, remove as remove2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+
+  // DBs wie im bestehenden System
+  const app1 = initApp1({
+    apiKey:"AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",
+    authDomain:"gesamt-dae4e.firebaseapp.com",
+    databaseURL:"https://gesamt-dae4e-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId:"gesamt-dae4e",
+    storageBucket:"gesamt-dae4e.appspot.com",
+    messagingSenderId:"844023612743",
+    appId:"1:844023612743:web:0821aa894541f89a7df862"
+  },"app1");
+  const db1 = getDB1(app1); // nur zum Codes prüfen in der Kinder-Ansicht, hier nicht nötig
+
+  const app2 = initApp2({
+    apiKey:"AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg",
+    authDomain:"punkte-45c20.firebaseapp.com",
+    databaseURL:"https://punkte-45c20-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId:"punkte-45c20",
+    storageBucket:"punkte-45c20.appspot.com",
+    messagingSenderId:"931713539549",
+    appId:"1:931713539549:web:e348bf38369639f1906a34"
+  },"app2");
+  const db2 = getDB2(app2);
+
+  const ns = "malwettbewerb"; // eigener Namensraum in db2
+
+  const el = (q)=>document.querySelector(q);
+  const list = (q)=>document.querySelector(q);
+
+  // UI refs
+  let aktuelleSelect, wListe, bilderListe, stimmenListe, gewinnerSelects;
+
+  window.addEventListener("DOMContentLoaded", () => {
+    aktuelleSelect = el("#aktuelleId");
+    wListe = el("#wettbewerbe");
+    bilderListe = el("#bilder");
+    stimmenListe = el("#stimmen");
+    gewinnerSelects = {
+      s1: el("#gew1"),
+      s2: el("#gew2"),
+      s3: el("#gew3")
+    };
+
+    // Füllen
+    onVal2(ref2(db2, `${ns}/aktuelleId`), s=>{
+      aktuelleSelect.dataset.current = s.exists()? s.val() : "";
+      renderAktuelleId();
+    });
+
+    onVal2(ref2(db2, `${ns}/wettbewerbe`), s=>{
+      const data = s.val()||{};
+      renderWettbewerbListe(data);
+      renderAktuelleId(Object.keys(data));
+      // preload Kandidaten für Gewinner-Selects
+      const cur = aktuelleSelect.value;
+      if (cur && data[cur]?.bilder){
+        fillGewinnerSelects(data[cur].bilder);
+      }
+    });
+
+    // Stimmenübersicht
+    onVal2(ref2(db2, `${ns}/stimmen`), s=>{
+      const votes = s.val()||{};
+      renderStimmen(votes);
+    });
+
+    // Events
+    el("#neuBtn").onclick = createWettbewerb;
+    el("#savePhase").onclick = savePhasen;
+    el("#addBild").onclick = addBild;
+    el("#setAktuelle").onclick = () => {
+      const id = el("#aktuelleId").value;
+      if(!id) return;
+      set2(ref2(db2, `${ns}/aktuelleId`), id);
+      alert("Aktueller Wettbewerb gesetzt.");
+    };
+    el("#delWettb").onclick = delWettbewerb;
+    el("#saveGewinner").onclick = saveGewinner;
+    el("#toggleZaehler").onchange = e=>{
+      update2(ref2(db2, `${ns}/einstellungen`), { zeigeZaehler: !!e.target.checked });
+    };
+    // Einstellungen laden
+    onVal2(ref2(db2, `${ns}/einstellungen/zeigeZaehler`), s=>{
+      el("#toggleZaehler").checked = !!(s.exists()? s.val(): false);
+    });
+  });
+
+  function renderAktuelleId(ids=[]){
+    const current = aktuelleSelect.dataset.current || "";
+    const old = aktuelleSelect.value;
+    aktuelleSelect.innerHTML = "";
+    const opt0 = document.createElement("option");
+    opt0.value=""; opt0.textContent="— auswählen —";
+    aktuelleSelect.appendChild(opt0);
+    ids.sort().forEach(id=>{
+      const o = document.createElement("option");
+      o.value=id; o.textContent=id + (id===current ? "  • aktuell" : "");
+      aktuelleSelect.appendChild(o);
+    });
+    aktuelleSelect.value = old && ids.includes(old) ? old : current || "";
+  }
+
+  function renderWettbewerbListe(data){
+    wListe.innerHTML = "";
+    Object.keys(data).sort().forEach(id=>{
+      const w = data[id];
+      const div = document.createElement("div");
+      div.className = "item";
+      div.innerHTML = `
+        <div>
+          <div><b>${id}</b> ${id=== (aktuelleSelect.dataset.current||"") ? '<span class="pill">aktuell</span>': ''}</div>
+          <div class="muted">
+            Einwurf: ${fmt(w?.phasen?.einwurfStart)} |
+            Abstimmung: ${fmt(w?.phasen?.abstimmStart)} |
+            Gewinner: ${fmt(w?.phasen?.gewinnerStart)} |
+            Ende: ${fmt(w?.phasen?.ende)}
+          </div>
+        </div>
+        <div><button class="sec" onclick="window.selectW('${id}')">Bearbeiten</button></div>`;
+      wListe.appendChild(div);
+    });
+    window.selectW = (id)=>{
+      aktuelleSelect.value = id;
+      loadDetail(id);
+    };
+    // Falls nichts gewählt und es gibt einen aktuellen → laden
+    const cur = aktuelleSelect.dataset.current;
+    if (cur && data[cur]) loadDetail(cur);
+  }
+
+  async function loadDetail(id){
+    // Phasen
+    const snap = await get2(ref2(db2, `${ns}/wettbewerbe/${id}/phasen`));
+    const p = snap.val()||{};
+    el("#pEinwurf").value = toLocalDT(p.einwurfStart);
+    el("#pAbstimm").value = toLocalDT(p.abstimmStart);
+    el("#pGewinner").value = toLocalDT(p.gewinnerStart);
+    el("#pEnde").value = toLocalDT(p.ende);
+
+    // Bilder
+    const b = await get2(ref2(db2, `${ns}/wettbewerbe/${id}/bilder`));
+    renderBilder(b.val()||{});
+
+    // Gewinner
+    const g = await get2(ref2(db2, `${ns}/wettbewerbe/${id}/gewinner`));
+    const v = g.val()||{};
+    el("#gew1").value = v.platz1 || "";
+    el("#gew2").value = v.platz2 || "";
+    el("#gew3").value = v.platz3 || "";
+  }
+
+  function fmt(x){ if(!x) return "—"; try{ return new Date(x).toLocaleString(); }catch{ return "—"; } }
+  function toLocalDT(x){ if(!x) return ""; const d=new Date(x); const pad=n=>String(n).padStart(2,'0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+
+  async function createWettbewerb(){
+    const id = prompt("Neue ID, z.B. mw_2025_09_01");
+    if(!id) return;
+    const path = ref2(db2, `${ns}/wettbewerbe/${id}`);
+    const ex = await get2(path);
+    if(ex.exists()){ alert("ID existiert bereits."); return; }
+    await set2(path, { phasen:{}, bilder:{} });
+    alert("Wettbewerb angelegt.");
+    set2(ref2(db2, `${ns}/aktuelleId`), id);
+  }
+
+  async function savePhasen(){
+    const id = aktuelleSelect.value; if(!id) return alert("Wettbewerb wählen.");
+    const ph = {
+      einwurfStart: new Date(el("#pEinwurf").value).toISOString(),
+      abstimmStart: new Date(el("#pAbstimm").value).toISOString(),
+      gewinnerStart: new Date(el("#pGewinner").value).toISOString(),
+      ende: new Date(el("#pEnde").value).toISOString()
+    };
+    await update2(ref2(db2, `${ns}/wettbewerbe/${id}/phasen`), ph);
+    alert("Phasen gespeichert.");
+  }
+
+  function renderBilder(bilder){
+    bilderListe.innerHTML = "";
+    const keys = Object.keys(bilder);
+    if(keys.length===0){ bilderListe.innerHTML = '<div class="muted">Noch keine Bilder.</div>'; return; }
+    keys.forEach(k=>{
+      const u = bilder[k].url;
+      const row = document.createElement("div");
+      row.className="item";
+      row.innerHTML = `
+        <div class="imgline">
+          <img src="${u}" alt="Bild">
+          <div class="muted" style="overflow:hidden;text-overflow:ellipsis">${u}</div>
+        </div>
+        <div>
+          <button class="sec" onclick="window.delBild('${k}')">Löschen</button>
+        </div>`;
+      bilderListe.appendChild(row);
+    });
+    window.delBild = async (bid)=>{
+      const id = aktuelleSelect.value; if(!id) return;
+      if(!confirm("Bild löschen?")) return;
+      await remove2(ref2(db2, `${ns}/wettbewerbe/${id}/bilder/${bid}`));
+    };
+  }
+
+  async function addBild(){
+    const id = aktuelleSelect.value; if(!id) return alert("Wettbewerb wählen.");
+    const url = document.querySelector("#bildUrl").value.trim();
+    if(!url) return;
+    const key = push2(ref2(db2, `${ns}/wettbewerbe/${id}/bilder`)).key;
+    await set2(ref2(db2, `${ns}/wettbewerbe/${id}/bilder/${key}`), { url, addedAt: new Date().toISOString() });
+    document.querySelector("#bildUrl").value="";
+  }
+
+  function renderStimmen(votesAll){
+    const id = aktuelleSelect.value;
+    stimmenListe.innerHTML = "";
+    if(!id || !votesAll[id]){ stimmenListe.innerHTML = '<div class="muted">Keine Stimmen.</div>'; return; }
+    const votes = votesAll[id];
+    const perImg = {};
+    Object.keys(votes).forEach(kind=>{
+      const b = votes[kind].bildId;
+      perImg[b] = (perImg[b]||0)+1;
+    });
+    const rows = Object.entries(perImg).sort((a,b)=>b[1]-a[1]);
+    rows.forEach(([bid,count])=>{
+      const div = document.createElement("div");
+      div.className="item";
+      div.innerHTML = `<div><b>${bid}</b></div><div>${count}</div>`;
+      stimmenListe.appendChild(div);
+    });
+  }
+
+  function fillGewinnerSelects(bilder){
+    const opts = [['','— kein Eintrag —']].concat(Object.keys(bilder).map(id=>[id,id]));
+    [el("#gew1"),el("#gew2"),el("#gew3")].forEach(sel=>{
+      const v = sel.value;
+      sel.innerHTML="";
+      opts.forEach(([val,lab])=>{
+        const o=document.createElement("option"); o.value=val; o.textContent=lab; sel.appendChild(o);
+      });
+      sel.value=v||"";
+    });
+  }
+
+  async function saveGewinner(){
+    const id = aktuelleSelect.value; if(!id) return alert("Wettbewerb wählen.");
+    const data = {
+      platz1: el("#gew1").value || null,
+      platz2: el("#gew2").value || null,
+      platz3: el("#gew3").value || null
+    };
+    await set2(ref2(db2, `${ns}/wettbewerbe/${id}/gewinner`), data);
+    alert("Gewinner gesetzt.");
+  }
+
+  async function delWettbewerb(){
+    const id = aktuelleSelect.value; if(!id) return;
+    if(!confirm("Wettbewerb vollständig löschen?")) return;
+    await remove2(ref2(db2, `${ns}/wettbewerbe/${id}`));
+    await remove2(ref2(db2, `${ns}/stimmen/${id}`));
+    const curSnap = await get2(ref2(db2, `${ns}/aktuelleId`));
+    if(curSnap.exists() && curSnap.val()===id){ set2(ref2(db2, `${ns}/aktuelleId`), ""); }
+    alert("Gelöscht.");
+  }
+</script>
+</head>
+<body>
+  <h1>Malwettbewerb – Admin</h1>
+
+  <div class="card">
+    <label for="aktuelleId">Aktueller Wettbewerb</label>
+    <div class="row">
+      <select id="aktuelleId"></select>
+      <button id="setAktuelle" class="pri">Setzen</button>
+    </div>
+    <div style="margin-top:8px" class="row">
+      <button id="neuBtn" class="sec">Neuen Wettbewerb anlegen</button>
+      <button id="delWettb" class="sec">Wettbewerb löschen</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin:0 0 8px">Phasen</h2>
+    <div class="row grid">
+      <div><label>Einwurfphase start</label><input id="pEinwurf" type="datetime-local"></div>
+      <div><label>Abstimmphase start</label><input id="pAbstimm" type="datetime-local"></div>
+      <div><label>Gewinnerphase start</label><input id="pGewinner" type="datetime-local"></div>
+      <div><label>Ende</label><input id="pEnde" type="datetime-local"></div>
+    </div>
+    <div style="margin-top:10px"><button id="savePhase" class="pri">Speichern</button></div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin:0 0 8px">Bilder</h2>
+    <label>Bild-URL hinzufügen</label>
+    <div class="row">
+      <input id="bildUrl" type="url" placeholder="https://…">
+      <button id="addBild" class="sec">Hinzufügen</button>
+    </div>
+    <div id="bilder" class="list" style="margin-top:8px"></div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin:0 0 8px">Stimmen (nur Übersicht)</h2>
+    <label><input id="toggleZaehler" type="checkbox"> Zähler öffentlich zeigen (Kinderansicht) – standard AUS</label>
+    <div id="stimmen" class="list" style="margin-top:8px"></div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin:0 0 8px">Gewinner auswählen</h2>
+    <div class="row3">
+      <div><label>Platz 1</label><select id="gew1"></select></div>
+      <div><label>Platz 2</label><select id="gew2"></select></div>
+      <div><label>Platz 3</label><select id="gew3"></select></div>
+    </div>
+    <div style="margin-top:10px"><button id="saveGewinner" class="pri">Speichern</button></div>
+    <div class="muted" style="margin-top:8px">Hinweis: Kinder sehen in der Gewinnerphase nur die drei ausgewählten Bilder.</div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin:0 0 8px">Wettbewerbe</h2>
+    <div id="wettbewerbe" class="list"></div>
+  </div>
+</body></html>
