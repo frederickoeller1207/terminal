@@ -1,0 +1,266 @@
+<!DOCTYPE html><html lang="de"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Malwettbewerb</title>
+<link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  body{font-family:'SF Pro Display',sans-serif;background:#f6f7f9;color:#222;margin:0;min-height:100vh;display:flex;flex-direction:column}
+  header{padding:16px 16px 8px;text-align:center}
+  h1{font-size:22px;margin:6px 0 0}
+  .container{padding:10px 14px 24px;max-width:980px;margin:0 auto;width:100%}
+  .notice{background:#fff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.06);padding:16px;margin:10px 0}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(min-width:900px){.grid{grid-template-columns:1fr 1fr 1fr}}
+  .card{background:#fff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.06);overflow:hidden}
+  .card img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}
+  .btn{display:inline-block;background:#007aff;color:#fff;padding:12px 16px;border-radius:10px;border:0;font-weight:700;cursor:pointer}
+  .muted{color:#666}
+  .center{display:flex;justify-content:center;align-items:center}
+  .loading{position:fixed;inset:0;background:rgba(246,247,249,.98);display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;z-index:9999}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:9999}
+  .dialog{background:#fff;border-radius:12px;max-width:420px;width:calc(100% - 32px);padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.2)}
+  .row{display:grid;grid-template-columns:1fr;gap:8px}
+  input,select{font-family:inherit;font-size:16px;border:1px solid #ddd;border-radius:10px;padding:10px}
+</style>
+<script type="module">
+  import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+  import { getDatabase as getDB1, ref as ref1, get as get1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+  import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+  import { getDatabase as getDB2, ref as ref2, get as get2, onValue as onVal2, set as set2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+
+  // DBs wie im System
+  const app1 = initApp1({
+    apiKey:"AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",
+    authDomain:"gesamt-dae4e.firebaseapp.com",
+    databaseURL:"https://gesamt-dae4e-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId:"gesamt-dae4e",
+    storageBucket:"gesamt-dae4e.appspot.com",
+    messagingSenderId:"844023612743",
+    appId:"1:844023612743:web:0821aa894541f89a7df862"
+  },"app1");
+  const db1 = getDB1(app1); // Codes
+
+  const app2 = initApp2({
+    apiKey:"AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg",
+    authDomain:"punkte-45c20.firebaseapp.com",
+    databaseURL:"https://punkte-45c20-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId:"punkte-45c20",
+    storageBucket:"punkte-45c20.appspot.com",
+    messagingSenderId:"931713539549",
+    appId:"1:931713539549:web:e348bf38369639f1906a34"
+  },"app2");
+  const db2 = getDB2(app2);
+
+  const ns = "malwettbewerb";
+
+  const $ = (q)=>document.querySelector(q);
+
+  let aktuelleId = "";
+  let bilderMap = {};
+  let kinderList = [];
+
+  window.addEventListener("DOMContentLoaded", async ()=>{
+    // Ladezustand
+    showLoading("Bilder werden geladen. Bitte warte …");
+
+    // aktiver Wettbewerb
+    const cur = await get2(ref2(db2, `${ns}/aktuelleId`));
+    aktuelleId = cur.exists()? cur.val() : "";
+    if(!aktuelleId){ hideLoading(); renderNotice("Momentan ist kein aktiver Malwettbewerb."); return; }
+
+    // Daten parallel
+    const [wSnap, kSnap] = await Promise.all([
+      get2(ref2(db2, `${ns}/wettbewerbe/${aktuelleId}`)),
+      get2(ref2(db2, `kinder`))
+    ]);
+    const w = wSnap.val()||{};
+    const ph = w.phasen||{};
+    const now = new Date();
+    const einwurf = ph.einwurfStart? new Date(ph.einwurfStart):null;
+    const abstimm = ph.abstimmStart? new Date(ph.abstimmStart):null;
+    const gewinner = ph.gewinnerStart? new Date(ph.gewinnerStart):null;
+    const ende = ph.ende? new Date(ph.ende):null;
+
+    // Kinderliste (alle, inkl. Ausland ~)
+    kinderList = [];
+    if(kSnap.exists()){
+      kSnap.forEach(ch=>kinderList.push(ch.key));
+      kinderList.sort((a,b)=>a.localeCompare(b));
+    }
+
+    // Phase bestimmen
+    if(!einwurf||!abstimm||!gewinner||!ende || now<einwurf){
+      hideLoading();
+      renderNotice("Momentan ist kein aktiver Malwettbewerb.");
+      return;
+    }
+    if(now>=einwurf && now<abstimm){
+      hideLoading();
+      const dd = abstimm.toLocaleDateString();
+      renderNotice(`Es wird für den Malwettbewerb gesammelt. Wirf dein Bild in den Briefkasten draußen. Komme bald wieder zurück. Dann kannst du für dein Lieblingsbild abstimmen. Du kannst am ${dd} für dein Bild abstimmen.`);
+      return;
+    }
+    if(now>=abstimm && now<gewinner){
+      // Abstimmphase → zuerst Bilder vollständig vorladen
+      const bilder = (w.bilder||{});
+      const ids = Object.keys(bilder);
+      if(ids.length===0){
+        hideLoading();
+        renderNotice("Es sind noch keine Bilder vorhanden.");
+        return;
+      }
+      try{
+        await preloadAll(ids.map(id=>bilder[id].url));
+        hideLoading();
+        bilderMap = bilder;
+        renderVoting(ids);
+      }catch(e){
+        hideLoading();
+        renderNotice("Fehler beim Laden der Bilder. Bitte neu öffnen.");
+      }
+      return;
+    }
+    if(now>=gewinner && now<ende){
+      hideLoading();
+      renderWinners(w);
+      return;
+    }
+    hideLoading();
+    renderNotice("Der Malwettbewerb ist beendet.");
+  });
+
+  function showLoading(txt){
+    const div = document.createElement("div");
+    div.className="loading";
+    div.id="loading";
+    div.innerHTML = `<div class="notice center"><div><div style="font-weight:700;text-align:center">${txt}</div><div class="muted center" style="margin-top:6px">Die Seite wird sichtbar, sobald alles geladen ist.</div></div></div>`;
+    document.body.appendChild(div);
+  }
+  function hideLoading(){ const n=$("#loading"); if(n) n.remove(); }
+
+  function renderNotice(text){
+    $("header").innerHTML = `<h1>Malwettbewerb</h1>`;
+    $(".container").innerHTML = `<div class="notice">${text}</div>`;
+  }
+
+  async function preloadAll(urls){
+    // Hinweis: Bandbreite hängt von Originalgröße ab. Ohne separate Thumbnails kann nur die Anzeigegröße begrenzt werden.
+    await Promise.all(urls.map(u=>new Promise((res,rej)=>{
+      const img = new Image();
+      img.onload=()=>res(); img.onerror=rej;
+      img.decoding="async"; img.loading="eager";
+      img.src=u;
+    })));
+  }
+
+  function renderVoting(ids){
+    $("header").innerHTML = `<h1>Malwettbewerb</h1><div class="muted">Abstimmphase: Wähle genau ein Lieblingsbild.</div>`;
+    const grid = document.createElement("div");
+    grid.className="grid";
+    ids.forEach(id=>{
+      const url = bilderMap[id].url;
+      const card = document.createElement("div");
+      card.className="card";
+      const img = document.createElement("img");
+      img.src=url; img.alt="Bild";
+      img.loading="lazy"; img.decoding="async";
+      img.onclick = ()=>openVoteFlow(id,url);
+      card.appendChild(img);
+      grid.appendChild(card);
+    });
+    const c = $(".container"); c.innerHTML=""; c.appendChild(grid);
+  }
+
+  async function alreadyVoted(kind){
+    const s = await get2(ref2(db2, `${ns}/stimmen/${aktuelleId}/${encodeKey(kind)}`));
+    return s.exists();
+  }
+
+  function openVoteFlow(bildId, url){
+    const m = $("#modal"); m.style.display="flex";
+    $("#vprev").src=url;
+    $("#confirmText").textContent = "Möchtest du für dieses Bild abstimmen? Du kannst nur einmal abstimmen.";
+    // Fülle Kontoliste
+    const sel = $("#kindSel");
+    sel.innerHTML="";
+    kinderList.forEach(name=>{
+      const o=document.createElement("option");
+      o.value=name; o.textContent=name;
+      sel.appendChild(o);
+    });
+    $("#code").value="";
+    $("#sendBtn").onclick = async ()=>{
+      const name = sel.value;
+      if(!name) return;
+      // Einmaligkeit
+      if(await alreadyVoted(name)){
+        alert("Du hast bereits für diesen Malwettbewerb abgestimmt. Du kannst beim nächsten Mal wieder abstimmen.");
+        closeModal();
+        return;
+      }
+      // Code prüfen
+      const codeSnap = await get1(ref1(db1, `kinder/${name}`));
+      const stored = codeSnap.exists()? (codeSnap.val().code||"") : "";
+      const entered = $("#code").value.trim();
+      if(!stored){ alert("Kein Sicherheitscode hinterlegt."); return; }
+      if(entered !== stored){ alert("Falscher Code."); return; }
+
+      // nochmal prüfen (race)
+      if(await alreadyVoted(name)){
+        alert("Du hast bereits für diesen Malwettbewerb abgestimmt. Du kannst beim nächsten Mal wieder abstimmen.");
+        closeModal(); return;
+      }
+      // Stimme schreiben
+      const vote = { bildId, zeit: new Date().toISOString() };
+      await set2(ref2(db2, `${ns}/stimmen/${aktuelleId}/${encodeKey(name)}`), vote);
+      alert("Stimme versendet. Danke.");
+      closeModal();
+    };
+  }
+
+  function renderWinners(w){
+    const g = (w.gewinner)||{};
+    const ids = [g.platz1,g.platz2,g.platz3].filter(Boolean);
+    $("header").innerHTML = `<h1>Malwettbewerb</h1><div class="muted">Gewinner</div>`;
+    if(ids.length===0){ $(".container").innerHTML = `<div class="notice">Die Gewinner werden vorbereitet.</div>`; return; }
+    const grid = document.createElement("div"); grid.className="grid";
+    ids.forEach((id,idx)=>{
+      const url = (w.bilder||{})[id]?.url;
+      if(!url) return;
+      const card = document.createElement("div");
+      card.className="card";
+      card.innerHTML = `<img src="${url}" alt="Gewinner"><div style="padding:10px 12px;font-weight:700">Platz ${idx+1}</div>`;
+      grid.appendChild(card);
+    });
+    const c = $(".container"); c.innerHTML=""; c.appendChild(grid);
+  }
+
+  function closeModal(){ $("#modal").style.display="none"; }
+
+  function encodeKey(name){ return name.replaceAll("/","_"); }
+</script>
+</head>
+<body>
+  <header><h1>Malwettbewerb</h1></header>
+  <div class="container">
+    <div class="notice">Lade…</div>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="modal">
+    <div class="dialog">
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:8px">
+        <img id="vprev" src="" alt="Bild" style="width:84px;height:63px;object-fit:cover;border-radius:8px;border:1px solid #eee">
+        <div id="confirmText" style="font-weight:700">Möchtest du für dieses Bild abstimmen?</div>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <label for="kindSel" style="font-weight:600">Mit welchem Konto möchtest du abstimmen?</label>
+        <select id="kindSel"></select>
+        <input id="code" type="number" inputmode="numeric" placeholder="Sicherheitscode">
+        <button id="sendBtn" class="btn">Stimme versenden</button>
+        <button class="btn" style="background:#f0f0f0;color:#222" onclick="document.querySelector('#modal').style.display='none'">Schließen</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="loading" class="loading" style="display:none"></div>
+</body></html>
