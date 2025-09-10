@@ -1,394 +1,252 @@
-<!DOCTYPE html>  <html lang="de">  
-<head>  
-  <meta charset="UTF-8" />  
-  <title>Mäusegruppe Terminal</title>  
-  <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600&display=swap" rel="stylesheet">  
-  <style>  
-    body {  
-      font-family: 'SF Pro Display', sans-serif;  
-      background-color: #f9f9fb;  
-      padding: 16px;  
-      color: #1c1c1e;  
-      margin: 0;  
-      display: flex;  
-      flex-direction: column;  
-      justify-content: center;  
-      min-height: 100vh;  
-    }  
-    h1 {  
-      margin-bottom: 30px;  
-      font-size: 26px;  
-      font-weight: 600;  
-      text-align: center;  
-    }  
-    #home-btn {  
-      display: flex;  
-      justify-content: center;  
-      font-size: 18px;  
-      color: #007aff;  
-      cursor: pointer;  
-      margin-bottom: 20px;  
-    }  
-    .menu {  
-      display: flex;  
-      flex-direction: column;  
-      align-items: center;  
-      gap: 16px;  
-      margin-bottom: 30px;  
-    }  
-    #view {  
-      display: flex;  
-      flex-direction: column;  
-      align-items: center;  
-      gap: 16px;  
-    }  
-    button {  
-      background-color: #ffffff;  
-      border: 1px solid #ccc;  
-      border-radius: 12px;  
-      padding: 18px 24px;  
-      font-size: 20px;  
-      font-weight: 600;  
-      color: #000;  
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);  
-      cursor: pointer;  
-      width: 95%;  
-      max-width: 340px;  
-      text-align: center;  
-      transition: all 0.2s ease, transform 0.1s ease;  
-    }  
-    button:hover { background-color: #f0f0f5; }  
-    button:active {  
-      background-color: #e0e0e5;  
-      transform: scale(0.97);  
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1) inset;  
-    }  
-    input {  
-      width: 95%;  
-      max-width: 340px;  
-      font-size: 16px;  
-      padding: 12px;  
-      margin-top: 12px;  
-      border: 1px solid #ccc;  
-      border-radius: 10px;  
-    }  
-    #konto-details {  
-      display: flex;  
-      flex-direction: column;  
-      align-items: center;  
-      gap: 12px;  
-      font-size: 18px;  
-      text-align: center;  
-    }  
-    .color-circle {  
-      width: 24px;  
-      height: 24px;  
-      border-radius: 50%;  
-      border: 1px solid #ccc;  
-      margin-top: 5px;  
-    }  
-  </style>  
-</head>  
-<body>  
-  <h1 id="title">Mäusegruppe Terminal</h1>  
-  <div id="menu" class="menu">  
-    <button id="btn-kontoeinsehen">Konto einsehen</button>  
-    <button onclick="window.location.href='https://frederickoeller1207.github.io/ziele/'">Mein Ziel</button>  
-    <button id="btn-ausleihe">Spielzeug Ausleihe</button>  
-    <button id="btn-checkout">Checkout</button>  
-    <button id="btn-mausdollar">Mausdollar hinzufügen</button>  
-    <button onclick="window.location.href='https://frederickoeller1207.github.io/Mousecity-Store/'">Mousecity Store</button>  
-  </div>  
-  <div id="home-btn" style="display:none;">🏠 Zurück</div>  
-  <div id="view"></div>    <script type="module">  
-    import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";  
-    import { getDatabase as getDB1, ref as ref1, get as get1, onValue as onVal1, set as set1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";  
-    import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";  
-    import { getDatabase as getDB2, ref as ref2, update as update2, onValue as onVal2, get as get2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";  
-  
-    const config1 = {  
-      apiKey: "AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",  
-      authDomain: "gesamt-dae4e.firebaseapp.com",  
-      databaseURL: "https://gesamt-dae4e-default-rtdb.europe-west1.firebasedatabase.app",  
-      projectId: "gesamt-dae4e",  
-      storageBucket: "gesamt-dae4e.appspot.com",  
-      messagingSenderId: "844023612743",  
-      appId: "1:844023612743:web:0821aa894541f89a7df862"  
-    };  
-    const config2 = {  
-      apiKey: "AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg",  
-      authDomain: "punkte-45c20.firebaseapp.com",  
-      databaseURL: "https://punkte-45c20-default-rtdb.europe-west1.firebasedatabase.app",  
-      projectId: "punkte-45c20",  
-      storageBucket: "punkte-45c20.appspot.com",  
-      messagingSenderId: "931713539549",  
-      appId: "1:931713539549:web:e348bf38369639f1906a34"  
-    };  
-  
-    const app1 = initApp1(config1, "app1");  
-    const db1 = getDB1(app1);  
-    const app2 = initApp2(config2, "app2");  
-    const db2 = getDB2(app2);  
-  
-    const view = document.getElementById("view");  
-    const menu = document.getElementById("menu");  
-    const homeBtn = document.getElementById("home-btn");  
-  
-    const farben = ["⚪", "🔴", "🟡", "🟢", "⚫", "🟣"];  
-  
-    const resetView = () => {  
-      view.innerHTML = "";  
-      menu.style.display = "flex";  
-      homeBtn.style.display = "none";  
-      document.getElementById("title").textContent = "Mäusegruppe Terminal";  
-    };  
-    const openView = (title) => {  
-      view.innerHTML = "";  
-      menu.style.display = "none";  
-      homeBtn.style.display = "flex";  
-      document.getElementById("title").textContent = title;  
-    };  
-    homeBtn.onclick = resetView;  
-  
-    function eingabeMitZahl(title, callback) {  
-      openView(title);  
-      const input = document.createElement("input");  
-      input.type = "number";  
-      input.inputMode = "numeric";  
-      input.autofocus = true;  
-      const btn = document.createElement("button");  
-      btn.textContent = "OK";  
-      btn.onclick = () => {  
-        const val = input.value.trim();  
-        if (val) callback(val);  
-      };  
-      view.appendChild(input);  
-      view.appendChild(btn);  
-      input.focus();  
-    }  
-  
-    async function checkSicherheitscode(name, callback) {  
-      const snap = await get1(ref1(db1, `kinder/${name}`));  
-      const code = snap.exists() ? snap.val().code : null;  
-      if (!code) return alert("Kein Sicherheitscode hinterlegt.");  
-      eingabeMitZahl(`Bitte Sicherheitscode für ${name} eingeben:`, (eingabe) => {  
-        if (eingabe === code) callback();  
-        else alert("Falscher Code.");  
-      });  
-    }  
-  
-    // --- Konto einsehen ---  
-    document.getElementById("btn-kontoeinsehen").onclick = showKontoEinsehen;  
-  
-    function farbeToColor(f) {  
-      if (f === "🔴") return "red";  
-      if (f === "🟡") return "orange";  
-      if (f === "🟢") return "green";  
-      if (f === "⚫") return "black";  
-      if (f === "🟣") return "purple";  
-      if (f === "🔵") return "blue";  
-      return "#ccc";  
-    }  
-    function getFarbBedeutung(farbe) {  
-      if (farbe === "🟢") return "Du bist deinem Ziel heute 5 % näher.";  
-      if (farbe === "🟣") return "Du bist deinem Ziel heute 10 % näher.";  
-      if (farbe === "🔴") return "Du entfernst dich heute um 5 % von deinem Ziel.";  
-      if (farbe === "⚫") return "Du entfernst dich heute um 10 % von deinem Ziel.";  
-      if (farbe === "🟡" || farbe === "⚪") return "Dein Ziel-Fortschritt bleibt heute unverändert.";  
-      return "";  
-    }  
-  
-    async function showKontoEinsehen() {  
-      openView("Konto einsehen");  
-      const suchInput = document.createElement("input");  
-      suchInput.placeholder = "Suche nach Namen...";  
-      suchInput.autofocus = true;  
-      view.appendChild(suchInput);  
-  
-      const kinderListe = document.createElement("div");  
-      kinderListe.id = "kinder-liste";  
-      kinderListe.style.marginTop = "20px";  
-      view.appendChild(kinderListe);  
-  
-      const kinderSnap = await get2(ref2(db2, "kinder"));  
-      const alleKonten = [];  
-      if (kinderSnap.exists()) {  
-        kinderSnap.forEach(kindSnap => {  
-          alleKonten.push({ name: kindSnap.key, ...kindSnap.val() });  
-        });  
-      }  
-      function renderKinderListe(filterText = "") {  
-        kinderListe.innerHTML = "";  
-        const gefilterteKonten = alleKonten.filter(konto =>  
-          konto.name.toLowerCase().includes(filterText.toLowerCase())  
-        );  
-        gefilterteKonten.forEach(konto => {  
-          const btn = document.createElement("button");  
-          btn.textContent = konto.name;  
-          btn.onclick = () => showKontoDetails(konto);  
-          kinderListe.appendChild(btn);  
-        });  
-      }  
-      renderKinderListe();  
-      suchInput.addEventListener("keyup", (e) => renderKinderListe(e.target.value));  
-    }  
-  
-    function showKontoDetails(konto) {  
-      openView(konto.name);  
-      const detailsContainer = document.createElement("div");  
-      detailsContainer.id = "konto-details";  
-  
-      // NEU: Kontostand ganz oben  
-      const kontostand = Number(konto.punkte ?? konto.kontostand ?? 0);  
-      const saldo = document.createElement("p");  
-      saldo.style.fontWeight = "600";  
-      saldo.textContent = `Du hast ${kontostand} M$ auf deinem Konto`;  
-      detailsContainer.appendChild(saldo);  
-  
-      // Farbe + Zielfortschritt  
-      const farbLabel = document.createElement("p");  
-      farbLabel.textContent = "Deine Farbe für heute ist:";  
-      detailsContainer.appendChild(farbLabel);  
-  
-      if (konto.farbe) {  
-        const farbKreis = document.createElement("div");  
-        farbKreis.className = "color-circle";  
-        farbKreis.style.backgroundColor = farbeToColor(konto.farbe);  
-        detailsContainer.appendChild(farbKreis);  
-  
-        const bedeutung = document.createElement("p");  
-        bedeutung.textContent = getFarbBedeutung(konto.farbe);  
-        detailsContainer.appendChild(bedeutung);  
-      } else {  
-        const keineFarbe = document.createElement("p");  
-        keineFarbe.textContent = "Dieses Konto hat keine Farbe.";  
-        detailsContainer.appendChild(keineFarbe);  
-  
-        const unver = document.createElement("p");  
-        unver.textContent = "Dein Ziel-Fortschritt bleibt heute unverändert.";  
-        detailsContainer.appendChild(unver);  
-      }  
-  
-      view.appendChild(detailsContainer);  
-    }  
-  
-    // --- Ausleihe ---  
-    document.getElementById("btn-ausleihe").onclick = () => {  
-      openView("Spielzeug Ausleihe");  
-      onVal1(ref1(db1, "kinder"), snapshot => {  
-        snapshot.forEach(childSnap => {  
-          const name = childSnap.key;  
-          const btn = document.createElement("button");  
-          btn.textContent = name;  
-          btn.onclick = () => checkSicherheitscode(name, () => ausleihen(name));  
-          view.appendChild(btn);  
-        });  
-      });  
-    };  
-    function frageSpielzeugnummer(name, callback) {  
-      eingabeMitZahl(`${name}, gib bitte die Spielzeugnummer ein:`, callback);  
-    }  
-    async function ausleihen(name) {  
-      const ausleiheSnap = await get1(ref1(db1, `ausleihen/${name}`));  
-      if (ausleiheSnap.exists() && ausleiheSnap.val().bestätigt === false) {  
-        alert("Bitte gib das ausgeliehene Spielzeug zurück.");  
-        return;  
-      }  
-      frageSpielzeugnummer(name, async (nummer) => {  
-        const spielzeugeSnap = await get1(ref1(db1, "spielzeuge"));  
-        const spielzeuge = spielzeugeSnap.exists() ? spielzeugeSnap.val() : {};  
-        if (spielzeuge[nummer]) {  
-          await set1(ref1(db1, `ausleihen/${name}`), {  
-            spielzeug: spielzeuge[nummer],  
-            nummer: nummer,  
-            zeit: new Date().toISOString(),  
-            bestätigt: false  
-          });  
-          const popup = document.createElement("div");  
-          popup.textContent = `${spielzeuge[nummer]} erfolgreich ausgeliehen.`;  
-          popup.style = "position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;color:#000;padding:20px 30px;border-radius:12px;font-size:18px;box-shadow:0 4px 12px rgba(0,0,0,0.2);z-index:9999;text-align:center;";  
-          document.body.appendChild(popup);  
-          setTimeout(() => { popup.remove(); resetView(); }, 3000);  
-        } else {  
-          alert("Ungültige Nummer.");  
-        }  
-      });  
-    }  
-  
-    // --- Checkout ---  
-    document.getElementById("btn-checkout").onclick = () => {  
-      openView("Checkout");  
-      onVal1(ref1(db1, "kinder"), snapshot => {  
-        snapshot.forEach(childSnap => {  
-          const name = childSnap.key;  
-          const link = childSnap.val().link;  
-          const btn = document.createElement("button");  
-          btn.textContent = name;  
-          btn.onclick = () => checkSicherheitscode(name, () => {  
-            if (link) window.location.href = link;  
-            else alert("Kein Link hinterlegt.");  
-          });  
-          view.appendChild(btn);  
-        });  
-      });  
-    };  
-  
-    // --- Mausdollar hinzufügen ---  
-    document.getElementById("btn-mausdollar").onclick = () => {  
-      openView("Mausdollar hinzufügen");  
-      const kinder = [];  
-      onVal1(ref1(db1, "kinder"), snapshot => {  
-        snapshot.forEach(childSnap => { kinder.push(childSnap.key); });  
-        kinder.forEach(name => {  
-          const btn = document.createElement("button");  
-          btn.textContent = name;  
-          btn.onclick = () => checkSicherheitscode(name, () => waehleBetrag(name));  
-          view.appendChild(btn);  
-        });  
-      });  
-    };  
-    function waehleBetrag(name) {  
-      openView(`${name}: Wähle Betrag`);  
-      for (let i = 1; i <= 5; i++) {  
-        const btn = document.createElement("button");  
-        btn.textContent = `${i}`;  
-        btn.onclick = () => waehleGrund(name, i);  
-        view.appendChild(btn);  
-      }  
-    }  
-    function waehleGrund(name, betrag) {  
-      openView(`${name}: Grund wählen`);  
-      const gruende = ["Quiz", "Kurze Hilfe", "Malwettbewerb", "Tischdienst"];  
-      gruende.forEach(g => {  
-        const btn = document.createElement("button");  
-        btn.textContent = g;  
-        btn.onclick = () => sendeAnfrage(name, betrag, g);  
-        view.appendChild(btn);  
-      });  
-      const eigenerInput = document.createElement("input");  
-      eigenerInput.placeholder = "Eigener Grund";  
-      eigenerInput.type = "text";  
-      view.appendChild(eigenerInput);  
-      const absendenBtn = document.createElement("button");  
-      absendenBtn.textContent = "Absenden";  
-      absendenBtn.onclick = () => {  
-        const g = eigenerInput.value.trim();  
-        if (g) sendeAnfrage(name, betrag, g);  
-      };  
-      view.appendChild(absendenBtn);  
-    }  
-    function sendeAnfrage(name, betrag, grund) {  
-      const now = new Date();  
-      const tag = String(now.getDate()).padStart(2, '0');  
-      const monat = String(now.getMonth() + 1).padStart(2, '0');  
-      const stunde = String(now.getHours()).padStart(2, '0');  
-      const minute = String(now.getMinutes()).padStart(2, '0');  
-      const zeit = `${tag}.${monat} – ${stunde}:${minute}`;  
-      const anfrageRef = ref1(db1, `anfragen/${Date.now()}_${name}`);  
-      set1(anfrageRef, { name, betrag, grund, zeit });  
-      view.innerHTML = `<h2>Anfrage gesendet! (${betrag} Mausdollar für: ${grund})</h2>`;  
-    }  
-  
-    resetView();  
-  </script>  </body>  
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mäusegruppe Terminal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#f2f4f8; --ink:#1c1c1e; --muted:#6b7280; --card:#ffffff;
+      --ring:#e5e7eb; --brand:#007aff; --shadow:0 10px 25px rgba(0,0,0,.08)
+    }
+    body{font-family:'SF Pro Display',sans-serif;background:linear-gradient(135deg,#e6f0ff 0%,#fef3f7 100%);min-height:100vh;margin:0;color:var(--ink);display:flex;flex-direction:column}
+    h1{margin:20px 0 10px;font-size:28px;font-weight:700;text-align:center}
+    #home-btn{display:none;justify-content:center;font-size:16px;color:var(--brand);cursor:pointer;margin-bottom:10px}
+    #view{display:flex;flex-direction:column;align-items:center;gap:16px;padding:0 16px 24px}
+    /* App grid */
+    .app-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:780px;width:100%;padding:0 16px 24px;margin:8px auto 24px}
+    @media(min-width:700px){.app-grid{grid-template-columns:repeat(4,1fr)}}
+    .app{background:var(--card);border:1px solid var(--ring);border-radius:18px;box-shadow:var(--shadow);padding:14px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:transform .08s ease, box-shadow .2s}
+    .app:active{transform:translateY(1px)}
+    .app:hover{box-shadow:0 14px 32px rgba(0,0,0,.1)}
+    .app img{width:86px;height:86px;object-fit:contain;border-radius:16px}
+    .app .title{font-weight:700;font-size:16px;text-align:center}
+    .app .sub{font-size:12px;color:var(--muted);text-align:center}
+    /* Old buttons kept hidden to preserve handlers if needed */
+    .legacy-menu{display:none}
+    /* Inputs and buttons for views (kept from original) */
+    input{width:95%;max-width:340px;font-size:16px;padding:12px;margin-top:12px;border:1px solid #ccc;border-radius:10px}
+    button{background:#fff;border:1px solid #ccc;border-radius:12px;padding:18px 24px;font-size:18px;font-weight:600;color:#000;box-shadow:0 2px 5px rgba(0,0,0,.05);cursor:pointer;width:95%;max-width:340px;text-align:center;transition:all .2s, transform .1s}
+    button:hover{background:#f0f0f5}
+    button:active{background:#e0e0e5;transform:scale(.98)}
+    #konto-details{display:flex;flex-direction:column;align-items:center;gap:12px;font-size:18px;text-align:center}
+    .color-circle{width:24px;height:24px;border-radius:50%;border:1px solid #ccc;margin-top:5px}
+  </style>
+</head>
+<body>
+  <h1 id="title">Mäusegruppe Terminal</h1>
+
+  <!-- App-Startseite -->
+  <div class="app-grid" id="app-grid">
+    <div class="app" onclick="showKontoEinsehen()">
+      <img src="https://i.supaimg.com/0483c192-7c11-41e0-92c1-e980e9b50f60.png" alt="Konto">
+      <div class="title">Konto einsehen</div>
+      <div class="sub">Kontostand & Farbe</div>
+    </div>
+    <div class="app" onclick="window.location.href='https://frederickoeller1207.github.io/ziele/'">
+      <img src="https://i.supaimg.com/5abf1dba-fcbb-472c-a9bc-3c15894c1bcb.png" alt="Ziel">
+      <div class="title">Mein Ziel</div>
+      <div class="sub">Fortschritt ansehen</div>
+    </div>
+    <div class="app" onclick="openAusleihe()">
+      <img src="https://i.supaimg.com/dea106e1-18eb-4ae7-b2ea-ca3ded6e63c1.png" alt="Ausleihe">
+      <div class="title">Spielzeug ausleihen</div>
+      <div class="sub">mit PIN</div>
+    </div>
+    <div class="app" onclick="openCheckout()">
+      <img src="https://i.supaimg.com/652a2719-c338-4a37-a712-7dd6d56945b5.png" alt="Checkout">
+      <div class="title">Checkout</div>
+      <div class="sub">mit PIN</div>
+    </div>
+    <div class="app" onclick="openMausdollar()">
+      <img src="https://i.supaimg.com/d256e5e6-05bd-43b0-a548-6c10c1e43efe.png" alt="Mausdollar">
+      <div class="title">Mausdollar hinzufügen</div>
+      <div class="sub">Anfrage senden</div>
+    </div>
+    <div class="app" onclick="window.location.href='https://frederickoeller1207.github.io/Mousecity-Store/'">
+      <img src="https://i.supaimg.com/1fc31392-99ae-4970-8cee-474e784ef93f.png" alt="Store">
+      <div class="title">Mousecity Store</div>
+      <div class="sub">Einkaufen</div>
+    </div>
+    <div class="app" onclick="window.location.href='malwettbewerb.html'">
+      <img src="https://i.supaimg.com/359b3d2b-2cc2-48dd-86b2-4f44ee584857.png" alt="Malwettbewerb">
+      <div class="title">Malwettbewerb</div>
+      <div class="sub">Abgeben & abstimmen</div>
+    </div>
+    <div class="app" onclick="window.location.href='nachrichten.html'">
+      <img src="https://i.supaimg.com/965bbc7f-a8a5-43f8-a7d1-90ce44c21053.png" alt="Briefkasten">
+      <div class="title">MausBriefkasten</div>
+      <div class="sub">Nachricht schreiben</div>
+    </div>
+  </div>
+
+  <!-- Legacy Menü (unsichtbar, Logik bleibt nutzbar) -->
+  <div id="menu" class="legacy-menu">
+    <button id="btn-kontoeinsehen">Konto einsehen</button>
+    <button onclick="window.location.href='https://frederickoeller1207.github.io/ziele/'">Mein Ziel</button>
+    <button id="btn-ausleihe">Spielzeug Ausleihe</button>
+    <button id="btn-checkout">Checkout</button>
+    <button id="btn-mausdollar">Mausdollar hinzufügen</button>
+    <button onclick="window.location.href='https://frederickoeller1207.github.io/Mousecity-Store/'">Mousecity Store</button>
+  </div>
+
+  <div id="home-btn">🏠 Zurück</div>
+  <div id="view"></div>
+
+  <script type="module">
+    import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+    import { getDatabase as getDB1, ref as ref1, get as get1, onValue as onVal1, set as set1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+    import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+    import { getDatabase as getDB2, ref as ref2, update as update2, onValue as onVal2, get as get2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+
+    const config1 = {
+      apiKey: "AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",
+      authDomain: "gesamt-dae4e.firebaseapp.com",
+      databaseURL: "https://gesamt-dae4e-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "gesamt-dae4e",
+      storageBucket: "gesamt-dae4e.appspot.com",
+      messagingSenderId: "844023612743",
+      appId: "1:844023612743:web:0821aa894541f89a7df862"
+    };
+    const config2 = {
+      apiKey: "AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg",
+      authDomain: "punkte-45c20.firebaseapp.com",
+      databaseURL: "https://punkte-45c20-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "punkte-45c20",
+      storageBucket: "punkte-45c20.appspot.com",
+      messagingSenderId: "931713539549",
+      appId: "1:931713539549:web:e348bf38369639f1906a34"
+    };
+
+    const app1 = initApp1(config1, "app1"); const db1 = getDB1(app1);
+    const app2 = initApp2(config2, "app2"); const db2 = getDB2(app2);
+
+    const view = document.getElementById("view");
+    const menu = document.getElementById("menu");
+    const homeBtn = document.getElementById("home-btn");
+
+    const resetView = () => { view.innerHTML=""; homeBtn.style.display="none"; document.getElementById("title").textContent="Mäusegruppe Terminal"; };
+    const openView = (title) => { view.innerHTML=""; homeBtn.style.display="flex"; document.getElementById("title").textContent=title; };
+    homeBtn.onclick = () => { resetView(); document.getElementById('app-grid').style.display='grid'; };
+
+    function eingabeMitZahl(title, callback){
+      openView(title);
+      const input = document.createElement("input"); input.type="number"; input.inputMode="numeric"; input.autofocus=true;
+      const btn = document.createElement("button"); btn.textContent="OK";
+      btn.onclick=()=>{ const val=input.value.trim(); if(val) callback(val); };
+      view.appendChild(input); view.appendChild(btn); input.focus();
+      document.getElementById('app-grid').style.display='none';
+    }
+
+    async function checkSicherheitscode(name, callback){
+      const snap = await get1(ref1(db1, `kinder/${name}`));
+      const code = snap.exists()? snap.val().code : null;
+      if(!code){ alert("Kein Sicherheitscode hinterlegt."); return; }
+      eingabeMitZahl(`Bitte Sicherheitscode für ${name} eingeben:`, (eingabe)=>{
+        if(eingabe===code) callback(); else alert("Falscher Code.");
+      });
+    }
+
+    // ===== Konto einsehen =====
+    document.getElementById("btn-kontoeinsehen").onclick = showKontoEinsehen;
+    function farbeToColor(f){ if(f==="🔴")return"red"; if(f==="🟡")return"orange"; if(f==="🟢")return"green"; if(f==="⚫")return"black"; if(f==="🟣")return"purple"; if(f==="🔵")return"blue"; return"#ccc";}
+    function getFarbBedeutung(f){ if(f==="🟢")return"Du bist deinem Ziel heute 5 % näher."; if(f==="🟣")return"Du bist deinem Ziel heute 10 % näher."; if(f==="🔴")return"Du entfernst dich heute um 5 % von deinem Ziel."; if(f==="⚫")return"Du entfernst dich heute um 10 % von deinem Ziel."; if(f==="🟡"||f==="⚪")return"Dein Ziel-Fortschritt bleibt heute unverändert."; return"";}
+    async function showKontoEinsehen(){
+      openView("Konto einsehen"); document.getElementById('app-grid').style.display='none';
+      const suchInput=document.createElement("input"); suchInput.placeholder="Suche nach Namen..."; suchInput.autofocus=true; view.appendChild(suchInput);
+      const kinderListe=document.createElement("div"); kinderListe.id="kinder-liste"; kinderListe.style.marginTop="20px"; view.appendChild(kinderListe);
+      const kinderSnap=await get2(ref2(db2,"kinder")); const alleKonten=[];
+      if(kinderSnap.exists()){ kinderSnap.forEach(kindSnap=>{ alleKonten.push({name:kindSnap.key, ...kindSnap.val()}); }); }
+      function renderKinderListe(filter=""){ kinderListe.innerHTML=""; alleKonten.filter(k=>k.name.toLowerCase().includes(filter.toLowerCase())).forEach(konto=>{ const btn=document.createElement("button"); btn.textContent=konto.name; btn.onclick=()=>showKontoDetails(konto); kinderListe.appendChild(btn); }); }
+      renderKinderListe(); suchInput.addEventListener("keyup",(e)=>renderKinderListe(e.target.value));
+    }
+    function showKontoDetails(konto){
+      openView(konto.name);
+      const details=document.createElement("div"); details.id="konto-details";
+      const kontostand=Number(konto.punkte??konto.kontostand??0);
+      const saldo=document.createElement("p"); saldo.style.fontWeight="600"; saldo.textContent=`Du hast ${kontostand} M$ auf deinem Konto`; details.appendChild(saldo);
+      const farbLabel=document.createElement("p"); farbLabel.textContent="Deine Farbe für heute ist:"; details.appendChild(farbLabel);
+      if(konto.farbe){
+        const kreis=document.createElement("div"); kreis.className="color-circle"; kreis.style.backgroundColor=farbeToColor(konto.farbe); details.appendChild(kreis);
+        const bedeutung=document.createElement("p"); bedeutung.textContent=getFarbBedeutung(konto.farbe); details.appendChild(bedeutung);
+      } else {
+        const keine=document.createElement("p"); keine.textContent="Dieses Konto hat keine Farbe."; details.appendChild(keine);
+        const unver=document.createElement("p"); unver.textContent="Dein Ziel-Fortschritt bleibt heute unverändert."; details.appendChild(unver);
+      }
+      view.appendChild(details);
+    }
+
+    // ===== Ausleihe =====
+    document.getElementById("btn-ausleihe").onclick = () => { openAusleihe(); };
+    window.openAusleihe = () => {
+      openView("Spielzeug Ausleihe"); document.getElementById('app-grid').style.display='none';
+      onVal1(ref1(db1,"kinder"), snapshot => {
+        view.innerHTML=""; snapshot.forEach(childSnap => {
+          const name=childSnap.key; const btn=document.createElement("button"); btn.textContent=name;
+          btn.onclick=()=>checkSicherheitscode(name,()=>ausleihen(name)); view.appendChild(btn);
+        });
+      });
+    };
+    function frageSpielzeugnummer(name,cb){ eingabeMitZahl(`${name}, gib bitte die Spielzeugnummer ein:`, cb); }
+    async function ausleihen(name){
+      const ausleiheSnap=await get1(ref1(db1,`ausleihen/${name}`));
+      if(ausleiheSnap.exists() && ausleiheSnap.val().bestätigt===false){ alert("Bitte gib das ausgeliehene Spielzeug zurück."); return; }
+      frageSpielzeugnummer(name, async (nummer)=>{
+        const spielzeugeSnap=await get1(ref1(db1,"spielzeuge")); const spielzeuge=spielzeugeSnap.exists()? spielzeugeSnap.val():{};
+        if(spielzeuge[nummer]){
+          await set1(ref1(db1,`ausleihen/${name}`),{spielzeug:spielzeuge[nummer],nummer,zeit:new Date().toISOString(),bestätigt:false});
+          const popup=document.createElement("div");
+          popup.textContent=`${spielzeuge[nummer]} erfolgreich ausgeliehen.`; popup.style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;color:#000;padding:20px 30px;border-radius:12px;font-size:18px;box-shadow:0 4px 12px rgba(0,0,0,.2);z-index:9999;text-align:center;";
+          document.body.appendChild(popup); setTimeout(()=>{ popup.remove(); resetView(); document.getElementById('app-grid').style.display='grid'; },3000);
+        } else { alert("Ungültige Nummer."); }
+      });
+    }
+
+    // ===== Checkout =====
+    document.getElementById("btn-checkout").onclick = () => { openCheckout(); };
+    window.openCheckout = () => {
+      openView("Checkout"); document.getElementById('app-grid').style.display='none';
+      onVal1(ref1(db1,"kinder"), snapshot => {
+        view.innerHTML=""; snapshot.forEach(childSnap=>{
+          const name=childSnap.key; const link=childSnap.val().link;
+          const btn=document.createElement("button"); btn.textContent=name;
+          btn.onclick=()=>checkSicherheitscode(name,()=>{ if(link) window.location.href=link; else alert("Kein Link hinterlegt."); });
+          view.appendChild(btn);
+        });
+      });
+    };
+
+    // ===== Mausdollar hinzufügen =====
+    document.getElementById("btn-mausdollar").onclick = () => { openMausdollar(); };
+    window.openMausdollar = () => {
+      openView("Mausdollar hinzufügen"); document.getElementById('app-grid').style.display='none';
+      const kinder=[]; onVal1(ref1(db1,"kinder"), snapshot=>{
+        view.innerHTML=""; snapshot.forEach(childSnap=>{ kinder.push(childSnap.key); });
+        kinder.forEach(name=>{
+          const btn=document.createElement("button"); btn.textContent=name;
+          btn.onclick=()=>checkSicherheitscode(name,()=>waehleBetrag(name)); view.appendChild(btn);
+        });
+      });
+    };
+    function waehleBetrag(name){
+      openView(`${name}: Wähle Betrag`); document.getElementById('app-grid').style.display='none';
+      for(let i=1;i<=5;i++){ const btn=document.createElement("button"); btn.textContent=`${i}`; btn.onclick=()=>waehleGrund(name,i); view.appendChild(btn); }
+    }
+    function waehleGrund(name,betrag){
+      openView(`${name}: Grund wählen`); const gruende=["Quiz","Kurze Hilfe","Malwettbewerb","Tischdienst"];
+      gruende.forEach(g=>{ const btn=document.createElement("button"); btn.textContent=g; btn.onclick=()=>sendeAnfrage(name,betrag,g); view.appendChild(btn); });
+      const eigener=document.createElement("input"); eigener.placeholder="Eigener Grund"; eigener.type="text"; view.appendChild(eigener);
+      const abs=document.createElement("button"); abs.textContent="Absenden"; abs.onclick=()=>{ const g=eigener.value.trim(); if(g) sendeAnfrage(name,betrag,g); }; view.appendChild(abs);
+    }
+    function sendeAnfrage(name,betrag,grund){
+      const now=new Date(); const tag=String(now.getDate()).padStart(2,'0'); const monat=String(now.getMonth()+1).padStart(2,'0'); const stunde=String(now.getHours()).padStart(2,'0'); const minute=String(now.getMinutes()).padStart(2,'0');
+      const zeit=`${tag}.${monat} – ${stunde}:${minute}`; const anfrageRef=ref1(db1,`anfragen/${Date.now()}_${name}`);
+      set1(anfrageRef,{name,betrag,grund,zeit}); view.innerHTML=`<h2>Anfrage gesendet! (${betrag} Mausdollar für: ${grund})</h2>`;
+    }
+
+    // Start
+    resetView();
+  </script>
+</body>
 </html>
