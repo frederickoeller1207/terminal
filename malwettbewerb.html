@@ -18,7 +18,6 @@
   @media(min-width:700px){.grid{grid-template-columns:1fr 1fr}}
   @media(min-width:1000px){.grid{grid-template-columns:1fr 1fr 1fr}}
   .tile{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.12);transform:translateZ(0)}
-  /* Bild im Original-Seitenverhältnis anzeigen */
   .tile img{display:block;width:100%;height:auto;object-fit:contain;background:#f7f7f9}
   .badge{display:inline-block;margin:8px 10px;background:linear-gradient(90deg,var(--brand3),var(--brand2));color:#053;font-weight:800;border-radius:999px;padding:6px 10px;font-size:14px}
   .btn{display:inline-block;background:#111;color:#fff;border:0;border-radius:12px;padding:14px 18px;font-weight:800;font-size:18px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.18);transition:transform .08s ease}
@@ -38,10 +37,11 @@
 </style>
 <script type="module">
   import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-  import { getDatabase as getDB1, ref as ref1, get as get1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+  import { getDatabase as getDB1, ref as ref1, get as get1, onValue as onVal1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
   import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
   import { getDatabase as getDB2, ref as ref2, get as get2, onValue as onVal2, set as set2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
 
+  /* gesamt -> Codes + vollständige Kinderliste */
   const app1 = initApp1({
     apiKey:"AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",
     authDomain:"gesamt-dae4e.firebaseapp.com",
@@ -53,6 +53,7 @@
   },"app1");
   const db1 = getDB1(app1);
 
+  /* punkte -> Malwettbewerb */
   const app2 = initApp2({
     apiKey:"AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg",
     authDomain:"punkte-45c20.firebaseapp.com",
@@ -84,8 +85,8 @@
     aktuelleId = cur.exists()? cur.val() : "";
     if(!aktuelleId){ renderNotice("Momentan ist kein aktiver Malwettbewerb."); return; }
 
-    // Kinderliste LIVE laden: alle Kinder aus punkte/kinder
-    onVal2(ref2(db2, `kinder`), s=>{
+    /* ALLE Kinder live aus gesamt/kinder laden */
+    onVal1(ref1(db1, `kinder`), s=>{
       const list=[]; s.forEach(ch=>list.push(ch.key));
       list.sort((a,b)=>a.localeCompare(b));
       kinderList = list;
@@ -104,7 +105,6 @@
       renderNotice("Momentan ist kein aktiver Malwettbewerb."); return;
     }
 
-    // 24h-Lock vor Abstimmstart
     const lockStart = new Date(abstimm.getTime() - 24*60*60*1000);
 
     if(now>=einwurf && now<lockStart){
