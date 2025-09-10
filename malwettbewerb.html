@@ -27,7 +27,6 @@
   import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
   import { getDatabase as getDB2, ref as ref2, get as get2, onValue as onVal2, set as set2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
 
-  /* DBs wie im vorhandenen System */
   const app1 = initApp1({
     apiKey:"AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",
     authDomain:"gesamt-dae4e.firebaseapp.com",
@@ -37,7 +36,7 @@
     messagingSenderId:"844023612743",
     appId:"1:844023612743:web:0821aa894541f89a7df862"
   },"app1");
-  const db1 = getDB1(app1); // Codes
+  const db1 = getDB1(app1);
 
   const app2 = initApp2({
     apiKey:"AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg",
@@ -61,18 +60,15 @@
   window.addEventListener("DOMContentLoaded", init);
 
   async function init(){
-    // Einstellungen (optional, standard false)
     try{
       const ez = await get2(ref2(db2, `${ns}/einstellungen/zeigeZaehler`));
       zeigeZaehler = !!(ez.exists()? ez.val(): false);
     }catch{}
 
-    // aktiver Wettbewerb?
     const cur = await get2(ref2(db2, `${ns}/aktuelleId`));
     aktuelleId = cur.exists()? cur.val() : "";
     if(!aktuelleId){ renderNotice("Momentan ist kein aktiver Malwettbewerb."); return; }
 
-    // Wettbewerb + Kinder lesen
     const [wSnap, kSnap] = await Promise.all([
       get2(ref2(db2, `${ns}/wettbewerbe/${aktuelleId}`)),
       get2(ref2(db2, `kinder`))
@@ -88,39 +84,35 @@
     kinderList = [];
     if(kSnap.exists()){ kSnap.forEach(ch=>kinderList.push(ch.key)); kinderList.sort((a,b)=>a.localeCompare(b)); }
 
-    // keine/durch Datenfehler
     if(!einwurf||!abstimm||!gewinner||!ende || now<einwurf){
       renderNotice("Momentan ist kein aktiver Malwettbewerb."); return;
     }
 
-    // Phasen
     if(now>=einwurf && now<abstimm){
-      const dd = abstimm.toLocaleDateString();
-      renderNotice(`Es wird für den Malwettbewerb gesammelt. Wirf dein Bild in den Briefkasten draußen. Komme bald wieder zurück. Dann kannst du für dein Lieblingsbild abstimmen. Du kannst am ${dd} für dein Bild abstimmen.`);
+      const diffMs = abstimm - now;
+      const diffDays = Math.max(1, Math.ceil(diffMs / (1000*60*60*24)));
+      renderNotice(
+        `Momentan wird für den Malwettbewerb gesammelt. Du hast noch ${diffDays} ${diffDays===1 ? "Tag" : "Tage"} dein Bild in den Briefkasten vor der Tür einzuwerfen. Komme in ${diffDays} ${diffDays===1 ? "Tag" : "Tagen"} wieder zurück und stimme für dein Lieblingsbild ab.`
+      );
       return;
     }
 
     if(now>=abstimm && now<gewinner){
-      // Abstimmphase: alle Bilder vorladen; Loader nur hier
       const bilder = (w.bilder||{});
       const ids = Object.keys(bilder);
       if(ids.length===0){ renderNotice("Es sind noch keine Bilder vorhanden."); return; }
 
       showLoading("Bilder werden geladen. Bitte warte …");
-      // 10 s Timeout, danach Fallback ohne kompletten Preload
       try{
         await Promise.race([preloadAll(ids.map(id=>bilder[id].url)), new Promise((_,rej)=>setTimeout(()=>rej("timeout"),10000))]);
-      }catch(_e){ /* Fallback: trotzdem anzeigen */ }
+      }catch{}
       hideLoading();
       bilderMap = bilder;
       renderVoting(ids);
       return;
     }
 
-    if(now>=gewinner && now<ende){
-      renderWinners(w);
-      return;
-    }
+    if(now>=gewinner && now<ende){ renderWinners(w); return; }
 
     renderNotice("Der Malwettbewerb ist beendet.");
   }
@@ -171,7 +163,6 @@
     });
     const c = $(".container"); c.innerHTML=""; c.appendChild(grid);
 
-    // optionaler Zähler (nur wenn Admin ihn eingeschaltet hat)
     if(zeigeZaehler){
       onVal2(ref2(db2, `${ns}/stimmen/${aktuelleId}`), s=>{
         const votes = s.val()||{};
@@ -205,7 +196,6 @@
     const m = $("#modal"); m.style.display="flex";
     $("#vprev").src=url;
     $("#confirmText").textContent = "Möchtest du für dieses Bild abstimmen? Du kannst nur einmal abstimmen.";
-    // Kontoliste füllen
     const sel = $("#kindSel"); sel.innerHTML="";
     kinderList.forEach(name=>{
       const o=document.createElement("option"); o.value=name; o.textContent=name; sel.appendChild(o);
@@ -217,27 +207,19 @@
   async function sendVote(bildId){
     const name = $("#kindSel").value;
     if(!name) return;
-
-    // bereits abgestimmt?
     if(await hasVoted(name)){
       alert("Du hast bereits für diesen Malwettbewerb abgestimmt. Du kannst beim nächsten Mal wieder abstimmen.");
       closeModal(); return;
     }
-
-    // Code prüfen
     const codeSnap = await get1(ref1(db1, `kinder/${name}`));
     const stored = codeSnap.exists()? (codeSnap.val().code||"") : "";
     const entered = $("#code").value.trim();
     if(!stored){ alert("Kein Sicherheitscode hinterlegt."); return; }
     if(entered !== stored){ alert("Falscher Code."); return; }
-
-    // race-sichere Zweitprüfung
     if(await hasVoted(name)){
       alert("Du hast bereits für diesen Malwettbewerb abgestimmt. Du kannst beim nächsten Mal wieder abstimmen.");
       closeModal(); return;
     }
-
-    // Stimme speichern
     const vote = { bildId, zeit: new Date().toISOString() };
     await set2(ref2(db2, `${ns}/stimmen/${aktuelleId}/${encodeKey(name)}`), vote);
     alert("Stimme versendet. Danke.");
@@ -255,11 +237,8 @@
 </head>
 <body>
   <header><h1>Malwettbewerb</h1></header>
-  <div class="container">
-    <div class="notice">Lade…</div>
-  </div>
+  <div class="container"><div class="notice">Lade…</div></div>
 
-  <!-- Modal -->
   <div id="modal" class="modal">
     <div class="dialog">
       <div style="display:flex;gap:12px;align-items:center;margin-bottom:8px">
@@ -276,6 +255,5 @@
     </div>
   </div>
 
-  <!-- Loader -->
   <div id="loading" class="loading"></div>
 </body></html>
