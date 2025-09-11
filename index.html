@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="de">
+<!DOCTYPE html>
+<html lang="de">
 <head>
   <meta charset="UTF-8" />
   <title>Mäusegruppe Terminal</title>
@@ -18,13 +19,13 @@
     .notice{border-radius:14px;padding:12px 14px;margin:8px 0;box-shadow:var(--shadow);color:#fff}
     .notice h3{margin:0 0 6px 0;font-size:16px;font-weight:700;opacity:.95}
     .notice p{margin:0;font-size:14px;line-height:1.4;white-space:pre-wrap}
-    .n-blue{background:#1e40af}   /* Blau */
-    .n-red{background:#b91c1c}    /* Rot  */
-    .n-green{background:#047857}  /* Grün */
-    .n-orange{background:#c2410c} /* Orange */
-    .n-purple{background:#6d28d9} /* Lila */
-    .n-black{background:#111827}  /* Schwarz */
-    .n-gray{background:#374151}   /* Grau */
+    .n-blue{background:#1e40af}
+    .n-red{background:#b91c1c}
+    .n-green{background:#047857}
+    .n-orange{background:#c2410c}
+    .n-purple{background:#6d28d9}
+    .n-black{background:#111827}
+    .n-gray{background:#374151}
     /* App grid */
     .app-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:780px;width:100%;padding:0 16px 24px;margin:8px auto 24px}
     @media(min-width:700px){.app-grid{grid-template-columns:repeat(4,1fr)}}
@@ -34,24 +35,30 @@
     .app img{width:86px;height:86px;object-fit:contain;border-radius:16px}
     .app .title{font-weight:700;font-size:16px;text-align:center}
     .app .sub{font-size:12px;color:var(--muted);text-align:center}
-    /* Old buttons kept hidden to preserve handlers if needed */
+    /* Legacy menu hidden */
     .legacy-menu{display:none}
-    /* Inputs and buttons for views (kept from original) */
+    /* Inputs/buttons for views */
     input{width:95%;max-width:340px;font-size:16px;padding:12px;margin-top:12px;border:1px solid #ccc;border-radius:10px}
     button{background:#fff;border:1px solid #ccc;border-radius:12px;padding:18px 24px;font-size:18px;font-weight:600;color:#000;box-shadow:0 2px 5px rgba(0,0,0,.05);cursor:pointer;width:95%;max-width:340px;text-align:center;transition:all .2s, transform .1s}
     button:hover{background:#f0f0f5}
     button:active{background:#e0e0e5;transform:scale(.98)}
     #konto-details{display:flex;flex-direction:column;align-items:center;gap:12px;font-size:18px;text-align:center}
-    .color-circle{width:24px;height:24px;border-radius:50%;border:1px solid #ccc;margin-top:5px}/* >>> Zusatz-Styles NUR für 'Mausdollar hinzufügen' */
-.amount-wrap{width:100%;max-width:520px;display:flex;flex-direction:column;align-items:center;margin-top:8px}
-.amount-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;width:100%}
-.amount-btn{padding:18px 0;font-size:22px;font-weight:800;border:1px solid #ccc;border-radius:14px;background:#fff}
-.amount-btn.custom{grid-column:1/-1;font-size:18px}
-
+    .color-circle{width:24px;height:24px;border-radius:50%;border:1px solid #ccc;margin-top:5px}
+    /* Mausdollar UI */
+    .amount-wrap{width:100%;max-width:520px;display:flex;flex-direction:column;align-items:center;margin-top:8px}
+    .amount-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;width:100%}
+    .amount-btn{padding:18px 0;font-size:22px;font-weight:800;border:1px solid #ccc;border-radius:14px;background:#fff}
+    .amount-btn.custom{grid-column:1/-1;font-size:18px}
   </style>
 </head>
 <body>
-  <h1 id="title">Mäusegruppe Terminal</h1>  <!-- Kurznachrichten-Bereich -->  <div id="notices"></div>  <!-- App-Startseite -->  <div class="app-grid" id="app-grid">
+  <h1 id="title">Mäusegruppe Terminal</h1>
+
+  <!-- Kurznachrichten-Bereich (nur auf Startseite sichtbar) -->
+  <div id="notices"></div>
+
+  <!-- App-Startseite -->
+  <div class="app-grid" id="app-grid">
     <div class="app" onclick="showKontoEinsehen()">
       <img src="https://i.supaimg.com/0483c192-7c11-41e0-92c1-e980e9b50f60.png" alt="Konto">
       <div class="title">Konto einsehen</div>
@@ -92,15 +99,22 @@
       <div class="title">MausBriefkasten</div>
       <div class="sub">Nachricht schreiben</div>
     </div>
-  </div>  <!-- Legacy Menü (unsichtbar, Logik bleibt nutzbar) -->  <div id="menu" class="legacy-menu">
+  </div>
+
+  <!-- Legacy Menü (unsichtbar, Logik bleibt nutzbar) -->
+  <div id="menu" class="legacy-menu">
     <button id="btn-kontoeinsehen">Konto einsehen</button>
     <button onclick="window.location.href='https://frederickoeller1207.github.io/ziele/'">Mein Ziel</button>
     <button id="btn-ausleihe">Spielzeug Ausleihe</button>
     <button id="btn-checkout">Checkout</button>
     <button id="btn-mausdollar">Mausdollar hinzufügen</button>
     <button onclick="window.location.href='https://frederickoeller1207.github.io/Mousecity-Store/'">Mousecity Store</button>
-  </div>  <div id="home-btn">🏠 Zurück</div>
-  <div id="view"></div>  <script type="module">
+  </div>
+
+  <div id="home-btn">🏠 Zurück</div>
+  <div id="view"></div>
+
+  <script type="module">
     import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
     import { getDatabase as getDB1, ref as ref1, get as get1, onValue as onVal1, set as set1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
     import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
@@ -129,12 +143,34 @@
     const app2 = initApp2(config2, "app2"); const db2 = getDB2(app2);
 
     const view = document.getElementById("view");
-    const menu = document.getElementById("menu");
     const homeBtn = document.getElementById("home-btn");
+    const noticesBox = document.getElementById('notices');
 
-    const resetView = () => { view.innerHTML=""; homeBtn.style.display="none"; document.getElementById("title").textContent="Mäusegruppe Terminal"; };
-    const openView = (title) => { view.innerHTML=""; homeBtn.style.display="flex"; document.getElementById("title").textContent=title; };
-    homeBtn.onclick = () => { resetView(); document.getElementById('app-grid').style.display='grid'; };
+    // Home/Notices-State
+    let IS_HOME = true;
+    let latestNotices = [];
+
+    const resetView = () => {
+      view.innerHTML="";
+      homeBtn.style.display="none";
+      document.getElementById("title").textContent="Mäusegruppe Terminal";
+      document.getElementById('app-grid').style.display='grid';
+      IS_HOME = true;
+      // Nur auf Startseite zeigen
+      renderNoticesList(latestNotices);
+    };
+
+    const openView = (title) => {
+      view.innerHTML="";
+      homeBtn.style.display="flex";
+      document.getElementById("title").textContent=title;
+      document.getElementById('app-grid').style.display='none';
+      IS_HOME = false;
+      // Immer ausblenden, sobald nicht Startseite
+      noticesBox.style.display = 'none';
+    };
+
+    homeBtn.onclick = () => { resetView(); };
 
     function eingabeMitZahl(title, callback){
       openView(title);
@@ -142,7 +178,6 @@
       const btn = document.createElement("button"); btn.textContent="OK";
       btn.onclick=()=>{ const val=input.value.trim(); if(val) callback(val); };
       view.appendChild(input); view.appendChild(btn); input.focus();
-      document.getElementById('app-grid').style.display='none';
     }
 
     async function checkSicherheitscode(name, callback){
@@ -154,26 +189,21 @@
       });
     }
 
-    /* ===== Kurznachrichten lesen und anzeigen =====
-       Pfad: db1/kurznachrichten/{id} => {
-         title: string (optional),
-         text: string (optional),
-         color: 'blue'|'red'|'green'|'orange'|'purple'|'black'|'gray',
-         startISO: '2025-09-11T07:00:00+02:00',
-         endISO:   '2025-09-12T23:59:59+02:00',
-         createdAt: 1694412345678 (ms, optional)
-       }
-    */
-    const noticesBox = document.getElementById('notices');
+    /* ===== Kurznachrichten lesen und NUR auf Startseite anzeigen ===== */
     function colorToClass(c){
       const m = {blue:'n-blue',red:'n-red',green:'n-green',orange:'n-orange',purple:'n-purple',black:'n-black',grey:'n-gray',gray:'n-gray'};
       return m[(c||'').toLowerCase()] || 'n-blue';
     }
     function parseISO(s){ const d = new Date(s); return isNaN(d.getTime()) ? null : d; }
+
     function renderNoticesList(items){
-      if(!items.length){ noticesBox.style.display='none'; noticesBox.innerHTML=''; return; }
+      latestNotices = items || [];
+      if(!IS_HOME || !latestNotices.length){
+        noticesBox.style.display='none';
+        return;
+      }
       noticesBox.style.display='block';
-      noticesBox.innerHTML = items.map(n=>{
+      noticesBox.innerHTML = latestNotices.map(n=>{
         const cls = colorToClass(n.color);
         const title = (n.title && n.title.trim()) ? n.title.trim() : 'Nachricht';
         const text = (n.text || '');
@@ -183,6 +213,7 @@
                 </div>`;
       }).join('');
     }
+
     function subscribeNotices(){
       onVal1(ref1(db1, 'kurznachrichten'), snap=>{
         const now = new Date();
@@ -206,7 +237,6 @@
             }
           });
         }
-        // Neueste oben: zuerst nach createdAt desc, fallback start desc
         list.sort((a,b)=>{
           const ca = a.createdAt||0, cb = b.createdAt||0;
           if(cb!==ca) return cb-ca;
@@ -221,7 +251,7 @@
     function farbeToColor(f){ if(f==="🔴")return"red"; if(f==="🟡")return"orange"; if(f==="🟢")return"green"; if(f==="⚫")return"black"; if(f==="🟣")return"purple"; if(f==="🔵")return"blue"; return"#ccc";}
     function getFarbBedeutung(f){ if(f==="🟢")return"Du bist deinem Ziel heute 5 % näher."; if(f==="🟣")return"Du bist deinem Ziel heute 10 % näher."; if(f==="🔴")return"Du entfernst dich heute um 5 % von deinem Ziel."; if(f==="⚫")return"Du entfernst dich heute um 10 % von deinem Ziel."; if(f==="🟡"||f==="⚪")return"Dein Ziel-Fortschritt bleibt heute unverändert."; return"";}
     async function showKontoEinsehen(){
-      openView("Konto einsehen"); document.getElementById('app-grid').style.display='none';
+      openView("Konto einsehen");
       const suchInput=document.createElement("input"); suchInput.placeholder="Suche nach Namen..."; suchInput.autofocus=true; view.appendChild(suchInput);
       const kinderListe=document.createElement("div"); kinderListe.id="kinder-liste"; kinderListe.style.marginTop="20px"; view.appendChild(kinderListe);
       const kinderSnap=await get2(ref2(db2,"kinder")); const alleKonten=[];
@@ -229,7 +259,7 @@
       function renderKinderListe(filter=""){ kinderListe.innerHTML=""; alleKonten.filter(k=>k.name.toLowerCase().includes(filter.toLowerCase())).forEach(konto=>{ const btn=document.createElement("button"); btn.textContent=konto.name; btn.onclick=()=>showKontoDetails(konto); kinderListe.appendChild(btn); }); }
       renderKinderListe(); suchInput.addEventListener("keyup",(e)=>renderKinderListe(e.target.value));
     }
-    // <- wichtig: global machen für App-Kachel
+    // global für Kachel
     window.showKontoEinsehen = showKontoEinsehen;
 
     function showKontoDetails(konto){
@@ -251,7 +281,7 @@
     // ===== Ausleihe =====
     document.getElementById("btn-ausleihe").onclick = () => { openAusleihe(); };
     window.openAusleihe = () => {
-      openView("Spielzeug Ausleihe"); document.getElementById('app-grid').style.display='none';
+      openView("Spielzeug Ausleihe");
       onVal1(ref1(db1,"kinder"), snapshot => {
         view.innerHTML=""; snapshot.forEach(childSnap => {
           const name=childSnap.key; const btn=document.createElement("button"); btn.textContent=name;
@@ -269,7 +299,7 @@
           await set1(ref1(db1,`ausleihen/${name}`),{spielzeug:spielzeuge[nummer],nummer,zeit:new Date().toISOString(),bestätigt:false});
           const popup=document.createElement("div");
           popup.textContent=`${spielzeuge[nummer]} erfolgreich ausgeliehen.`; popup.style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;color:#000;padding:20px 30px;border-radius:12px;font-size:18px;box-shadow:0 4px 12px rgba(0,0,0,.2);z-index:9999;text-align:center;";
-          document.body.appendChild(popup); setTimeout(()=>{ popup.remove(); resetView(); document.getElementById('app-grid').style.display='grid'; },3000);
+          document.body.appendChild(popup); setTimeout(()=>{ popup.remove(); resetView(); },3000);
         } else { alert("Ungültige Nummer."); }
       });
     }
@@ -277,7 +307,7 @@
     // ===== Checkout =====
     document.getElementById("btn-checkout").onclick = () => { openCheckout(); };
     window.openCheckout = () => {
-      openView("Checkout"); document.getElementById('app-grid').style.display='none';
+      openView("Checkout");
       onVal1(ref1(db1,"kinder"), snapshot => {
         view.innerHTML=""; snapshot.forEach(childSnap=>{
           const name=childSnap.key; const link=childSnap.val().link;
@@ -291,7 +321,7 @@
     // ===== Mausdollar hinzufügen =====
     document.getElementById("btn-mausdollar").onclick = () => { openMausdollar(); };
     window.openMausdollar = () => {
-      openView("Mausdollar hinzufügen"); document.getElementById('app-grid').style.display='none';
+      openView("Mausdollar hinzufügen");
       const kinder=[]; onVal1(ref1(db1,"kinder"), snapshot=>{
         view.innerHTML=""; snapshot.forEach(childSnap=>{ kinder.push(childSnap.key); });
         kinder.forEach(name=>{
@@ -301,7 +331,7 @@
       });
     };
     function waehleBetrag(name){
-      openView(`${name}: Wähle Betrag`); document.getElementById('app-grid').style.display='none';
+      openView(`${name}: Wähle Betrag`);
 
       const wrap=document.createElement("div"); wrap.className="amount-wrap";
       const grid=document.createElement("div"); grid.className="amount-grid";
@@ -341,5 +371,6 @@
     // Start
     resetView();
     subscribeNotices();
-  </script></body>
+  </script>
+</body>
 </html>
