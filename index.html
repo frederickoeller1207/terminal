@@ -32,6 +32,12 @@
     button:active{background:#e0e0e5;transform:scale(.98)}
     #konto-details{display:flex;flex-direction:column;align-items:center;gap:12px;font-size:18px;text-align:center}
     .color-circle{width:24px;height:24px;border-radius:50%;border:1px solid #ccc;margin-top:5px}
+
+    /* >>> Zusatz-Styles NUR für 'Mausdollar hinzufügen' */
+    .amount-wrap{width:100%;max-width:520px;display:flex;flex-direction:column;align-items:center;margin-top:8px}
+    .amount-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;width:100%}
+    .amount-btn{padding:18px 0;font-size:22px;font-weight:800;border:1px solid #ccc;border-radius:14px;background:#fff}
+    .amount-btn.custom{grid-column:1/-1;font-size:18px}
   </style>
 </head>
 <body>
@@ -220,7 +226,7 @@
       });
     };
 
-    // ===== Mausdollar hinzufügen =====
+    // ===== Mausdollar hinzufügen (NEU: 2 Spalten + eigener Betrag) =====
     document.getElementById("btn-mausdollar").onclick = () => { openMausdollar(); };
     window.openMausdollar = () => {
       openView("Mausdollar hinzufügen"); document.getElementById('app-grid').style.display='none';
@@ -234,7 +240,29 @@
     };
     function waehleBetrag(name){
       openView(`${name}: Wähle Betrag`); document.getElementById('app-grid').style.display='none';
-      for(let i=1;i<=5;i++){ const btn=document.createElement("button"); btn.textContent=`${i}`; btn.onclick=()=>waehleGrund(name,i); view.appendChild(btn); }
+
+      const wrap=document.createElement("div"); wrap.className="amount-wrap";
+      const grid=document.createElement("div"); grid.className="amount-grid";
+      wrap.appendChild(grid);
+
+      [1,2,3,4,5,6].forEach(n=>{
+        const b=document.createElement("button");
+        b.className="amount-btn";
+        b.textContent=n;
+        b.onclick=()=>waehleGrund(name,n);
+        grid.appendChild(b);
+      });
+
+      const custom=document.createElement("button");
+      custom.className="amount-btn custom";
+      custom.textContent="Eigener Betrag";
+      custom.onclick=()=>eingabeMitZahl("Eigener Betrag", (val)=>{
+        const n = Math.max(1, Math.floor(Number(val)||0));
+        waehleGrund(name,n);
+      });
+      wrap.appendChild(custom);
+
+      view.appendChild(wrap);
     }
     function waehleGrund(name,betrag){
       openView(`${name}: Grund wählen`); const gruende=["Quiz","Kurze Hilfe","Malwettbewerb","Tischdienst"];
