@@ -9,7 +9,7 @@
     :root{
       --bg:#f2f4f8; --ink:#1c1c1e; --muted:#6b7280; --card:#ffffff;
       --ring:#e5e7eb; --brand:#007aff; --shadow:0 10px 25px rgba(0,0,0,.08);
-      --accent:#22c55e; --accent2:#f59e0b; --danger:#ef4444
+      --accent:#22c55e; --accent2:#f59e0b
     }
     *{box-sizing:border-box}
     body{font-family:'SF Pro Display',sans-serif;background:linear-gradient(135deg,#e6f0ff 0%,#fef3f7 100%);min-height:100vh;margin:0;color:var(--ink);display:flex;flex-direction:column}
@@ -25,57 +25,43 @@
     .app .title{font-weight:700;font-size:16px;text-align:center}
     .app .sub{font-size:12px;color:var(--muted);text-align:center}
 
-    /* View Container */
+    /* View */
     #home-btn{display:none;justify-content:center;font-size:16px;color:var(--brand);cursor:pointer;margin-bottom:10px}
     #view{display:flex;flex-direction:column;align-items:center;gap:16px;padding:0 16px 32px}
 
-    /* Inputs/Buttons (Base) */
-    input, select, textarea{width:100%;max-width:520px;font-size:16px;padding:12px 14px;border:1px solid var(--ring);border-radius:12px;background:#fff}
-    textarea{min-height:120px}
-    .btn{background:#fff;border:1px solid var(--ring);border-radius:12px;padding:14px 18px;font-size:18px;font-weight:600;color:#000;box-shadow:0 2px 5px rgba(0,0,0,.05);cursor:pointer;width:100%;max-width:520px;text-align:center;transition:all .2s, transform .1s}
-    .btn:hover{background:#f8fafc}
-    .btn:active{transform:scale(.98)}
-    .btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
-    .btn.success{background:var(--accent);border-color:var(--accent);color:#fff}
-    .btn.warn{background:var(--accent2);border-color:var(--accent2);color:#111}
-    .btn.ghost{background:#fff;border-style:dashed}
-
-    /* Cards & lists */
+    /* Cards & base controls */
     .card{background:var(--card);border:1px solid var(--ring);border-radius:16px;box-shadow:var(--shadow);padding:16px;width:100%;max-width:780px}
+    .mt-center{margin-top:8vh}       /* hilft, Karten mittiger zu positionieren */
     .section-title{font-weight:700;margin:6px 0 2px}
     .muted{color:var(--muted)}
 
-    /* Konto einsehen */
-    .search-row{display:flex;gap:10px;align-items:center;width:100%;max-width:780px}
-    .search-row input{flex:1}
-    .chip-list{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
-    @media(min-width:640px){.chip-list{grid-template-columns:repeat(3,1fr)}}
-    @media(min-width:900px){.chip-list{grid-template-columns:repeat(4,1fr)}}
-    .chip{padding:12px 14px;border:1px solid var(--ring);border-radius:12px;background:#fff;cursor:pointer;text-align:center;font-weight:600}
-    .chip:hover{background:#f8fafc}
-    .details-grid{display:grid;grid-template-columns:1fr;gap:12px}
-    @media(min-width:600px){.details-grid{grid-template-columns:1fr 1fr}}
+    input, select, textarea{width:100%;max-width:520px;font-size:16px;padding:12px 14px;border:1px solid var(--ring);border-radius:12px;background:#fff}
+    .btn{background:#fff;border:1px solid var(--ring);border-radius:12px;padding:14px 18px;font-size:18px;font-weight:600;color:#000;box-shadow:0 2px 5px rgba(0,0,0,.05);cursor:pointer;width:100%;max-width:520px;text-align:center;transition:all .2s, transform .1s}
+    .btn:active{transform:scale(.98)}
+    .btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+    .btn.ghost{background:#fff;border-style:dashed}
 
-    .stat{background:#f9fafb;border:1px solid var(--ring);border-radius:14px;padding:14px}
-    .stat .label{font-size:12px;color:var(--muted);letter-spacing:.2px}
-    .stat .value{font-size:22px;font-weight:800;margin-top:6px}
-    .color-circle{width:28px;height:28px;border-radius:50%;border:1px solid #d1d5db;display:inline-block;vertical-align:middle;margin-right:8px}
+    /* Vertikale Namensliste (Buttons untereinander) */
+    .name-list{display:flex;flex-direction:column;gap:10px;width:100%;max-width:520px;margin-top:8px}
+    .name-list .btn{padding:16px 18px;font-size:18px}
 
-    /* Betrag-Grid */
-    .grid-amount{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:520px}
-    @media(min-width:520px){.grid-amount{grid-template-columns:repeat(6,1fr)}}
-    .amount-btn{padding:12px;border:1px solid var(--ring);border-radius:12px;background:#fff;font-weight:700;cursor:pointer;text-align:center}
-    .amount-btn:hover{background:#f8fafc}
-    .amount-btn.custom{grid-column:span 3}
-    @media(min-width:520px){.amount-btn.custom{grid-column:span 2}}
+    /* Konto einsehen – größere Typo */
+    .details-grid{display:grid;grid-template-columns:1fr;gap:14px}
+    .stat{background:#f9fafb;border:1px solid var(--ring);border-radius:14px;padding:16px}
+    .stat .label{font-size:16px;color:var(--muted);letter-spacing:.2px}
+    .stat .value{font-size:26px;font-weight:800;margin-top:8px}
+    .color-circle{width:30px;height:30px;border-radius:50%;border:1px solid #d1d5db;display:inline-block;vertical-align:middle;margin-right:10px}
 
-    /* Gründe-Grid */
+    /* Betrag-Grid: 2 Spalten, große Buttons */
+    .grid-amount{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;width:100%;max-width:520px;margin-top:10px}
+    .amount-btn{padding:18px;border:1px solid var(--ring);border-radius:14px;background:#fff;font-weight:800;font-size:22px;cursor:pointer;text-align:center}
+    .amount-btn.custom{grid-column:1/-1;font-size:18px;font-weight:700}
+
+    /* Gründe */
     .grid-reason{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;width:100%;max-width:520px}
-    @media(min-width:520px){.grid-reason{grid-template-columns:repeat(3,1fr)}}
-    .reason-btn{padding:12px;border:1px solid var(--ring);border-radius:12px;background:#fff;font-weight:600;cursor:pointer;text-align:center}
-    .reason-btn:hover{background:#f8fafc}
-
-    /* Hidden legacy menu (handlers kept) */
+    .reason-btn{padding:14px;border:1px solid var(--ring);border-radius:12px;background:#fff;font-weight:600;cursor:pointer;text-align:center}
+    
+    /* Hidden legacy menu */
     .legacy-menu{display:none}
   </style>
 </head>
@@ -126,7 +112,7 @@
     </div>
   </div>
 
-  <!-- Legacy Menü (unsichtbar, Logik bleibt nutzbar) -->
+  <!-- Legacy Menü (unsichtbar, Handler bleiben) -->
   <div id="menu" class="legacy-menu">
     <button id="btn-kontoeinsehen">Konto einsehen</button>
     <button onclick="window.location.href='https://frederickoeller1207.github.io/ziele/'">Mein Ziel</button>
@@ -143,7 +129,7 @@
     import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
     import { getDatabase as getDB1, ref as ref1, get as get1, onValue as onVal1, set as set1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
     import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-    import { getDatabase as getDB2, ref as ref2, update as update2, onValue as onVal2, get as get2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+    import { getDatabase as getDB2, ref as ref2, get as get2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
 
     const config1 = {
       apiKey: "AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",
@@ -176,7 +162,7 @@
 
     function eingabeMitZahl(title, callback, placeholder="Zahl eingeben"){
       openView(title);
-      const card=document.createElement("div"); card.className="card";
+      const card=document.createElement("div"); card.className="card mt-center";
       card.innerHTML = `
         <div class="section-title">${title}</div>
         <input type="number" inputmode="numeric" id="num-inp" placeholder="${placeholder}">
@@ -199,7 +185,17 @@
       }, "PIN");
     }
 
-    /* ===== Konto einsehen (schöner) ===== */
+    /* Hilfs-Sortierung: Alphabetisch, ~ ans Ende */
+    function sortNamesWithTildeLast(arr){
+      return arr.sort((a,b)=>{
+        const at=a.startsWith("~"), bt=b.startsWith("~");
+        if(at!==bt) return at?1:-1;
+        const aa=at?a.slice(1):a, bb=bt?b.slice(1):b;
+        return aa.localeCompare(bb,'de',{sensitivity:'base'});
+      });
+    }
+
+    /* ===== Konto einsehen ===== */
     document.getElementById("btn-kontoeinsehen").onclick = showKontoEinsehen;
     function farbeToColor(f){ if(f==="🔴")return"red"; if(f==="🟡")return"orange"; if(f==="🟢")return"green"; if(f==="⚫")return"black"; if(f==="🟣")return"purple"; if(f==="🔵")return"blue"; return"#e5e7eb";}
     function getFarbBedeutung(f){
@@ -212,39 +208,30 @@
     }
     async function showKontoEinsehen(){
       openView("Konto einsehen");
+      // Namensliste (untereinander)
+      const choose=document.createElement("div"); choose.className="card mt-center";
+      choose.innerHTML = `<div class="section-title">Wähle ein Konto</div>`;
+      const list=document.createElement("div"); list.className="name-list"; choose.appendChild(list);
+      view.appendChild(choose);
 
-      const suchRow=document.createElement("div"); suchRow.className="search-row";
-      const suchInput=document.createElement("input"); suchInput.placeholder="🔎 Name suchen…"; suchInput.autofocus=true;
-      suchRow.appendChild(suchInput);
-      view.appendChild(suchRow);
-
-      const listCard=document.createElement("div"); listCard.className="card";
-      const listWrap=document.createElement("div"); listWrap.className="chip-list"; listCard.appendChild(listWrap);
-      view.appendChild(listCard);
-
-      const kinderSnap=await get2(ref2(db2,"kinder"));
-      const alleKonten=[];
-      if(kinderSnap.exists()){ kinderSnap.forEach(kindSnap=>{ alleKonten.push({name:kindSnap.key, ...kindSnap.val()}); }); }
-      alleKonten.sort((a,b)=>a.name.localeCompare(b.name,'de',{sensitivity:'base'}));
-
-      function renderKinderListe(filter=""){
-        listWrap.innerHTML="";
-        alleKonten
-          .filter(k=>k.name.toLowerCase().includes(filter.toLowerCase()))
-          .forEach(k=>{
-            const chip=document.createElement("div"); chip.className="chip"; chip.textContent=k.name;
-            chip.onclick=()=>showKontoDetails(k);
-            listWrap.appendChild(chip);
-          });
-      }
-      renderKinderListe();
-      suchInput.addEventListener("input",(e)=>renderKinderListe(e.target.value));
+      const snap=await get2(ref2(db2,"kinder"));
+      const names=[];
+      if(snap.exists()){ snap.forEach(s=>names.push(s.key)); }
+      sortNamesWithTildeLast(names).forEach(n=>{
+        const b=document.createElement("button"); b.className="btn"; b.textContent=n;
+        b.onclick=async ()=>{
+          const kSnap = await get2(ref2(db2,`kinder/${n}`));
+          const konto = {name:n, ...(kSnap.val()||{})};
+          showKontoDetails(konto);
+        };
+        list.appendChild(b);
+      });
     }
     window.showKontoEinsehen = showKontoEinsehen;
 
     function showKontoDetails(konto){
       openView(konto.name);
-      const card=document.createElement("div"); card.className="card";
+      const card=document.createElement("div"); card.className="card mt-center";
       const grid=document.createElement("div"); grid.className="details-grid";
 
       const kontostand=Number(konto.punkte??konto.kontostand??0);
@@ -256,11 +243,11 @@
       let farbeHtml = konto.farbe
         ? `<span class="color-circle" style="background:${farbeToColor(konto.farbe)}"></span>${konto.farbe}`
         : `<span class="muted">keine Farbe</span>`;
-      stat2.innerHTML=`<div class="label">Heutige Farbe</div><div class="value" style="display:flex;align-items:center;gap:8px">${farbeHtml}</div>`;
+      stat2.innerHTML=`<div class="label">Heutige Farbe</div><div class="value" style="display:flex;align-items:center;gap:10px">${farbeHtml}</div>`;
       grid.appendChild(stat2);
 
       const info=document.createElement("div"); info.className="stat"; info.style.gridColumn="1/-1";
-      info.innerHTML=`<div class="label">Bedeutung</div><div style="margin-top:6px">${konto.farbe?getFarbBedeutung(konto.farbe):"Dein Ziel-Fortschritt bleibt heute unverändert."}</div>`;
+      info.innerHTML=`<div class="label">Bedeutung</div><div style="margin-top:6px;font-size:18px">${konto.farbe?getFarbBedeutung(konto.farbe):"Dein Ziel-Fortschritt bleibt heute unverändert."}</div>`;
 
       card.appendChild(grid); card.appendChild(info);
       view.appendChild(card);
@@ -271,13 +258,14 @@
     window.openAusleihe = () => {
       openView("Spielzeug Ausleihe");
       onVal1(ref1(db1,"kinder"), snapshot => {
-        const card=document.createElement("div"); card.className="card";
-        const list=document.createElement("div"); list.className="chip-list"; card.appendChild(list);
-        snapshot.forEach(childSnap => {
-          const name=childSnap.key;
-          const chip=document.createElement("div"); chip.className="chip"; chip.textContent=name;
-          chip.onclick=()=>checkSicherheitscode(name,()=>ausleihen(name));
-          list.appendChild(chip);
+        const card=document.createElement("div"); card.className="card mt-center";
+        card.innerHTML=`<div class="section-title">Wähle deinen Namen</div>`;
+        const list=document.createElement("div"); list.className="name-list"; card.appendChild(list);
+        const names=[]; snapshot.forEach(s=>names.push(s.key));
+        sortNamesWithTildeLast(names).forEach(name=>{
+          const b=document.createElement("button"); b.className="btn"; b.textContent=name;
+          b.onclick=()=>checkSicherheitscode(name,()=>ausleihen(name));
+          list.appendChild(b);
         });
         view.innerHTML=""; view.appendChild(card);
       });
@@ -290,7 +278,7 @@
         const spielzeugeSnap=await get1(ref1(db1,"spielzeuge")); const spielzeuge=spielzeugeSnap.exists()? spielzeugeSnap.val():{};
         if(spielzeuge[nummer]){
           await set1(ref1(db1,`ausleihen/${name}`),{spielzeug:spielzeuge[nummer],nummer,zeit:new Date().toISOString(),bestätigt:false});
-          const card=document.createElement("div"); card.className="card";
+          const card=document.createElement("div"); card.className="card mt-center";
           card.innerHTML=`<div class="section-title">Ausleihe erfolgreich</div><div class="muted">„${spielzeuge[nummer]}“ wurde für dich reserviert.</div>`;
           view.innerHTML=""; view.appendChild(card);
           setTimeout(resetView,1600);
@@ -303,54 +291,53 @@
     window.openCheckout = () => {
       openView("Checkout");
       onVal1(ref1(db1,"kinder"), snapshot => {
-        const card=document.createElement("div"); card.className="card";
-        const list=document.createElement("div"); list.className="chip-list"; card.appendChild(list);
-        snapshot.forEach(childSnap=>{
-          const name=childSnap.key; const link=childSnap.val().link;
-          const chip=document.createElement("div"); chip.className="chip"; chip.textContent=name;
-          chip.onclick=()=>checkSicherheitscode(name,()=>{ if(link) window.location.href=link; else alert("Kein Link hinterlegt."); });
-          list.appendChild(chip);
+        const card=document.createElement("div"); card.className="card mt-center";
+        card.innerHTML=`<div class="section-title">Wähle deinen Namen</div>`;
+        const list=document.createElement("div"); list.className="name-list"; card.appendChild(list);
+        const items=[]; snapshot.forEach(s=>items.push({name:s.key, link:s.val().link}));
+        sortNamesWithTildeLast(items.map(i=>i.name)).forEach(n=>{
+          const link = items.find(i=>i.name===n)?.link;
+          const b=document.createElement("button"); b.className="btn"; b.textContent=n;
+          b.onclick=()=>checkSicherheitscode(n,()=>{ if(link) window.location.href=link; else alert("Kein Link hinterlegt."); });
+          list.appendChild(b);
         });
         view.innerHTML=""; view.appendChild(card);
       });
     };
 
-    /* ===== Mausdollar hinzufügen (schöner + eigener Betrag) ===== */
+    /* ===== Mausdollar hinzufügen (2 Spalten groß, mittig) ===== */
     document.getElementById("btn-mausdollar").onclick = () => { openMausdollar(); };
     window.openMausdollar = () => {
       openView("Mausdollar hinzufügen");
-
-      // 1) Kind wählen
-      const chooseCard=document.createElement("div"); chooseCard.className="card";
-      chooseCard.innerHTML=`<div class="section-title">Wähle ein Konto</div><div class="muted">Bitte tippe deinen Namen an und gib danach deine PIN ein.</div>`;
-      const list=document.createElement("div"); list.className="chip-list"; chooseCard.appendChild(list);
-      view.appendChild(chooseCard);
+      const choose=document.createElement("div"); choose.className="card mt-center";
+      choose.innerHTML = `<div class="section-title">Wähle ein Konto</div>`;
+      const list=document.createElement("div"); list.className="name-list"; choose.appendChild(list);
+      view.appendChild(choose);
 
       const names=[];
       onVal1(ref1(db1,"kinder"), snapshot=>{
-        list.innerHTML="";
-        snapshot.forEach(childSnap=>{ names.push(childSnap.key); });
-        names.sort((a,b)=>a.localeCompare(b,'de',{sensitivity:'base'}));
-        names.forEach(name=>{
-          const chip=document.createElement("div"); chip.className="chip"; chip.textContent=name;
-          chip.onclick=()=>checkSicherheitscode(name,()=>waehleBetrag(name));
-          list.appendChild(chip);
+        list.innerHTML=""; names.length=0; snapshot.forEach(s=>names.push(s.key));
+        sortNamesWithTildeLast(names).forEach(name=>{
+          const b=document.createElement("button"); b.className="btn"; b.textContent=name;
+          b.onclick=()=>checkSicherheitscode(name,()=>waehleBetrag(name));
+          list.appendChild(b);
         });
       });
     };
 
     function waehleBetrag(name){
       openView(`${name}: Betrag wählen`);
-      const card=document.createElement("div"); card.className="card";
+      const card=document.createElement("div"); card.className="card mt-center";
       card.innerHTML = `<div class="section-title">Wie viele Mausdollar?</div><div class="muted">Du kannst einen Vorschlag antippen oder einen eigenen Betrag eingeben.</div>`;
       const grid=document.createElement("div"); grid.className="grid-amount"; card.appendChild(grid);
 
-      const presets=[1,2,3,4,5,10];
-      presets.forEach(n=>{
+      const order=[1,2,3,4,5,6];
+      order.forEach(n=>{
         const b=document.createElement("button"); b.className="amount-btn"; b.textContent=n;
         b.onclick=()=>waehleGrund(name,n);
         grid.appendChild(b);
       });
+
       const custom=document.createElement("button"); custom.className="amount-btn custom"; custom.textContent="Eigener Betrag";
       custom.onclick=()=>eingabeMitZahl("Eigener Betrag", (val)=>{
         const n = Math.max(1, Math.floor(Number(val)||0));
@@ -363,8 +350,8 @@
 
     function waehleGrund(name,betrag){
       openView(`${name}: Grund wählen`);
-      const card=document.createElement("div"); card.className="card";
-      card.innerHTML=`<div class="section-title">Wofür bekommst du Mausdollar?</div><div class="muted">Bitte wähle einen Grund oder schreibe deinen eigenen.</div>`;
+      const card=document.createElement("div"); card.className="card mt-center";
+      card.innerHTML=`<div class="section-title">Wofür bekommst du Mausdollar?</div>`;
       const grid=document.createElement("div"); grid.className="grid-reason"; card.appendChild(grid);
 
       const gruende=["Quiz","Kurze Hilfe","Malwettbewerb","Tischdienst","Aufräumen","Besondere Tat"];
@@ -374,8 +361,8 @@
         grid.appendChild(b);
       });
 
-      const own=document.createElement("div"); own.style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap";
-      own.innerHTML=`<input id="own-reason" type="text" placeholder="Eigener Grund"><button class="btn success" id="send-own">Absenden (${betrag} M$)</button>`;
+      const own=document.createElement("div"); own.style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center";
+      own.innerHTML=`<input id="own-reason" type="text" placeholder="Eigener Grund" style="flex:1;min-width:0"><button class="btn primary" id="send-own">Absenden (${betrag} M$)</button>`;
       card.appendChild(own);
       view.appendChild(card);
 
@@ -394,7 +381,7 @@
       const zeit=`${tag}.${monat} – ${stunde}:${minute}`;
       const anfrageRef=ref1(db1,`anfragen/${Date.now()}_${name}`);
       set1(anfrageRef,{name,betrag,grund,zeit});
-      const card=document.createElement("div"); card.className="card";
+      const card=document.createElement("div"); card.className="card mt-center";
       card.innerHTML=`<div class="section-title">Anfrage gesendet ✅</div><div class="muted">${betrag} Mausdollar für: <b>${grund}</b></div>`;
       view.innerHTML=""; view.appendChild(card);
       setTimeout(resetView,1400);
