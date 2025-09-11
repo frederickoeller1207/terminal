@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="de">
+<!DOCTYPE html><html lang="de">
 <head>
   <meta charset="UTF-8" />
   <title>Mäusegruppe Terminal</title>
@@ -14,6 +13,18 @@
     h1{margin:20px 0 10px;font-size:28px;font-weight:700;text-align:center}
     #home-btn{display:none;justify-content:center;font-size:16px;color:var(--brand);cursor:pointer;margin-bottom:10px}
     #view{display:flex;flex-direction:column;align-items:center;gap:16px;padding:0 16px 24px}
+    /* Notices */
+    #notices{max-width:900px;width:100%;margin:6px auto 10px;padding:0 16px;display:none}
+    .notice{border-radius:14px;padding:12px 14px;margin:8px 0;box-shadow:var(--shadow);color:#fff}
+    .notice h3{margin:0 0 6px 0;font-size:16px;font-weight:700;opacity:.95}
+    .notice p{margin:0;font-size:14px;line-height:1.4;white-space:pre-wrap}
+    .n-blue{background:#1e40af}   /* Blau */
+    .n-red{background:#b91c1c}    /* Rot  */
+    .n-green{background:#047857}  /* Grün */
+    .n-orange{background:#c2410c} /* Orange */
+    .n-purple{background:#6d28d9} /* Lila */
+    .n-black{background:#111827}  /* Schwarz */
+    .n-gray{background:#374151}   /* Grau */
     /* App grid */
     .app-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:780px;width:100%;padding:0 16px 24px;margin:8px auto 24px}
     @media(min-width:700px){.app-grid{grid-template-columns:repeat(4,1fr)}}
@@ -31,20 +42,16 @@
     button:hover{background:#f0f0f5}
     button:active{background:#e0e0e5;transform:scale(.98)}
     #konto-details{display:flex;flex-direction:column;align-items:center;gap:12px;font-size:18px;text-align:center}
-    .color-circle{width:24px;height:24px;border-radius:50%;border:1px solid #ccc;margin-top:5px}
+    .color-circle{width:24px;height:24px;border-radius:50%;border:1px solid #ccc;margin-top:5px}/* >>> Zusatz-Styles NUR für 'Mausdollar hinzufügen' */
+.amount-wrap{width:100%;max-width:520px;display:flex;flex-direction:column;align-items:center;margin-top:8px}
+.amount-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;width:100%}
+.amount-btn{padding:18px 0;font-size:22px;font-weight:800;border:1px solid #ccc;border-radius:14px;background:#fff}
+.amount-btn.custom{grid-column:1/-1;font-size:18px}
 
-    /* >>> Zusatz-Styles NUR für 'Mausdollar hinzufügen' */
-    .amount-wrap{width:100%;max-width:520px;display:flex;flex-direction:column;align-items:center;margin-top:8px}
-    .amount-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;width:100%}
-    .amount-btn{padding:18px 0;font-size:22px;font-weight:800;border:1px solid #ccc;border-radius:14px;background:#fff}
-    .amount-btn.custom{grid-column:1/-1;font-size:18px}
   </style>
 </head>
 <body>
-  <h1 id="title">Mäusegruppe Terminal</h1>
-
-  <!-- App-Startseite -->
-  <div class="app-grid" id="app-grid">
+  <h1 id="title">Mäusegruppe Terminal</h1>  <!-- Kurznachrichten-Bereich -->  <div id="notices"></div>  <!-- App-Startseite -->  <div class="app-grid" id="app-grid">
     <div class="app" onclick="showKontoEinsehen()">
       <img src="https://i.supaimg.com/0483c192-7c11-41e0-92c1-e980e9b50f60.png" alt="Konto">
       <div class="title">Konto einsehen</div>
@@ -85,22 +92,15 @@
       <div class="title">MausBriefkasten</div>
       <div class="sub">Nachricht schreiben</div>
     </div>
-  </div>
-
-  <!-- Legacy Menü (unsichtbar, Logik bleibt nutzbar) -->
-  <div id="menu" class="legacy-menu">
+  </div>  <!-- Legacy Menü (unsichtbar, Logik bleibt nutzbar) -->  <div id="menu" class="legacy-menu">
     <button id="btn-kontoeinsehen">Konto einsehen</button>
     <button onclick="window.location.href='https://frederickoeller1207.github.io/ziele/'">Mein Ziel</button>
     <button id="btn-ausleihe">Spielzeug Ausleihe</button>
     <button id="btn-checkout">Checkout</button>
     <button id="btn-mausdollar">Mausdollar hinzufügen</button>
     <button onclick="window.location.href='https://frederickoeller1207.github.io/Mousecity-Store/'">Mousecity Store</button>
-  </div>
-
-  <div id="home-btn">🏠 Zurück</div>
-  <div id="view"></div>
-
-  <script type="module">
+  </div>  <div id="home-btn">🏠 Zurück</div>
+  <div id="view"></div>  <script type="module">
     import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
     import { getDatabase as getDB1, ref as ref1, get as get1, onValue as onVal1, set as set1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
     import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
@@ -151,6 +151,68 @@
       if(!code){ alert("Kein Sicherheitscode hinterlegt."); return; }
       eingabeMitZahl(`Bitte Sicherheitscode für ${name} eingeben:`, (eingabe)=>{
         if(eingabe===code) callback(); else alert("Falscher Code.");
+      });
+    }
+
+    /* ===== Kurznachrichten lesen und anzeigen =====
+       Pfad: db1/kurznachrichten/{id} => {
+         title: string (optional),
+         text: string (optional),
+         color: 'blue'|'red'|'green'|'orange'|'purple'|'black'|'gray',
+         startISO: '2025-09-11T07:00:00+02:00',
+         endISO:   '2025-09-12T23:59:59+02:00',
+         createdAt: 1694412345678 (ms, optional)
+       }
+    */
+    const noticesBox = document.getElementById('notices');
+    function colorToClass(c){
+      const m = {blue:'n-blue',red:'n-red',green:'n-green',orange:'n-orange',purple:'n-purple',black:'n-black',grey:'n-gray',gray:'n-gray'};
+      return m[(c||'').toLowerCase()] || 'n-blue';
+    }
+    function parseISO(s){ const d = new Date(s); return isNaN(d.getTime()) ? null : d; }
+    function renderNoticesList(items){
+      if(!items.length){ noticesBox.style.display='none'; noticesBox.innerHTML=''; return; }
+      noticesBox.style.display='block';
+      noticesBox.innerHTML = items.map(n=>{
+        const cls = colorToClass(n.color);
+        const title = (n.title && n.title.trim()) ? n.title.trim() : 'Nachricht';
+        const text = (n.text || '');
+        return `<div class="notice ${cls}">
+                  <h3>${title}</h3>
+                  <p>${text}</p>
+                </div>`;
+      }).join('');
+    }
+    function subscribeNotices(){
+      onVal1(ref1(db1, 'kurznachrichten'), snap=>{
+        const now = new Date();
+        const list = [];
+        if(snap.exists()){
+          snap.forEach(ch=>{
+            const v = ch.val() || {};
+            const start = parseISO(v.startISO);
+            const end = parseISO(v.endISO);
+            if(!start || !end) return;
+            if(now >= start && now <= end){
+              list.push({
+                id: ch.key,
+                title: v.title || '',
+                text: v.text || '',
+                color: v.color || 'blue',
+                start: start,
+                end: end,
+                createdAt: Number(v.createdAt||0)
+              });
+            }
+          });
+        }
+        // Neueste oben: zuerst nach createdAt desc, fallback start desc
+        list.sort((a,b)=>{
+          const ca = a.createdAt||0, cb = b.createdAt||0;
+          if(cb!==ca) return cb-ca;
+          return b.start - a.start;
+        });
+        renderNoticesList(list);
       });
     }
 
@@ -226,7 +288,7 @@
       });
     };
 
-    // ===== Mausdollar hinzufügen (NEU: 2 Spalten + eigener Betrag) =====
+    // ===== Mausdollar hinzufügen =====
     document.getElementById("btn-mausdollar").onclick = () => { openMausdollar(); };
     window.openMausdollar = () => {
       openView("Mausdollar hinzufügen"); document.getElementById('app-grid').style.display='none';
@@ -278,6 +340,6 @@
 
     // Start
     resetView();
-  </script>
-</body>
+    subscribeNotices();
+  </script></body>
 </html>
