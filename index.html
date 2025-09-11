@@ -10,109 +10,130 @@
       --bg:#f2f4f8; --ink:#1c1c1e; --muted:#6b7280; --card:#ffffff;
       --ring:#e5e7eb; --brand:#007aff; --shadow:0 10px 25px rgba(0,0,0,.08)
     }
-    body{font-family:'SF Pro Display',sans-serif;background:linear-gradient(135deg,#e6f0ff 0%,#fef3f7 100%);min-height:100vh;margin:0;color:var(--ink);display:flex;flex-direction:column}
-    h1{margin:20px 0 10px;font-size:28px;font-weight:700;text-align:center}
-    #home-btn{display:none;justify-content:center;font-size:16px;color:var(--brand);cursor:pointer;margin-bottom:10px}
-    #view{display:flex;flex-direction:column;align-items:center;gap:16px;padding:0 16px 24px}
-    /* Notices */
-    #notices{max-width:900px;width:100%;margin:6px auto 10px;padding:0 16px;display:none}
-    .notice{border-radius:14px;padding:12px 14px;margin:8px 0;box-shadow:var(--shadow);color:#fff}
-    .notice h3{margin:0 0 6px 0;font-size:16px;font-weight:700;opacity:.95}
-    .notice p{margin:0;font-size:14px;line-height:1.4;white-space:pre-wrap}
-    .n-blue{background:#1e40af}
-    .n-red{background:#b91c1c}
-    .n-green{background:#047857}
-    .n-orange{background:#c2410c}
-    .n-purple{background:#6d28d9}
-    .n-black{background:#111827}
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      font-family:'SF Pro Display',sans-serif;
+      background:linear-gradient(135deg,#e6f0ff 0%,#fef3f7 100%);
+      min-height:100vh; margin:0; color:var(--ink);
+      display:flex; flex-direction:column; overflow-x:hidden;
+    }
+
+    /* zentrierte, feste Inhaltsbreite auf Handy */
+    .page{width:100%; max-width:420px; margin:0 auto; padding:12px}
+
+    h1{margin:12px 0 8px; font-size:24px; font-weight:700; text-align:center}
+    #home-btn{display:none; justify-content:center; font-size:16px; color:var(--brand); cursor:pointer; margin:6px 0 10px}
+
+    /* Notices nur innerhalb der Page, ohne Überbreite */
+    #notices{width:100%; margin:6px 0 10px; display:none}
+    .notice{border-radius:12px; padding:10px 12px; margin:8px 0; box-shadow:var(--shadow); color:#fff}
+    .notice h3{margin:0 0 4px 0; font-size:14px; font-weight:700; opacity:.95}
+    .notice p{margin:0; font-size:13px; line-height:1.35; white-space:pre-wrap}
+    .n-blue{background:#1e40af}.n-red{background:#b91c1c}.n-green{background:#047857}
+    .n-orange{background:#c2410c}.n-purple{background:#6d28d9}.n-black{background:#111827}
     .n-gray{background:#374151}
-    /* App grid */
-    .app-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:780px;width:100%;padding:0 16px 24px;margin:8px auto 24px}
-    @media(min-width:700px){.app-grid{grid-template-columns:repeat(4,1fr)}}
-    .app{background:var(--card);border:1px solid var(--ring);border-radius:18px;box-shadow:var(--shadow);padding:14px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:transform .08s ease, box-shadow .2s}
+
+    /* Startseiten-Grid: flachere Kacheln, keine Quadratpflicht */
+    .app-grid{
+      display:grid; grid-template-columns:repeat(2,1fr);
+      gap:12px; width:100%; margin:8px 0 16px
+    }
+    .app{
+      background:var(--card); border:1px solid var(--ring); border-radius:14px;
+      box-shadow:var(--shadow); padding:10px; display:flex; flex-direction:column;
+      align-items:center; gap:6px; cursor:pointer; transition:transform .08s ease, box-shadow .2s;
+      min-height:118px; /* flacher als vorher */
+    }
     .app:active{transform:translateY(1px)}
     .app:hover{box-shadow:0 14px 32px rgba(0,0,0,.1)}
-    .app img{width:86px;height:86px;object-fit:contain;border-radius:16px}
-    .app .title{font-weight:700;font-size:16px;text-align:center}
-    .app .sub{font-size:12px;color:var(--muted);text-align:center}
-    /* Legacy menu hidden */
+    .app img{width:60px; height:60px; object-fit:contain; border-radius:12px}
+    .app .title{font-weight:700; font-size:14px; text-align:center}
+    .app .sub{font-size:11px; color:var(--muted); text-align:center}
+
+    /* verstecktes Legacy-Menü bleibt funktionsfähig */
     .legacy-menu{display:none}
-    /* Inputs/buttons for views */
-    input{width:95%;max-width:340px;font-size:16px;padding:12px;margin-top:12px;border:1px solid #ccc;border-radius:10px}
-    button{background:#fff;border:1px solid #ccc;border-radius:12px;padding:18px 24px;font-size:18px;font-weight:600;color:#000;box-shadow:0 2px 5px rgba(0,0,0,.05);cursor:pointer;width:95%;max-width:340px;text-align:center;transition:all .2s, transform .1s}
+
+    /* Views */
+    #view{display:flex; flex-direction:column; align-items:center; gap:12px}
+    input{width:95%; max-width:340px; font-size:16px; padding:12px; margin-top:12px; border:1px solid #ccc; border-radius:10px}
+    button{background:#fff; border:1px solid #ccc; border-radius:10px; padding:14px 18px; font-size:16px; font-weight:600; color:#000; box-shadow:0 2px 5px rgba(0,0,0,.05); cursor:pointer; width:95%; max-width:340px; text-align:center; transition:all .2s, transform .1s}
     button:hover{background:#f0f0f5}
-    button:active{background:#e0e0e5;transform:scale(.98)}
-    #konto-details{display:flex;flex-direction:column;align-items:center;gap:12px;font-size:18px;text-align:center}
-    .color-circle{width:24px;height:24px;border-radius:50%;border:1px solid #ccc;margin-top:5px}
+    button:active{background:#e0e0e5; transform:scale(.98)}
+    #konto-details{display:flex; flex-direction:column; align-items:center; gap:10px; font-size:16px; text-align:center}
+    .color-circle{width:22px; height:22px; border-radius:50%; border:1px solid #ccc; margin-top:4px}
+
     /* Mausdollar UI */
-    .amount-wrap{width:100%;max-width:520px;display:flex;flex-direction:column;align-items:center;margin-top:8px}
-    .amount-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;width:100%}
-    .amount-btn{padding:18px 0;font-size:22px;font-weight:800;border:1px solid #ccc;border-radius:14px;background:#fff}
-    .amount-btn.custom{grid-column:1/-1;font-size:18px}
+    .amount-wrap{width:100%; max-width:520px; display:flex; flex-direction:column; align-items:center; margin-top:6px; padding-bottom:8px}
+    .amount-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:10px; width:100%}
+    .amount-btn{padding:14px 0; font-size:20px; font-weight:800; border:1px solid #ccc; border-radius:12px; background:#fff}
+    .amount-btn.custom{grid-column:1/-1; font-size:16px}
   </style>
 </head>
 <body>
-  <h1 id="title">Mäusegruppe Terminal</h1>
+  <div class="page">
+    <h1 id="title">Mäusegruppe Terminal</h1>
 
-  <!-- Kurznachrichten-Bereich (nur auf Startseite sichtbar) -->
-  <div id="notices"></div>
+    <!-- Kurznachrichten-Bereich (nur auf Startseite sichtbar) -->
+    <div id="notices"></div>
 
-  <!-- App-Startseite -->
-  <div class="app-grid" id="app-grid">
-    <div class="app" onclick="showKontoEinsehen()">
-      <img src="https://i.supaimg.com/0483c192-7c11-41e0-92c1-e980e9b50f60.png" alt="Konto">
-      <div class="title">Konto einsehen</div>
-      <div class="sub">Kontostand & Farbe</div>
+    <!-- App-Startseite -->
+    <div class="app-grid" id="app-grid">
+      <div class="app" onclick="showKontoEinsehen()">
+        <img src="https://i.supaimg.com/0483c192-7c11-41e0-92c1-e980e9b50f60.png" alt="Konto">
+        <div class="title">Konto einsehen</div>
+        <div class="sub">Kontostand & Farbe</div>
+      </div>
+      <div class="app" onclick="window.location.href='https://frederickoeller1207.github.io/ziele/'">
+        <img src="https://i.supaimg.com/5abf1dba-fcbb-472c-a9bc-3c15894c1bcb.png" alt="Ziel">
+        <div class="title">Mein Ziel</div>
+        <div class="sub">Fortschritt ansehen</div>
+      </div>
+      <div class="app" onclick="openAusleihe()">
+        <img src="https://i.supaimg.com/dea106e1-18eb-4ae7-b2ea-ca3ded6e63c1.png" alt="Ausleihe">
+        <div class="title">Spielzeug ausleihen</div>
+        <div class="sub">mit PIN</div>
+      </div>
+      <div class="app" onclick="openCheckout()">
+        <img src="https://i.supaimg.com/652a2719-c338-4a37-a712-7dd6d56945b5.png" alt="Checkout">
+        <div class="title">Checkout</div>
+        <div class="sub">mit PIN</div>
+      </div>
+      <div class="app" onclick="openMausdollar()">
+        <img src="https://i.supaimg.com/d256e5e6-05bd-43b0-a548-6c10c1e43efe.png" alt="Mausdollar">
+        <div class="title">Mausdollar hinzufügen</div>
+        <div class="sub">Anfrage senden</div>
+      </div>
+      <div class="app" onclick="window.location.href='https://frederickoeller1207.github.io/Mousecity-Store/'">
+        <img src="https://i.supaimg.com/1fc31392-99ae-4970-8cee-474e784ef93f.png" alt="Store">
+        <div class="title">Mousecity Store</div>
+        <div class="sub">Einkaufen</div>
+      </div>
+      <div class="app" onclick="window.location.href='malwettbewerb.html'">
+        <img src="https://i.supaimg.com/359b3d2b-2cc2-48dd-86b2-4f44ee584857.png" alt="Malwettbewerb">
+        <div class="title">Malwettbewerb</div>
+        <div class="sub">Abgeben & abstimmen</div>
+      </div>
+      <div class="app" onclick="window.location.href='nachrichten.html'">
+        <img src="https://i.supaimg.com/965bbc7f-a8a5-43f8-a7d1-90ce44c21053.png" alt="Briefkasten">
+        <div class="title">MausBriefkasten</div>
+        <div class="sub">Nachricht schreiben</div>
+      </div>
     </div>
-    <div class="app" onclick="window.location.href='https://frederickoeller1207.github.io/ziele/'">
-      <img src="https://i.supaimg.com/5abf1dba-fcbb-472c-a9bc-3c15894c1bcb.png" alt="Ziel">
-      <div class="title">Mein Ziel</div>
-      <div class="sub">Fortschritt ansehen</div>
+
+    <!-- Legacy Menü (unsichtbar, Logik bleibt nutzbar) -->
+    <div id="menu" class="legacy-menu">
+      <button id="btn-kontoeinsehen">Konto einsehen</button>
+      <button onclick="window.location.href='https://frederickoeller1207.github.io/ziele/'">Mein Ziel</button>
+      <button id="btn-ausleihe">Spielzeug Ausleihe</button>
+      <button id="btn-checkout">Checkout</button>
+      <button id="btn-mausdollar">Mausdollar hinzufügen</button>
+      <button onclick="window.location.href='https://frederickoeller1207.github.io/Mousecity-Store/'">Mousecity Store</button>
     </div>
-    <div class="app" onclick="openAusleihe()">
-      <img src="https://i.supaimg.com/dea106e1-18eb-4ae7-b2ea-ca3ded6e63c1.png" alt="Ausleihe">
-      <div class="title">Spielzeug ausleihen</div>
-      <div class="sub">mit PIN</div>
-    </div>
-    <div class="app" onclick="openCheckout()">
-      <img src="https://i.supaimg.com/652a2719-c338-4a37-a712-7dd6d56945b5.png" alt="Checkout">
-      <div class="title">Checkout</div>
-      <div class="sub">mit PIN</div>
-    </div>
-    <div class="app" onclick="openMausdollar()">
-      <img src="https://i.supaimg.com/d256e5e6-05bd-43b0-a548-6c10c1e43efe.png" alt="Mausdollar">
-      <div class="title">Mausdollar hinzufügen</div>
-      <div class="sub">Anfrage senden</div>
-    </div>
-    <div class="app" onclick="window.location.href='https://frederickoeller1207.github.io/Mousecity-Store/'">
-      <img src="https://i.supaimg.com/1fc31392-99ae-4970-8cee-474e784ef93f.png" alt="Store">
-      <div class="title">Mousecity Store</div>
-      <div class="sub">Einkaufen</div>
-    </div>
-    <div class="app" onclick="window.location.href='malwettbewerb.html'">
-      <img src="https://i.supaimg.com/359b3d2b-2cc2-48dd-86b2-4f44ee584857.png" alt="Malwettbewerb">
-      <div class="title">Malwettbewerb</div>
-      <div class="sub">Abgeben & abstimmen</div>
-    </div>
-    <div class="app" onclick="window.location.href='nachrichten.html'">
-      <img src="https://i.supaimg.com/965bbc7f-a8a5-43f8-a7d1-90ce44c21053.png" alt="Briefkasten">
-      <div class="title">MausBriefkasten</div>
-      <div class="sub">Nachricht schreiben</div>
-    </div>
+
+    <div id="home-btn">🏠 Zurück</div>
+    <div id="view"></div>
   </div>
-
-  <!-- Legacy Menü (unsichtbar, Logik bleibt nutzbar) -->
-  <div id="menu" class="legacy-menu">
-    <button id="btn-kontoeinsehen">Konto einsehen</button>
-    <button onclick="window.location.href='https://frederickoeller1207.github.io/ziele/'">Mein Ziel</button>
-    <button id="btn-ausleihe">Spielzeug Ausleihe</button>
-    <button id="btn-checkout">Checkout</button>
-    <button id="btn-mausdollar">Mausdollar hinzufügen</button>
-    <button onclick="window.location.href='https://frederickoeller1207.github.io/Mousecity-Store/'">Mousecity Store</button>
-  </div>
-
-  <div id="home-btn">🏠 Zurück</div>
-  <div id="view"></div>
 
   <script type="module">
     import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
@@ -158,6 +179,8 @@
       IS_HOME = true;
       // Nur auf Startseite zeigen
       renderNoticesList(latestNotices);
+      // Scroll oben halten
+      window.scrollTo({top:0,behavior:'instant'});
     };
 
     const openView = (title) => {
@@ -253,7 +276,7 @@
     async function showKontoEinsehen(){
       openView("Konto einsehen");
       const suchInput=document.createElement("input"); suchInput.placeholder="Suche nach Namen..."; suchInput.autofocus=true; view.appendChild(suchInput);
-      const kinderListe=document.createElement("div"); kinderListe.id="kinder-liste"; kinderListe.style.marginTop="20px"; view.appendChild(kinderListe);
+      const kinderListe=document.createElement("div"); kinderListe.id="kinder-liste"; kinderListe.style.marginTop="16px"; view.appendChild(kinderListe);
       const kinderSnap=await get2(ref2(db2,"kinder")); const alleKonten=[];
       if(kinderSnap.exists()){ kinderSnap.forEach(kindSnap=>{ alleKonten.push({name:kindSnap.key, ...kindSnap.val()}); }); }
       function renderKinderListe(filter=""){ kinderListe.innerHTML=""; alleKonten.filter(k=>k.name.toLowerCase().includes(filter.toLowerCase())).forEach(konto=>{ const btn=document.createElement("button"); btn.textContent=konto.name; btn.onclick=()=>showKontoDetails(konto); kinderListe.appendChild(btn); }); }
@@ -298,7 +321,7 @@
         if(spielzeuge[nummer]){
           await set1(ref1(db1,`ausleihen/${name}`),{spielzeug:spielzeuge[nummer],nummer,zeit:new Date().toISOString(),bestätigt:false});
           const popup=document.createElement("div");
-          popup.textContent=`${spielzeuge[nummer]} erfolgreich ausgeliehen.`; popup.style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;color:#000;padding:20px 30px;border-radius:12px;font-size:18px;box-shadow:0 4px 12px rgba(0,0,0,.2);z-index:9999;text-align:center;";
+          popup.textContent=`${spielzeuge[nummer]} erfolgreich ausgeliehen.`; popup.style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;color:#000;padding:16px 22px;border-radius:10px;font-size:16px;box-shadow:0 4px 12px rgba(0,0,0,.2);z-index:9999;text-align:center;";
           document.body.appendChild(popup); setTimeout(()=>{ popup.remove(); resetView(); },3000);
         } else { alert("Ungültige Nummer."); }
       });
