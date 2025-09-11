@@ -8,12 +8,13 @@
   <style>
     :root{
       --bg:#f2f4f8; --ink:#1c1c1e; --muted:#6b7280; --card:#ffffff;
-      --ring:#e5e7eb; --brand:#007aff; --shadow:0 10px 25px rgba(0,0,0,.08)
+      --ring:#e5e7eb; --brand:#007aff; --shadow:0 10px 25px rgba(0,0,0,.08);
+      --accent:#22c55e; --accent2:#f59e0b; --danger:#ef4444
     }
+    *{box-sizing:border-box}
     body{font-family:'SF Pro Display',sans-serif;background:linear-gradient(135deg,#e6f0ff 0%,#fef3f7 100%);min-height:100vh;margin:0;color:var(--ink);display:flex;flex-direction:column}
     h1{margin:20px 0 10px;font-size:28px;font-weight:700;text-align:center}
-    #home-btn{display:none;justify-content:center;font-size:16px;color:var(--brand);cursor:pointer;margin-bottom:10px}
-    #view{display:flex;flex-direction:column;align-items:center;gap:16px;padding:0 16px 24px}
+
     /* App grid */
     .app-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:780px;width:100%;padding:0 16px 24px;margin:8px auto 24px}
     @media(min-width:700px){.app-grid{grid-template-columns:repeat(4,1fr)}}
@@ -23,15 +24,59 @@
     .app img{width:86px;height:86px;object-fit:contain;border-radius:16px}
     .app .title{font-weight:700;font-size:16px;text-align:center}
     .app .sub{font-size:12px;color:var(--muted);text-align:center}
-    /* Old buttons kept hidden to preserve handlers if needed */
+
+    /* View Container */
+    #home-btn{display:none;justify-content:center;font-size:16px;color:var(--brand);cursor:pointer;margin-bottom:10px}
+    #view{display:flex;flex-direction:column;align-items:center;gap:16px;padding:0 16px 32px}
+
+    /* Inputs/Buttons (Base) */
+    input, select, textarea{width:100%;max-width:520px;font-size:16px;padding:12px 14px;border:1px solid var(--ring);border-radius:12px;background:#fff}
+    textarea{min-height:120px}
+    .btn{background:#fff;border:1px solid var(--ring);border-radius:12px;padding:14px 18px;font-size:18px;font-weight:600;color:#000;box-shadow:0 2px 5px rgba(0,0,0,.05);cursor:pointer;width:100%;max-width:520px;text-align:center;transition:all .2s, transform .1s}
+    .btn:hover{background:#f8fafc}
+    .btn:active{transform:scale(.98)}
+    .btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+    .btn.success{background:var(--accent);border-color:var(--accent);color:#fff}
+    .btn.warn{background:var(--accent2);border-color:var(--accent2);color:#111}
+    .btn.ghost{background:#fff;border-style:dashed}
+
+    /* Cards & lists */
+    .card{background:var(--card);border:1px solid var(--ring);border-radius:16px;box-shadow:var(--shadow);padding:16px;width:100%;max-width:780px}
+    .section-title{font-weight:700;margin:6px 0 2px}
+    .muted{color:var(--muted)}
+
+    /* Konto einsehen */
+    .search-row{display:flex;gap:10px;align-items:center;width:100%;max-width:780px}
+    .search-row input{flex:1}
+    .chip-list{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
+    @media(min-width:640px){.chip-list{grid-template-columns:repeat(3,1fr)}}
+    @media(min-width:900px){.chip-list{grid-template-columns:repeat(4,1fr)}}
+    .chip{padding:12px 14px;border:1px solid var(--ring);border-radius:12px;background:#fff;cursor:pointer;text-align:center;font-weight:600}
+    .chip:hover{background:#f8fafc}
+    .details-grid{display:grid;grid-template-columns:1fr;gap:12px}
+    @media(min-width:600px){.details-grid{grid-template-columns:1fr 1fr}}
+
+    .stat{background:#f9fafb;border:1px solid var(--ring);border-radius:14px;padding:14px}
+    .stat .label{font-size:12px;color:var(--muted);letter-spacing:.2px}
+    .stat .value{font-size:22px;font-weight:800;margin-top:6px}
+    .color-circle{width:28px;height:28px;border-radius:50%;border:1px solid #d1d5db;display:inline-block;vertical-align:middle;margin-right:8px}
+
+    /* Betrag-Grid */
+    .grid-amount{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:520px}
+    @media(min-width:520px){.grid-amount{grid-template-columns:repeat(6,1fr)}}
+    .amount-btn{padding:12px;border:1px solid var(--ring);border-radius:12px;background:#fff;font-weight:700;cursor:pointer;text-align:center}
+    .amount-btn:hover{background:#f8fafc}
+    .amount-btn.custom{grid-column:span 3}
+    @media(min-width:520px){.amount-btn.custom{grid-column:span 2}}
+
+    /* Gründe-Grid */
+    .grid-reason{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;width:100%;max-width:520px}
+    @media(min-width:520px){.grid-reason{grid-template-columns:repeat(3,1fr)}}
+    .reason-btn{padding:12px;border:1px solid var(--ring);border-radius:12px;background:#fff;font-weight:600;cursor:pointer;text-align:center}
+    .reason-btn:hover{background:#f8fafc}
+
+    /* Hidden legacy menu (handlers kept) */
     .legacy-menu{display:none}
-    /* Inputs and buttons for views (kept from original) */
-    input{width:95%;max-width:340px;font-size:16px;padding:12px;margin-top:12px;border:1px solid #ccc;border-radius:10px}
-    button{background:#fff;border:1px solid #ccc;border-radius:12px;padding:18px 24px;font-size:18px;font-weight:600;color:#000;box-shadow:0 2px 5px rgba(0,0,0,.05);cursor:pointer;width:95%;max-width:340px;text-align:center;transition:all .2s, transform .1s}
-    button:hover{background:#f0f0f5}
-    button:active{background:#e0e0e5;transform:scale(.98)}
-    #konto-details{display:flex;flex-direction:column;align-items:center;gap:12px;font-size:18px;text-align:center}
-    .color-circle{width:24px;height:24px;border-radius:50%;border:1px solid #ccc;margin-top:5px}
   </style>
 </head>
 <body>
@@ -123,20 +168,26 @@
     const app2 = initApp2(config2, "app2"); const db2 = getDB2(app2);
 
     const view = document.getElementById("view");
-    const menu = document.getElementById("menu");
     const homeBtn = document.getElementById("home-btn");
 
-    const resetView = () => { view.innerHTML=""; homeBtn.style.display="none"; document.getElementById("title").textContent="Mäusegruppe Terminal"; };
-    const openView = (title) => { view.innerHTML=""; homeBtn.style.display="flex"; document.getElementById("title").textContent=title; };
-    homeBtn.onclick = () => { resetView(); document.getElementById('app-grid').style.display='grid'; };
+    const resetView = () => { view.innerHTML=""; homeBtn.style.display="none"; document.getElementById("title").textContent="Mäusegruppe Terminal"; document.getElementById('app-grid').style.display='grid'; };
+    const openView = (title) => { view.innerHTML=""; homeBtn.style.display="flex"; document.getElementById("title").textContent=title; document.getElementById('app-grid').style.display='none'; };
+    homeBtn.onclick = resetView;
 
-    function eingabeMitZahl(title, callback){
+    function eingabeMitZahl(title, callback, placeholder="Zahl eingeben"){
       openView(title);
-      const input = document.createElement("input"); input.type="number"; input.inputMode="numeric"; input.autofocus=true;
-      const btn = document.createElement("button"); btn.textContent="OK";
-      btn.onclick=()=>{ const val=input.value.trim(); if(val) callback(val); };
-      view.appendChild(input); view.appendChild(btn); input.focus();
-      document.getElementById('app-grid').style.display='none';
+      const card=document.createElement("div"); card.className="card";
+      card.innerHTML = `
+        <div class="section-title">${title}</div>
+        <input type="number" inputmode="numeric" id="num-inp" placeholder="${placeholder}">
+        <div style="display:flex;gap:10px;margin-top:12px">
+          <button class="btn primary" id="ok-btn">OK</button>
+          <button class="btn ghost" id="cancel-btn">Abbrechen</button>
+        </div>`;
+      view.appendChild(card);
+      const input = card.querySelector("#num-inp"); input.focus();
+      card.querySelector("#ok-btn").onclick = ()=>{ const val=input.value.trim(); if(val) callback(val); };
+      card.querySelector("#cancel-btn").onclick = resetView;
     }
 
     async function checkSicherheitscode(name, callback){
@@ -145,53 +196,93 @@
       if(!code){ alert("Kein Sicherheitscode hinterlegt."); return; }
       eingabeMitZahl(`Bitte Sicherheitscode für ${name} eingeben:`, (eingabe)=>{
         if(eingabe===code) callback(); else alert("Falscher Code.");
-      });
+      }, "PIN");
     }
 
-    // ===== Konto einsehen =====
+    /* ===== Konto einsehen (schöner) ===== */
     document.getElementById("btn-kontoeinsehen").onclick = showKontoEinsehen;
-    function farbeToColor(f){ if(f==="🔴")return"red"; if(f==="🟡")return"orange"; if(f==="🟢")return"green"; if(f==="⚫")return"black"; if(f==="🟣")return"purple"; if(f==="🔵")return"blue"; return"#ccc";}
-    function getFarbBedeutung(f){ if(f==="🟢")return"Du bist deinem Ziel heute 5 % näher."; if(f==="🟣")return"Du bist deinem Ziel heute 10 % näher."; if(f==="🔴")return"Du entfernst dich heute um 5 % von deinem Ziel."; if(f==="⚫")return"Du entfernst dich heute um 10 % von deinem Ziel."; if(f==="🟡"||f==="⚪")return"Dein Ziel-Fortschritt bleibt heute unverändert."; return"";}
-    async function showKontoEinsehen(){
-      openView("Konto einsehen"); document.getElementById('app-grid').style.display='none';
-      const suchInput=document.createElement("input"); suchInput.placeholder="Suche nach Namen..."; suchInput.autofocus=true; view.appendChild(suchInput);
-      const kinderListe=document.createElement("div"); kinderListe.id="kinder-liste"; kinderListe.style.marginTop="20px"; view.appendChild(kinderListe);
-      const kinderSnap=await get2(ref2(db2,"kinder")); const alleKonten=[];
-      if(kinderSnap.exists()){ kinderSnap.forEach(kindSnap=>{ alleKonten.push({name:kindSnap.key, ...kindSnap.val()}); }); }
-      function renderKinderListe(filter=""){ kinderListe.innerHTML=""; alleKonten.filter(k=>k.name.toLowerCase().includes(filter.toLowerCase())).forEach(konto=>{ const btn=document.createElement("button"); btn.textContent=konto.name; btn.onclick=()=>showKontoDetails(konto); kinderListe.appendChild(btn); }); }
-      renderKinderListe(); suchInput.addEventListener("keyup",(e)=>renderKinderListe(e.target.value));
+    function farbeToColor(f){ if(f==="🔴")return"red"; if(f==="🟡")return"orange"; if(f==="🟢")return"green"; if(f==="⚫")return"black"; if(f==="🟣")return"purple"; if(f==="🔵")return"blue"; return"#e5e7eb";}
+    function getFarbBedeutung(f){
+      if(f==="🟢")return"Du bist deinem Ziel heute 5 % näher.";
+      if(f==="🟣")return"Du bist deinem Ziel heute 10 % näher.";
+      if(f==="🔴")return"Du entfernst dich heute um 5 % von deinem Ziel.";
+      if(f==="⚫")return"Du entfernst dich heute um 10 % von deinem Ziel.";
+      if(f==="🟡"||f==="⚪")return"Dein Ziel-Fortschritt bleibt heute unverändert.";
+      return"";
     }
-    // <- wichtig: global machen für App-Kachel
+    async function showKontoEinsehen(){
+      openView("Konto einsehen");
+
+      const suchRow=document.createElement("div"); suchRow.className="search-row";
+      const suchInput=document.createElement("input"); suchInput.placeholder="🔎 Name suchen…"; suchInput.autofocus=true;
+      suchRow.appendChild(suchInput);
+      view.appendChild(suchRow);
+
+      const listCard=document.createElement("div"); listCard.className="card";
+      const listWrap=document.createElement("div"); listWrap.className="chip-list"; listCard.appendChild(listWrap);
+      view.appendChild(listCard);
+
+      const kinderSnap=await get2(ref2(db2,"kinder"));
+      const alleKonten=[];
+      if(kinderSnap.exists()){ kinderSnap.forEach(kindSnap=>{ alleKonten.push({name:kindSnap.key, ...kindSnap.val()}); }); }
+      alleKonten.sort((a,b)=>a.name.localeCompare(b.name,'de',{sensitivity:'base'}));
+
+      function renderKinderListe(filter=""){
+        listWrap.innerHTML="";
+        alleKonten
+          .filter(k=>k.name.toLowerCase().includes(filter.toLowerCase()))
+          .forEach(k=>{
+            const chip=document.createElement("div"); chip.className="chip"; chip.textContent=k.name;
+            chip.onclick=()=>showKontoDetails(k);
+            listWrap.appendChild(chip);
+          });
+      }
+      renderKinderListe();
+      suchInput.addEventListener("input",(e)=>renderKinderListe(e.target.value));
+    }
     window.showKontoEinsehen = showKontoEinsehen;
 
     function showKontoDetails(konto){
       openView(konto.name);
-      const details=document.createElement("div"); details.id="konto-details";
+      const card=document.createElement("div"); card.className="card";
+      const grid=document.createElement("div"); grid.className="details-grid";
+
       const kontostand=Number(konto.punkte??konto.kontostand??0);
-      const saldo=document.createElement("p"); saldo.style.fontWeight="600"; saldo.textContent=`Du hast ${kontostand} M$ auf deinem Konto`; details.appendChild(saldo);
-      const farbLabel=document.createElement("p"); farbLabel.textContent="Deine Farbe für heute ist:"; details.appendChild(farbLabel);
-      if(konto.farbe){
-        const kreis=document.createElement("div"); kreis.className="color-circle"; kreis.style.backgroundColor=farbeToColor(konto.farbe); details.appendChild(kreis);
-        const bedeutung=document.createElement("p"); bedeutung.textContent=getFarbBedeutung(konto.farbe); details.appendChild(bedeutung);
-      } else {
-        const keine=document.createElement("p"); keine.textContent="Dieses Konto hat keine Farbe."; details.appendChild(keine);
-        const unver=document.createElement("p"); unver.textContent="Dein Ziel-Fortschritt bleibt heute unverändert."; details.appendChild(unver);
-      }
-      view.appendChild(details);
+      const stat1=document.createElement("div"); stat1.className="stat";
+      stat1.innerHTML=`<div class="label">Kontostand</div><div class="value">${kontostand} M$</div>`;
+      grid.appendChild(stat1);
+
+      const stat2=document.createElement("div"); stat2.className="stat";
+      let farbeHtml = konto.farbe
+        ? `<span class="color-circle" style="background:${farbeToColor(konto.farbe)}"></span>${konto.farbe}`
+        : `<span class="muted">keine Farbe</span>`;
+      stat2.innerHTML=`<div class="label">Heutige Farbe</div><div class="value" style="display:flex;align-items:center;gap:8px">${farbeHtml}</div>`;
+      grid.appendChild(stat2);
+
+      const info=document.createElement("div"); info.className="stat"; info.style.gridColumn="1/-1";
+      info.innerHTML=`<div class="label">Bedeutung</div><div style="margin-top:6px">${konto.farbe?getFarbBedeutung(konto.farbe):"Dein Ziel-Fortschritt bleibt heute unverändert."}</div>`;
+
+      card.appendChild(grid); card.appendChild(info);
+      view.appendChild(card);
     }
 
-    // ===== Ausleihe =====
+    /* ===== Ausleihe ===== */
     document.getElementById("btn-ausleihe").onclick = () => { openAusleihe(); };
     window.openAusleihe = () => {
-      openView("Spielzeug Ausleihe"); document.getElementById('app-grid').style.display='none';
+      openView("Spielzeug Ausleihe");
       onVal1(ref1(db1,"kinder"), snapshot => {
-        view.innerHTML=""; snapshot.forEach(childSnap => {
-          const name=childSnap.key; const btn=document.createElement("button"); btn.textContent=name;
-          btn.onclick=()=>checkSicherheitscode(name,()=>ausleihen(name)); view.appendChild(btn);
+        const card=document.createElement("div"); card.className="card";
+        const list=document.createElement("div"); list.className="chip-list"; card.appendChild(list);
+        snapshot.forEach(childSnap => {
+          const name=childSnap.key;
+          const chip=document.createElement("div"); chip.className="chip"; chip.textContent=name;
+          chip.onclick=()=>checkSicherheitscode(name,()=>ausleihen(name));
+          list.appendChild(chip);
         });
+        view.innerHTML=""; view.appendChild(card);
       });
     };
-    function frageSpielzeugnummer(name,cb){ eingabeMitZahl(`${name}, gib bitte die Spielzeugnummer ein:`, cb); }
+    function frageSpielzeugnummer(name,cb){ eingabeMitZahl(`${name}, gib bitte die Spielzeugnummer ein:`, cb, "z.B. 102"); }
     async function ausleihen(name){
       const ausleiheSnap=await get1(ref1(db1,`ausleihen/${name}`));
       if(ausleiheSnap.exists() && ausleiheSnap.val().bestätigt===false){ alert("Bitte gib das ausgeliehene Spielzeug zurück."); return; }
@@ -199,56 +290,117 @@
         const spielzeugeSnap=await get1(ref1(db1,"spielzeuge")); const spielzeuge=spielzeugeSnap.exists()? spielzeugeSnap.val():{};
         if(spielzeuge[nummer]){
           await set1(ref1(db1,`ausleihen/${name}`),{spielzeug:spielzeuge[nummer],nummer,zeit:new Date().toISOString(),bestätigt:false});
-          const popup=document.createElement("div");
-          popup.textContent=`${spielzeuge[nummer]} erfolgreich ausgeliehen.`; popup.style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;color:#000;padding:20px 30px;border-radius:12px;font-size:18px;box-shadow:0 4px 12px rgba(0,0,0,.2);z-index:9999;text-align:center;";
-          document.body.appendChild(popup); setTimeout(()=>{ popup.remove(); resetView(); document.getElementById('app-grid').style.display='grid'; },3000);
+          const card=document.createElement("div"); card.className="card";
+          card.innerHTML=`<div class="section-title">Ausleihe erfolgreich</div><div class="muted">„${spielzeuge[nummer]}“ wurde für dich reserviert.</div>`;
+          view.innerHTML=""; view.appendChild(card);
+          setTimeout(resetView,1600);
         } else { alert("Ungültige Nummer."); }
       });
     }
 
-    // ===== Checkout =====
+    /* ===== Checkout ===== */
     document.getElementById("btn-checkout").onclick = () => { openCheckout(); };
     window.openCheckout = () => {
-      openView("Checkout"); document.getElementById('app-grid').style.display='none';
+      openView("Checkout");
       onVal1(ref1(db1,"kinder"), snapshot => {
-        view.innerHTML=""; snapshot.forEach(childSnap=>{
+        const card=document.createElement("div"); card.className="card";
+        const list=document.createElement("div"); list.className="chip-list"; card.appendChild(list);
+        snapshot.forEach(childSnap=>{
           const name=childSnap.key; const link=childSnap.val().link;
-          const btn=document.createElement("button"); btn.textContent=name;
-          btn.onclick=()=>checkSicherheitscode(name,()=>{ if(link) window.location.href=link; else alert("Kein Link hinterlegt."); });
-          view.appendChild(btn);
+          const chip=document.createElement("div"); chip.className="chip"; chip.textContent=name;
+          chip.onclick=()=>checkSicherheitscode(name,()=>{ if(link) window.location.href=link; else alert("Kein Link hinterlegt."); });
+          list.appendChild(chip);
         });
+        view.innerHTML=""; view.appendChild(card);
       });
     };
 
-    // ===== Mausdollar hinzufügen =====
+    /* ===== Mausdollar hinzufügen (schöner + eigener Betrag) ===== */
     document.getElementById("btn-mausdollar").onclick = () => { openMausdollar(); };
     window.openMausdollar = () => {
-      openView("Mausdollar hinzufügen"); document.getElementById('app-grid').style.display='none';
-      const kinder=[]; onVal1(ref1(db1,"kinder"), snapshot=>{
-        view.innerHTML=""; snapshot.forEach(childSnap=>{ kinder.push(childSnap.key); });
-        kinder.forEach(name=>{
-          const btn=document.createElement("button"); btn.textContent=name;
-          btn.onclick=()=>checkSicherheitscode(name,()=>waehleBetrag(name)); view.appendChild(btn);
+      openView("Mausdollar hinzufügen");
+
+      // 1) Kind wählen
+      const chooseCard=document.createElement("div"); chooseCard.className="card";
+      chooseCard.innerHTML=`<div class="section-title">Wähle ein Konto</div><div class="muted">Bitte tippe deinen Namen an und gib danach deine PIN ein.</div>`;
+      const list=document.createElement("div"); list.className="chip-list"; chooseCard.appendChild(list);
+      view.appendChild(chooseCard);
+
+      const names=[];
+      onVal1(ref1(db1,"kinder"), snapshot=>{
+        list.innerHTML="";
+        snapshot.forEach(childSnap=>{ names.push(childSnap.key); });
+        names.sort((a,b)=>a.localeCompare(b,'de',{sensitivity:'base'}));
+        names.forEach(name=>{
+          const chip=document.createElement("div"); chip.className="chip"; chip.textContent=name;
+          chip.onclick=()=>checkSicherheitscode(name,()=>waehleBetrag(name));
+          list.appendChild(chip);
         });
       });
     };
+
     function waehleBetrag(name){
-      openView(`${name}: Wähle Betrag`); document.getElementById('app-grid').style.display='none';
-      for(let i=1;i<=5;i++){ const btn=document.createElement("button"); btn.textContent=`${i}`; btn.onclick=()=>waehleGrund(name,i); view.appendChild(btn); }
-    }
-    function waehleGrund(name,betrag){
-      openView(`${name}: Grund wählen`); const gruende=["Quiz","Kurze Hilfe","Malwettbewerb","Tischdienst"];
-      gruende.forEach(g=>{ const btn=document.createElement("button"); btn.textContent=g; btn.onclick=()=>sendeAnfrage(name,betrag,g); view.appendChild(btn); });
-      const eigener=document.createElement("input"); eigener.placeholder="Eigener Grund"; eigener.type="text"; view.appendChild(eigener);
-      const abs=document.createElement("button"); abs.textContent="Absenden"; abs.onclick=()=>{ const g=eigener.value.trim(); if(g) sendeAnfrage(name,betrag,g); }; view.appendChild(abs);
-    }
-    function sendeAnfrage(name,betrag,grund){
-      const now=new Date(); const tag=String(now.getDate()).padStart(2,'0'); const monat=String(now.getMonth()+1).padStart(2,'0'); const stunde=String(now.getHours()).padStart(2,'0'); const minute=String(now.getMinutes()).padStart(2,'0');
-      const zeit=`${tag}.${monat} – ${stunde}:${minute}`; const anfrageRef=ref1(db1,`anfragen/${Date.now()}_${name}`);
-      set1(anfrageRef,{name,betrag,grund,zeit}); view.innerHTML=`<h2>Anfrage gesendet! (${betrag} Mausdollar für: ${grund})</h2>`;
+      openView(`${name}: Betrag wählen`);
+      const card=document.createElement("div"); card.className="card";
+      card.innerHTML = `<div class="section-title">Wie viele Mausdollar?</div><div class="muted">Du kannst einen Vorschlag antippen oder einen eigenen Betrag eingeben.</div>`;
+      const grid=document.createElement("div"); grid.className="grid-amount"; card.appendChild(grid);
+
+      const presets=[1,2,3,4,5,10];
+      presets.forEach(n=>{
+        const b=document.createElement("button"); b.className="amount-btn"; b.textContent=n;
+        b.onclick=()=>waehleGrund(name,n);
+        grid.appendChild(b);
+      });
+      const custom=document.createElement("button"); custom.className="amount-btn custom"; custom.textContent="Eigener Betrag";
+      custom.onclick=()=>eingabeMitZahl("Eigener Betrag", (val)=>{
+        const n = Math.max(1, Math.floor(Number(val)||0));
+        waehleGrund(name,n);
+      },"z.B. 7");
+      grid.appendChild(custom);
+
+      view.appendChild(card);
     }
 
-    // Start
+    function waehleGrund(name,betrag){
+      openView(`${name}: Grund wählen`);
+      const card=document.createElement("div"); card.className="card";
+      card.innerHTML=`<div class="section-title">Wofür bekommst du Mausdollar?</div><div class="muted">Bitte wähle einen Grund oder schreibe deinen eigenen.</div>`;
+      const grid=document.createElement("div"); grid.className="grid-reason"; card.appendChild(grid);
+
+      const gruende=["Quiz","Kurze Hilfe","Malwettbewerb","Tischdienst","Aufräumen","Besondere Tat"];
+      gruende.forEach(g=>{
+        const b=document.createElement("button"); b.className="reason-btn"; b.textContent=g;
+        b.onclick=()=>sendeAnfrage(name,betrag,g);
+        grid.appendChild(b);
+      });
+
+      const own=document.createElement("div"); own.style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap";
+      own.innerHTML=`<input id="own-reason" type="text" placeholder="Eigener Grund"><button class="btn success" id="send-own">Absenden (${betrag} M$)</button>`;
+      card.appendChild(own);
+      view.appendChild(card);
+
+      card.querySelector("#send-own").onclick = ()=>{
+        const g = card.querySelector("#own-reason").value.trim();
+        if(g) sendeAnfrage(name,betrag,g);
+      };
+    }
+
+    function sendeAnfrage(name,betrag,grund){
+      const now=new Date();
+      const tag=String(now.getDate()).padStart(2,'0');
+      const monat=String(now.getMonth()+1).padStart(2,'0');
+      const stunde=String(now.getHours()).padStart(2,'0');
+      const minute=String(now.getMinutes()).padStart(2,'0');
+      const zeit=`${tag}.${monat} – ${stunde}:${minute}`;
+      const anfrageRef=ref1(db1,`anfragen/${Date.now()}_${name}`);
+      set1(anfrageRef,{name,betrag,grund,zeit});
+      const card=document.createElement("div"); card.className="card";
+      card.innerHTML=`<div class="section-title">Anfrage gesendet ✅</div><div class="muted">${betrag} Mausdollar für: <b>${grund}</b></div>`;
+      view.innerHTML=""; view.appendChild(card);
+      setTimeout(resetView,1400);
+    }
+
+    /* Start */
     resetView();
   </script>
 </body>
