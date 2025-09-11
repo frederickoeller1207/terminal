@@ -161,6 +161,9 @@
       function renderKinderListe(filter=""){ kinderListe.innerHTML=""; alleKonten.filter(k=>k.name.toLowerCase().includes(filter.toLowerCase())).forEach(konto=>{ const btn=document.createElement("button"); btn.textContent=konto.name; btn.onclick=()=>showKontoDetails(konto); kinderListe.appendChild(btn); }); }
       renderKinderListe(); suchInput.addEventListener("keyup",(e)=>renderKinderListe(e.target.value));
     }
+    // <- wichtig: global machen für App-Kachel
+    window.showKontoEinsehen = showKontoEinsehen;
+
     function showKontoDetails(konto){
       openView(konto.name);
       const details=document.createElement("div"); details.id="konto-details";
