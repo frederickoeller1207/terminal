@@ -43,14 +43,8 @@
     .amount-btn{padding:14px 0;font-size:20px;font-weight:800;border:1px solid #ccc;border-radius:12px;background:#fff}
     .amount-btn.custom{grid-column:1/-1;font-size:16px}
 
-    /* Rot: diagonaler Sperrstrich */
     #lock-overlay{display:none;position:fixed;inset:0;pointer-events:none}
-    #lock-overlay::before{
-      content:""; position:absolute; left:50%; top:50%; width:140vmax; height:8px; background:#ef4444;
-      transform:translate(-50%,-50%) rotate(-45deg); box-shadow:0 0 0 2px #ef4444;
-    }
-
-    /* Toast */
+    #lock-overlay::before{content:"";position:absolute;left:50%;top:50%;width:140vmax;height:8px;background:#ef4444;transform:translate(-50%,-50%) rotate(-45deg);box-shadow:0 0 0 2px #ef4444}
     #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 8px 18px rgba(0,0,0,.25);font-size:14px;display:none;z-index:9999;max-width:90%;text-align:center}
   </style>
 </head>
@@ -65,35 +59,35 @@
 
     <div class="app-grid" id="app-grid">
       <div class="app" id="app-konto" onclick="showKontoEinsehen()">
-        <img src="https://i.supaimg.com/0483c192-7c11-41e0-92c1-e980e9b50f60.png" alt="Konto">
+        <img src="https://i.supaimg.com/0483c192-7c11-41e0-92c1-e980e9b50f60.png" alt="Konto" loading="lazy" decoding="async" width="60" height="60">
         <div class="title">Konto einsehen</div><div class="sub">Kontostand & Farbe</div>
       </div>
       <div class="app" id="app-ziel" onclick="window.location.href='https://frederickoeller1207.github.io/ziele/'">
-        <img src="https://i.supaimg.com/5abf1dba-fcbb-472c-a9bc-3c15894c1bcb.png" alt="Ziel">
+        <img src="https://i.supaimg.com/5abf1dba-fcbb-472c-a9bc-3c15894c1bcb.png" alt="Ziel" loading="lazy" decoding="async" width="60" height="60">
         <div class="title">Mein Ziel</div><div class="sub">Fortschritt ansehen</div>
       </div>
       <div class="app" id="app-ausleihe" onclick="openAusleihe()">
-        <img src="https://i.supaimg.com/dea106e1-18eb-4ae7-b2ea-ca3ded6e63c1.png" alt="Ausleihe">
+        <img src="https://i.supaimg.com/dea106e1-18eb-4ae7-b2ea-ca3ded6e63c1.png" alt="Ausleihe" loading="lazy" decoding="async" width="60" height="60">
         <div class="title">Spielzeug ausleihen</div><div class="sub">mit PIN</div>
       </div>
       <div class="app" id="app-checkout" onclick="openCheckout()">
-        <img src="https://i.supaimg.com/652a2719-c338-4a37-a712-7dd6d56945b5.png" alt="Checkout">
+        <img src="https://i.supaimg.com/652a2719-c338-4a37-a712-7dd6d56945b5.png" alt="Checkout" loading="lazy" decoding="async" width="60" height="60">
         <div class="title">Checkout</div><div class="sub">mit PIN</div>
       </div>
       <div class="app" id="app-mausdollar" onclick="openMausdollar()">
-        <img src="https://i.supaimg.com/d256e5e6-05bd-43b0-a548-6c10c1e43efe.png" alt="Mausdollar">
+        <img src="https://i.supaimg.com/d256e5e6-05bd-43b0-a548-6c10c1e43efe.png" alt="Mausdollar" loading="lazy" decoding="async" width="60" height="60">
         <div class="title">Mausdollar hinzufügen</div><div class="sub">Anfrage senden</div>
       </div>
       <div class="app" id="app-store" onclick="window.location.href='https://frederickoeller1207.github.io/Mousecity-Store/'">
-        <img src="https://i.supaimg.com/1fc31392-99ae-4970-8cee-474e784ef93f.png" alt="Store">
+        <img src="https://i.supaimg.com/1fc31392-99ae-4970-8cee-474e784ef93f.png" alt="Store" loading="lazy" decoding="async" width="60" height="60">
         <div class="title">Mousecity Store</div><div class="sub">Einkaufen</div>
       </div>
       <div class="app" id="app-malwettbewerb" onclick="window.location.href='malwettbewerb.html'">
-        <img src="https://i.supaimg.com/359b3d2b-2cc2-48dd-86b2-4f44ee584857.png" alt="Malwettbewerb">
+        <img src="https://i.supaimg.com/359b3d2b-2cc2-48dd-86b2-4f44ee584857.png" alt="Malwettbewerb" loading="lazy" decoding="async" width="60" height="60">
         <div class="title">Malwettbewerb</div><div class="sub">Abgeben & abstimmen</div>
       </div>
       <div class="app" id="app-briefkasten" onclick="window.location.href='nachrichten.html'">
-        <img src="https://i.supaimg.com/965bbc7f-a8a5-43f8-a7d1-90ce44c21053.png" alt="Briefkasten">
+        <img src="https://i.supaimg.com/965bbc7f-a8a5-43f8-a7d1-90ce44c21053.png" alt="Briefkasten" loading="lazy" decoding="async" width="60" height="60">
         <div class="title">MausBriefkasten</div><div class="sub">Nachricht schreiben</div>
       </div>
     </div>
@@ -184,7 +178,6 @@
       });
     }
 
-    /* ===== Live-Systemmodus lesen ===== */
     function subscribeMode(){
       onVal1(ref1(db1,"systemmode/state"), snap=>{
         const m = snap.exists() ? (snap.val().value||"green") : "green";
@@ -216,7 +209,6 @@
       }
     }
 
-    // ===== Funktionen mit internen Modus-Checks =====
     document.getElementById("btn-kontoeinsehen").onclick = ()=>showKontoEinsehen();
 
     function farbeToColor(f){ if(f==="🔴")return"red"; if(f==="🟡")return"orange"; if(f==="🟢")return"green"; if(f==="⚫")return"black"; if(f==="🟣")return"purple"; if(f==="🔵")return"blue"; return"#ccc";}
@@ -334,16 +326,14 @@
       set1(anfrageRef,{name,betrag,grund,zeit}); view.innerHTML=`<h2>Anfrage gesendet! (${betrag} Mausdollar für: ${grund})</h2>`;
     }
 
-    // Deep-Link/NFC-Schutz und Warnung im Rot-Modus
     (function handleDeepLinks(){
       const params=new URLSearchParams(location.search);
       if(!params.has("action")) return;
-      const act=params.get("action"); // z.B. action=checkout
+      const act=params.get("action");
       onVal1(ref1(db1,"systemmode/state"), snap=>{
         const m=snap.exists()?(snap.val().value||"green"):"green";
         MODE=m;
         if(m==="red"){
-          // Gewünschte Warnung
           showToast("Die Abholzeit ist im gesperrten Modus nicht verfügbar. Bitte nutze das Terminal nicht im gesperrten Modus. Beim nächsten Versuch wird ein Mousedollar von deinem Konto entfernt!", 4500);
           resetView();
         } else if(m==="yellow"){
@@ -354,11 +344,18 @@
       });
     })();
 
-    // Start
     function init(){
       resetView(); subscribeNotices(); subscribeMode();
     }
     init();
+  </script>
+
+  <!-- Service Worker Registrierung -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      // Falls deine Seite in einem Unterordner liegt, Pfad und scope anpassen.
+      navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(console.warn);
+    }
   </script>
 </body>
 </html>
