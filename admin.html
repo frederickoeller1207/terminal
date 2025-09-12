@@ -43,6 +43,7 @@
     .row{display:flex;gap:10px;flex-wrap:wrap}
     .row>*{flex:1 1 220px}
     select,input[type="datetime-local"]{padding:8px;border:1px solid #ddd;border-radius:8px;font-size:var(--font-size-small);width:100%;box-sizing:border-box}
+
     .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
     .mode-wrap{display:flex;align-items:center;gap:10px}
     .mode-cycle{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid #ccc;color:#111;border-radius:999px;padding:6px 10px}
@@ -52,75 +53,8 @@
     .title{font-size:22px;font-weight:600;color:var(--primary-color);margin-left:auto}
   </style>
 
-  <script type="module">
-    import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-    import { getDatabase as getDB1, ref as ref1, set, onValue, get, push, remove } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
-    import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-    import { getDatabase as getDB2, ref as ref2, get as get2, update as update2, onValue as onVal2, remove as remove2, set as set2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
-    import { initializeApp as initApp3 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-    import { getDatabase as getDB3, ref as ref3, onValue as onVal3, update as update3, remove as remove3, get as get3 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
-
-    const app1 = initApp1({
-      apiKey:"AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",
-      authDomain:"gesamt-dae4e.firebaseapp.com",
-      databaseURL:"https://gesamt-dae4e-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId:"gesamt-dae4e",
-      storageBucket:"gesamt-dae4e.appspot.com",
-      messagingSenderId:"844023612743",
-      appId:"1:844023612743:web:0821aa894541f89a7df862"
-    },"app1");
-    const db1 = getDB1(app1);
-
-    const app2 = initApp2({
-      apiKey:"AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg",
-      authDomain:"punkte-45c20.firebaseapp.com",
-      databaseURL:"https://punkte-45c20-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId:"punkte-45c20",
-      storageBucket:"punkte-45c20.appspot.com",
-      messagingSenderId:"931713539549",
-      appId:"1:931713539549:web:e348bf38369639f1906a34"
-    },"app2");
-    const db2 = getDB2(app2);
-
-    const app3 = initApp3({
-      apiKey:"AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg",
-      databaseURL:"https://punkte-45c20-default-rtdb.europe-west1.firebasedatabase.app"
-    },"app3");
-    const db3 = getDB3(app3);
-
-    /* ===== Systemmodus (grün/gelb/rot) – schreibt nach gesamt-dae4e/systemmode/state ===== */
-    const modeRef = ref1(db1, "systemmode/state");
-    const modeBtn = () => document.getElementById("mode-cycle");
-    const modeDot = () => document.getElementById("mode-dot");
-    const modeText = () => document.getElementById("mode-text");
-    const order = ["green","yellow","red"];
-
-    function nextMode(cur){ const i=order.indexOf(cur); return order[(i<0?0:(i+1)%order.length)]; }
-    function labelFor(m){ if(m==="green")return"Grün · Normal"; if(m==="yellow")return"Gelb · Eingeschränkt"; return"Rot · Gesperrt"; }
-    function dotClass(m){ if(m==="green")return"dot-green"; if(m==="yellow")return"dot-yellow"; return"dot-red"; }
-    async function setMode(m){ await set(modeRef,{ value:m, updatedAt:Date.now() }); }
-    function renderMode(m){ modeText().textContent=labelFor(m); modeDot().className="mode-dot "+dotClass(m); modeBtn().title="Modus wechseln"; }
-
-    onValue(modeRef,snap=>{ const v=snap.exists()?(snap.val().value||"green"):"green"; renderMode(v); });
-    window.addEventListener("DOMContentLoaded",()=>{
-      modeBtn().addEventListener("click", async ()=>{
-        const snap=await get(modeRef); const cur=snap.exists()?(snap.val().value||"green"):"green";
-        await setMode(nextMode(cur));
-      });
-    });
-
-    /* ===== Rest deines bestehenden Admin-Codes (unverändert) ===== */
-    /* … ALLES ANDERE AUS DEINEM POST BLEIBT UNVERÄNDERT … */
-    /* Ich habe nur Tippfehler in ladeHistorie korrigiert (eitrag -> eintrag). */
-
-    /* Farben und Mappings */
-    const farben=["⚪","🔴","🟡","🟢","⚫","🟣"];
-    function farbeToColor(f){ if(f==="🔴")return"red"; if(f==="🟡")return"orange"; if(f==="🟢")return"green"; if(f==="⚫")return"black"; if(f==="🟣")return"purple"; return"#333";}
-    function colorToDelta(f){ if(f==="🟢")return 5; if(f==="🟣")return 10; if(f==="🔴")return -5; if(f==="⚫")return -10; return 0;}
-    const clamp01=x=>Math.max(0,Math.min(100,x|0));
-
-    /* … dein kompletter Rest-Code wie gepostet … */
-  </script>
+  <!-- Dein kompletter <script type="module"> Block wie gepostet -->
+  <!-- ... -->
 </head>
 <body>
   <div class="topbar">
@@ -133,7 +67,94 @@
     <div class="title">Adminbereich</div>
   </div>
 
-  <!-- Dein unveränderter Body-Inhalt wie gepostet -->
-  <!-- … -->
+  <div class="section">
+    <div class="shop-admin-header">
+      <h2>Shop Bestellungen</h2>
+      <a href="https://frederickoeller1207.github.io/Mousecity-Store/admin" target="_blank">
+        <button class="secondary">Zur Shop Administration</button>
+      </a>
+    </div>
+    <div class="liste" id="pending-orders-list"></div>
+  </div>
+
+  <div class="section">
+    <h2>Mausdollar Anfragen</h2>
+    <div class="liste" id="mausdollar-anfragen-liste"></div>
+  </div>
+
+  <div class="section">
+    <h2>Aktuelle Ausleihen</h2>
+    <div class="liste" id="ausleihen-liste"></div>
+  </div>
+
+  <div class="section" id="abschluss-section" style="display:none">
+    <h2>Abschlüsse warten auf Freigabe</h2>
+    <div class="liste callout" id="abschluss-wartend"></div>
+  </div>
+
+  <div class="section">
+    <div class="shop-admin-header">
+      <h2>MausCity Konten</h2>
+      <div class="action-buttons">
+        <button id="durchfuehren-btn" class="action-button execute" title="Farben → Ziel-Fortschritt anwenden">✔️</button>
+        <button id="alle-gruen-btn" class="action-button green" title="Alle auf Grün setzen">Alle</button>
+        <button id="alle-weiss-btn" class="action-button white" title="Alle auf Weiß setzen">Alle</button>
+      </div>
+    </div>
+    <div class="liste" id="mauscity-konten-liste"></div>
+  </div>
+
+  <div class="section">
+    <h2>Kurznachrichten</h2>
+    <div class="row">
+      <input id="notice-title" type="text" placeholder="Titel (optional, z. B. Nachricht)" />
+      <input id="notice-text" type="text" placeholder="Nachrichtentext" />
+    </div>
+    <div class="row">
+      <select id="notice-color" aria-label="Farbe">
+        <option value="blue">Blau</option><option value="red">Rot</option><option value="green">Grün</option>
+        <option value="orange">Orange</option><option value="purple">Lila</option><option value="black">Schwarz</option><option value="gray">Grau</option>
+      </select>
+      <input id="notice-start" type="datetime-local" aria-label="Start" />
+      <input id="notice-end" type="datetime-local" aria-label="Ende" />
+    </div>
+    <button id="add-notice-btn">Neue Kurznachricht hinzufügen</button>
+    <div class="liste" id="kurznachrichten-liste"></div>
+  </div>
+
+  <div class="section">
+    <h2>Kinder hinzufügen</h2>
+    <div class="form-group">
+      <input id="kind-name" type="text" placeholder="Name des Kindes" />
+      <input id="checkout-link" type="text" placeholder="Checkout-Link (optional)" />
+      <input id="security-code" type="text" placeholder="3-stelliger Code" />
+    </div>
+    <div class="checkboxes">
+      <label><input type="checkbox" id="ist-gruppen"> Gruppenkonto hinzufügen</label>
+      <label><input type="checkbox" id="ist-ausland"> Auslandskonto hinzufügen</label>
+    </div>
+    <button id="add-kind-btn">Hinzufügen</button>
+    <div class="liste" id="kinder-liste"></div>
+  </div>
+
+  <div class="section">
+    <h2>Spielzeuge hinzufügen</h2>
+    <div class="form-group inline">
+      <input id="spielzeug-nummer" type="text" placeholder="Nummer" style="width: 100px;"/>
+      <input id="spielzeug-name" type="text" placeholder="Spielzeugname" style="flex-grow: 1;"/>
+      <button id="add-spielzeug-btn">Hinzufügen</button>
+    </div>
+    <div class="liste" id="spielzeug-liste"></div>
+  </div>
+
+  <div class="section">
+    <h2>Historie</h2>
+    <div class="liste" id="historie-liste"></div>
+  </div>
+  
+  <div class="section">
+    <h2>Konto löschen</h2>
+    <div class="liste" id="konto-loeschen-liste"></div>
+  </div>
 </body>
 </html>
