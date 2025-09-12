@@ -43,9 +43,9 @@
     .amount-btn{padding:14px 0;font-size:20px;font-weight:800;border:1px solid #ccc;border-radius:12px;background:#fff}
     .amount-btn.custom{grid-column:1/-1;font-size:16px}
 
-    #lock-overlay{display:none;position:fixed;inset:0;pointer-events:none}
+    #lock-overlay{display:none;position:fixed;inset:0;pointer-events:none;z-index:99998}
     #lock-overlay::before{content:"";position:absolute;left:50%;top:50%;width:140vmax;height:8px;background:#ef4444;transform:translate(-50%,-50%) rotate(-45deg);box-shadow:0 0 0 2px #ef4444}
-    #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 8px 18px rgba(0,0,0,.25);font-size:14px;display:none;z-index:9999;max-width:90%;text-align:center}
+    #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 8px 18px rgba(0,0,0,.25);font-size:14px;display:none;z-index:99999;max-width:90%;text-align:center}
   </style>
 </head>
 <body>
@@ -120,6 +120,11 @@
     const app1=initApp1(config1,"app1"); const db1=getDB1(app1);
     const app2=initApp2(config2,"app2"); const db2=getDB2(app2);
 
+    // HARD LOCK: sofortige Eingabesperre in Capture-Phase
+    let IS_LOCKED = true; // defensiv bis erste Mode-Antwort kommt
+    const _block = e => { if (IS_LOCKED) { e.stopImmediatePropagation(); e.preventDefault(); } };
+    ["click","touchstart","pointerdown","keydown","submit"].forEach(t=>document.addEventListener(t,_block,true));
+
     const view=document.getElementById("view");
     const homeBtn=document.getElementById("home-btn");
     const noticesBox=document.getElementById('notices');
@@ -131,7 +136,7 @@
 
     let IS_HOME=true;
     let latestNotices=[];
-    let MODE="green"; // green | yellow | red
+    let MODE="green";
 
     function showToast(msg, ms=3500){
       toast.textContent=msg; toast.style.display='block';
@@ -181,53 +186,78 @@
     function subscribeMode(){
       onVal1(ref1(db1,"systemmode/state"), snap=>{
         const m = snap.exists() ? (snap.val().value||"green") : "green";
-        MODE = m; applyModeToUI();
+        MODE = m;
+        if (m === "red"){
+          IS_LOCKED = true;
+          view.innerHTML="";
+          lockedBanner.style.display='block';
+          lockOverlay.style.display='block';
+          grid.style.display='none';
+          noticesBox.style.display='none';
+        } else {
+          IS_LOCKED = false;
+          lockedBanner.style.display='none';
+          lockOverlay.style.display='none';
+          resetView();
+        }
+        applyModeToUI();
       });
     }
 
     function applyModeToUI(){
-      if(!IS_HOME){
-        if(MODE==="red"){ view.innerHTML=""; lockedBanner.style.display='block'; lockOverlay.style.display='block'; }
-        return;
+      if(IS_LOCKED){
+        grid.style.display='none'; noticesBox.style.display='none'; return;
       }
-      const ids=["app-konto","app-ziel","app-ausleihe","app-checkout","app-mausdollar","app-store","app-malwettbewerb","app-briefkasten"];
-      const showAll=(b)=>ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display=b?'flex':'none'; });
-
+      if(!IS_HOME) return;
       if(MODE==="green"){
-        modeBanner.style.display='none'; lockedBanner.style.display='none'; lockOverlay.style.display='none';
-        grid.style.display='grid'; showAll(true); renderNoticesList(latestNotices);
+        modeBanner.style.display='none'; grid.style.display='grid'; renderNoticesList(latestNotices);
+        // alle Apps sichtbar
+        ["app-konto","app-ziel","app-ausleihe","app-checkout","app-mausdollar","app-store","app-malwettbewerb","app-briefkasten"].forEach(id=>{
+          const el=document.getElementById(id); if(el) el.style.display='flex';
+        });
       } else if(MODE==="yellow"){
-        modeBanner.style.display='block'; lockedBanner.style.display='none'; lockOverlay.style.display='none';
-        grid.style.display='grid'; showAll(false);
-        document.getElementById("app-checkout").style.display='flex';
-        document.getElementById("app-ziel").style.display='flex';
-        noticesBox.style.display='none';
-      } else { // red
-        grid.style.display='none'; view.innerHTML="";
-        modeBanner.style.display='none'; lockedBanner.style.display='block'; lockOverlay.style.display='block';
+        modeBanner.style.display='block'; grid.style.display='grid';
+        // nur Checkout + Ziel
+        ["app-checkout","app-ziel"].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='flex'; });
+        ["app-konto","app-ausleihe","app-mausdollar","app-store","app-malwettbewerb","app-briefkasten"].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
         noticesBox.style.display='none';
       }
+      // rot wird oben durch IS_LOCKED behandelt
     }
 
     document.getElementById("btn-kontoeinsehen").onclick = ()=>showKontoEinsehen();
 
     function farbeToColor(f){ if(f==="🔴")return"red"; if(f==="🟡")return"orange"; if(f==="🟢")return"green"; if(f==="⚫")return"black"; if(f==="🟣")return"purple"; if(f==="🔵")return"blue"; return"#ccc";}
-    function getFarbBedeutung(f){ if(f==="🟢")return"Du bist deinem Ziel heute 5 % näher."; if(f==="🟣")return"Du bist deinem Ziel heute 10 % näher."; if(f==="🔴")return"Du entfernst dich heute um 5 % von deinem Ziel."; if(f==="⚫")return"Du entfernst dich heute um 10 % von deinem Ziel."; if(f==="🟡"||f==="⚪")return"Dein Ziel-Fortschritt bleibt heute unverändert."; return"";}
+    function getFarbBedeutung(f){
+      if(f==="🟢")return"Du bist deinem Ziel heute 5 % näher.";
+      if(f==="🟣")return"Du bist deinem Ziel heute 10 % näher.";
+      if(f==="🔴")return"Du entfernst dich heute um 5 % von deinem Ziel.";
+      if(f==="⚫")return"Du entfernst dich heute um 10 % von deinem Ziel.";
+      if(f==="🟡"||f==="⚪")return"Dein Ziel-Fortschritt bleibt heute unverändert.";
+      return"";
+    }
 
     async function showKontoEinsehen(){
-      if(MODE==="red"){ showToast("Terminal gesperrt."); return; }
+      if(IS_LOCKED || MODE==="red"){ showToast("Terminal gesperrt."); return; }
       openView("Konto einsehen");
       const suchInput=document.createElement("input"); suchInput.placeholder="Suche nach Namen..."; suchInput.autofocus=true; view.appendChild(suchInput);
       const kinderListe=document.createElement("div"); kinderListe.id="kinder-liste"; kinderListe.style.marginTop="16px"; view.appendChild(kinderListe);
       const kinderSnap=await get2(ref2(db2,"kinder")); const alleKonten=[];
       if(kinderSnap.exists()){ kinderSnap.forEach(kindSnap=>{ alleKonten.push({name:kindSnap.key, ...kindSnap.val()}); }); }
-      function renderKinderListe(filter=""){ kinderListe.innerHTML=""; alleKonten.filter(k=>k.name.toLowerCase().includes(filter.toLowerCase())).forEach(konto=>{ const btn=document.createElement("button"); btn.textContent=konto.name; btn.onclick=()=>showKontoDetails(konto); kinderListe.appendChild(btn); }); }
+      function renderKinderListe(filter=""){
+        kinderListe.innerHTML="";
+        alleKonten
+          .filter(k=>k.name.toLowerCase().includes(filter.toLowerCase()))
+          .forEach(konto=>{
+            const btn=document.createElement("button"); btn.textContent=konto.name; btn.onclick=()=>showKontoDetails(konto); kinderListe.appendChild(btn);
+          });
+      }
       renderKinderListe(); suchInput.addEventListener("keyup",(e)=>renderKinderListe(e.target.value));
     }
     window.showKontoEinsehen = showKontoEinsehen;
 
     function showKontoDetails(konto){
-      if(MODE==="red"){ showToast("Terminal gesperrt."); return; }
+      if(IS_LOCKED || MODE==="red"){ showToast("Terminal gesperrt."); return; }
       openView(konto.name);
       const details=document.createElement("div"); details.id="konto-details";
       const kontostand=Number(konto.punkte??konto.kontostand??0);
@@ -242,28 +272,38 @@
       }
       view.appendChild(details);
     }
-
-    document.getElementById("btn-ausleihe").onclick = ()=>openAusleihe();
+document.getElementById("btn-ausleihe").onclick = ()=>openAusleihe();
     window.openAusleihe = ()=>{
-      if(MODE!=="green"){ showToast("Eingeschränkter Modus: Diese Funktion ist derzeit deaktiviert."); return; }
+      if(IS_LOCKED || MODE!=="green"){ showToast("Eingeschränkter Modus: Diese Funktion ist derzeit deaktiviert."); return; }
       openView("Spielzeug Ausleihe");
       onVal1(ref1(db1,"kinder"), snapshot=>{
-        view.innerHTML=""; snapshot.forEach(childSnap=>{
+        view.innerHTML="";
+        snapshot.forEach(childSnap=>{
           const name=childSnap.key; const btn=document.createElement("button"); btn.textContent=name;
           btn.onclick=()=>checkSicherheitscode(name,()=>ausleihen(name)); view.appendChild(btn);
         });
       });
     };
-    function eingabeMitZahl(title,callback){ openView(title); const input=document.createElement("input"); input.type="number"; input.inputMode="numeric"; input.autofocus=true; const btn=document.createElement("button"); btn.textContent="OK"; btn.onclick=()=>{ const val=input.value.trim(); if(val) callback(val); }; view.appendChild(input); view.appendChild(btn); input.focus(); }
+    function eingabeMitZahl(title,callback){
+      openView(title);
+      const input=document.createElement("input"); input.type="number"; input.inputMode="numeric"; input.autofocus=true;
+      const btn=document.createElement("button"); btn.textContent="OK";
+      btn.onclick=()=>{ const val=input.value.trim(); if(val) callback(val); };
+      view.appendChild(input); view.appendChild(btn); input.focus();
+    }
     async function ausleihen(name){
-      if(MODE!=="green"){ showToast("Eingeschränkter Modus: Diese Funktion ist derzeit deaktiviert."); return; }
+      if(IS_LOCKED || MODE!=="green"){ showToast("Eingeschränkter Modus: Diese Funktion ist derzeit deaktiviert."); return; }
       const ausleiheSnap=await get1(ref1(db1,`ausleihen/${name}`));
       if(ausleiheSnap.exists() && ausleiheSnap.val().bestätigt===false){ showToast("Bitte gib das ausgeliehene Spielzeug zurück."); return; }
       frageSpielzeugnummer(name, async (nummer)=>{
         const spielzeugeSnap=await get1(ref1(db1,"spielzeuge")); const spielzeuge=spielzeugeSnap.exists()?spielzeugeSnap.val():{};
         if(spielzeuge[nummer]){
           await set1(ref1(db1,`ausleihen/${name}`),{spielzeug:spielzeuge[nummer],nummer,zeit:new Date().toISOString(),bestätigt:false});
-          const popup=document.createElement("div"); popup.textContent=`${spielzeuge[nummer]} erfolgreich ausgeliehen.`; popup.style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;color:#000;padding:16px 22px;border-radius:10px;font-size:16px;box-shadow:0 4px 12px rgba(0,0,0,.2);z-index:9999;text-align:center;"; document.body.appendChild(popup); setTimeout(()=>{ popup.remove(); resetView(); },3000);
+          const popup=document.createElement("div");
+          popup.textContent=`${spielzeuge[nummer]} erfolgreich ausgeliehen.`;
+          popup.style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;color:#000;padding:16px 22px;border-radius:10px;font-size:16px;box-shadow:0 4px 12px rgba(0,0,0,.2);z-index:9999;text-align:center;";
+          document.body.appendChild(popup);
+          setTimeout(()=>{ popup.remove(); resetView(); },3000);
         } else { showToast("Ungültige Nummer."); }
       });
     }
@@ -271,10 +311,11 @@
 
     document.getElementById("btn-checkout").onclick = ()=>openCheckout();
     window.openCheckout = ()=>{
-      if(MODE==="red"){ showToast("Terminal gesperrt."); return; }
+      if(IS_LOCKED || MODE==="red"){ showToast("Terminal gesperrt."); return; }
       openView("Checkout");
       onVal1(ref1(db1,"kinder"), snapshot=>{
-        view.innerHTML=""; snapshot.forEach(childSnap=>{
+        view.innerHTML="";
+        snapshot.forEach(childSnap=>{
           const name=childSnap.key; const link=childSnap.val().link;
           const btn=document.createElement("button"); btn.textContent=name;
           btn.onclick=()=>checkSicherheitscode(name,()=>{ if(link) window.location.href=link; else showToast("Kein Link hinterlegt."); });
@@ -285,10 +326,11 @@
 
     document.getElementById("btn-mausdollar").onclick = ()=>openMausdollar();
     window.openMausdollar = ()=>{
-      if(MODE!=="green"){ showToast("Eingeschränkter Modus: Diese Funktion ist derzeit deaktiviert."); return; }
+      if(IS_LOCKED || MODE!=="green"){ showToast("Eingeschränkter Modus: Diese Funktion ist derzeit deaktiviert."); return; }
       openView("Mausdollar hinzufügen");
       const kinder=[]; onVal1(ref1(db1,"kinder"), snapshot=>{
-        view.innerHTML=""; snapshot.forEach(childSnap=>{ kinder.push(childSnap.key); });
+        view.innerHTML="";
+        snapshot.forEach(childSnap=>{ kinder.push(childSnap.key); });
         kinder.forEach(name=>{
           const btn=document.createElement("button"); btn.textContent=name;
           btn.onclick=()=>checkSicherheitscode(name,()=>waehleBetrag(name)); view.appendChild(btn);
@@ -296,7 +338,7 @@
       });
     };
     function checkSicherheitscode(name,callback){
-      if(MODE==="red"){ showToast("Terminal gesperrt."); return; }
+      if(IS_LOCKED || MODE==="red"){ showToast("Terminal gesperrt."); return; }
       const doCheck=async ()=>{
         const snap=await get1(ref1(db1,`kinder/${name}`)); const code=snap.exists()?snap.val().code:null;
         if(!code){ showToast("Kein Sicherheitscode hinterlegt."); return; }
@@ -320,7 +362,7 @@
       const abs=document.createElement("button"); abs.textContent="Absenden"; abs.onclick=()=>{ const g=eigener.value.trim(); if(g) sendeAnfrage(name,betrag,g); }; view.appendChild(abs);
     }
     function sendeAnfrage(name,betrag,grund){
-      if(MODE!=="green"){ showToast("Eingeschränkter Modus: Diese Funktion ist derzeit deaktiviert."); return; }
+      if(IS_LOCKED || MODE!=="green"){ showToast("Eingeschränkter Modus: Diese Funktion ist derzeit deaktiviert."); return; }
       const now=new Date(); const tag=String(now.getDate()).padStart(2,'0'); const monat=String(now.getMonth()+1).padStart(2,'0'); const stunde=String(now.getHours()).padStart(2,'0'); const minute=String(now.getMinutes()).padStart(2,'0');
       const zeit=`${tag}.${monat} – ${stunde}:${minute}`; const anfrageRef=ref1(db1,`anfragen/${Date.now()}_${name}`);
       set1(anfrageRef,{name,betrag,grund,zeit}); view.innerHTML=`<h2>Anfrage gesendet! (${betrag} Mausdollar für: ${grund})</h2>`;
@@ -334,8 +376,11 @@
         const m=snap.exists()?(snap.val().value||"green"):"green";
         MODE=m;
         if(m==="red"){
-          showToast("Die Abholzeit ist im gesperrten Modus nicht verfügbar. Bitte nutze das Terminal nicht im gesperrten Modus. Beim nächsten Versuch wird ein Mousedollar von deinem Konto entfernt!", 4500);
+          IS_LOCKED = true;
+          showToast("Die Funktion ist im gesperrten Modus deaktiviert.", 3500);
           resetView();
+          lockedBanner.style.display='block';
+          lockOverlay.style.display='block';
         } else if(m==="yellow"){
           if(act==="checkout"){ openCheckout(); } else { resetView(); showToast("Eingeschränkter Modus: Nur Checkout und Mein Ziel sind verfügbar."); }
         } else {
@@ -353,7 +398,6 @@
   <!-- Service Worker Registrierung -->
   <script>
     if ('serviceWorker' in navigator) {
-      // Falls deine Seite in einem Unterordner liegt, Pfad und scope anpassen.
       navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(console.warn);
     }
   </script>
