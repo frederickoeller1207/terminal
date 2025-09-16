@@ -58,10 +58,6 @@
     <div id="notices"></div>
 
     <div class="app-grid" id="app-grid">
-      <div class="app" id="app-konto" onclick="showKontoEinsehen()">
-        <img src="https://i.supaimg.com/0483c192-7c11-41e0-92c1-e980e9b50f60.png" alt="Konto" loading="lazy" decoding="async" width="60" height="60">
-        <div class="title">Konto einsehen</div><div class="sub">Kontostand & Farbe</div>
-      </div>
       <div class="app" id="app-ziel" onclick="window.location.href='https://frederickoeller1207.github.io/ziele/'">
         <img src="https://i.supaimg.com/5abf1dba-fcbb-472c-a9bc-3c15894c1bcb.png" alt="Ziel" loading="lazy" decoding="async" width="60" height="60">
         <div class="title">Mein Ziel</div><div class="sub">Fortschritt ansehen</div>
@@ -74,14 +70,6 @@
         <img src="https://i.supaimg.com/652a2719-c338-4a37-a712-7dd6d56945b5.png" alt="Checkout" loading="lazy" decoding="async" width="60" height="60">
         <div class="title">Checkout</div><div class="sub">mit PIN</div>
       </div>
-      <div class="app" id="app-mausdollar" onclick="openMausdollar()">
-        <img src="https://i.supaimg.com/d256e5e6-05bd-43b0-a548-6c10c1e43efe.png" alt="Mausdollar" loading="lazy" decoding="async" width="60" height="60">
-        <div class="title">Mausdollar hinzufügen</div><div class="sub">Anfrage senden</div>
-      </div>
-      <div class="app" id="app-store" onclick="window.location.href='https://frederickoeller1207.github.io/Mousecity-Store/'">
-        <img src="https://i.supaimg.com/1fc31392-99ae-4970-8cee-474e784ef93f.png" alt="Store" loading="lazy" decoding="async" width="60" height="60">
-        <div class="title">Mousecity Store</div><div class="sub">Einkaufen</div>
-      </div>
       <div class="app" id="app-malwettbewerb" onclick="window.location.href='malwettbewerb.html'">
         <img src="https://i.supaimg.com/359b3d2b-2cc2-48dd-86b2-4f44ee584857.png" alt="Malwettbewerb" loading="lazy" decoding="async" width="60" height="60">
         <div class="title">Malwettbewerb</div><div class="sub">Abgeben & abstimmen</div>
@@ -93,12 +81,9 @@
     </div>
 
     <div id="menu" class="legacy-menu">
-      <button id="btn-kontoeinsehen">Konto einsehen</button>
       <button onclick="window.location.href='https://frederickoeller1207.github.io/ziele/'">Mein Ziel</button>
       <button id="btn-ausleihe">Spielzeug Ausleihe</button>
       <button id="btn-checkout">Checkout</button>
-      <button id="btn-mausdollar">Mausdollar hinzufügen</button>
-      <button onclick="window.location.href='https://frederickoeller1207.github.io/Mousecity-Store/'">Mousecity Store</button>
     </div>
 
     <div id="home-btn">🏠 Zurück</div>
@@ -212,67 +197,20 @@
       if(MODE==="green"){
         modeBanner.style.display='none'; grid.style.display='grid'; renderNoticesList(latestNotices);
         // alle Apps sichtbar
-        ["app-konto","app-ziel","app-ausleihe","app-checkout","app-mausdollar","app-store","app-malwettbewerb","app-briefkasten"].forEach(id=>{
+        ["app-ziel","app-ausleihe","app-checkout","app-malwettbewerb","app-briefkasten"].forEach(id=>{
           const el=document.getElementById(id); if(el) el.style.display='flex';
         });
       } else if(MODE==="yellow"){
         modeBanner.style.display='block'; grid.style.display='grid';
         // nur Checkout + Ziel
         ["app-checkout","app-ziel"].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='flex'; });
-        ["app-konto","app-ausleihe","app-mausdollar","app-store","app-malwettbewerb","app-briefkasten"].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
+        ["app-ausleihe","app-malwettbewerb","app-briefkasten"].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
         noticesBox.style.display='none';
       }
       // rot wird oben durch IS_LOCKED behandelt
     }
 
-    document.getElementById("btn-kontoeinsehen").onclick = ()=>showKontoEinsehen();
-
-    function farbeToColor(f){ if(f==="🔴")return"red"; if(f==="🟡")return"orange"; if(f==="🟢")return"green"; if(f==="⚫")return"black"; if(f==="🟣")return"purple"; if(f==="🔵")return"blue"; return"#ccc";}
-    function getFarbBedeutung(f){
-      if(f==="🟢")return"Du bist deinem Ziel heute 5 % näher.";
-      if(f==="🟣")return"Du bist deinem Ziel heute 10 % näher.";
-      if(f==="🔴")return"Du entfernst dich heute um 5 % von deinem Ziel.";
-      if(f==="⚫")return"Du entfernst dich heute um 10 % von deinem Ziel.";
-      if(f==="🟡"||f==="⚪")return"Dein Ziel-Fortschritt bleibt heute unverändert.";
-      return"";
-    }
-
-    async function showKontoEinsehen(){
-      if(IS_LOCKED || MODE==="red"){ showToast("Terminal gesperrt."); return; }
-      openView("Konto einsehen");
-      const suchInput=document.createElement("input"); suchInput.placeholder="Suche nach Namen..."; suchInput.autofocus=true; view.appendChild(suchInput);
-      const kinderListe=document.createElement("div"); kinderListe.id="kinder-liste"; kinderListe.style.marginTop="16px"; view.appendChild(kinderListe);
-      const kinderSnap=await get2(ref2(db2,"kinder")); const alleKonten=[];
-      if(kinderSnap.exists()){ kinderSnap.forEach(kindSnap=>{ alleKonten.push({name:kindSnap.key, ...kindSnap.val()}); }); }
-      function renderKinderListe(filter=""){
-        kinderListe.innerHTML="";
-        alleKonten
-          .filter(k=>k.name.toLowerCase().includes(filter.toLowerCase()))
-          .forEach(konto=>{
-            const btn=document.createElement("button"); btn.textContent=konto.name; btn.onclick=()=>showKontoDetails(konto); kinderListe.appendChild(btn);
-          });
-      }
-      renderKinderListe(); suchInput.addEventListener("keyup",(e)=>renderKinderListe(e.target.value));
-    }
-    window.showKontoEinsehen = showKontoEinsehen;
-
-    function showKontoDetails(konto){
-      if(IS_LOCKED || MODE==="red"){ showToast("Terminal gesperrt."); return; }
-      openView(konto.name);
-      const details=document.createElement("div"); details.id="konto-details";
-      const kontostand=Number(konto.punkte??konto.kontostand??0);
-      const saldo=document.createElement("p"); saldo.style.fontWeight="600"; saldo.textContent=`Du hast ${kontostand} M$ auf deinem Konto`; details.appendChild(saldo);
-      const farbLabel=document.createElement("p"); farbLabel.textContent="Deine Farbe für heute ist:"; details.appendChild(farbLabel);
-      if(konto.farbe){
-        const kreis=document.createElement("div"); kreis.className="color-circle"; kreis.style.backgroundColor=farbeToColor(konto.farbe); details.appendChild(kreis);
-        const bedeutung=document.createElement("p"); bedeutung.textContent=getFarbBedeutung(konto.farbe); details.appendChild(bedeutung);
-      } else {
-        const keine=document.createElement("p"); keine.textContent="Dieses Konto hat keine Farbe."; details.appendChild(keine);
-        const unver=document.createElement("p"); unver.textContent="Dein Ziel-Fortschritt bleibt heute unverändert."; details.appendChild(unver);
-      }
-      view.appendChild(details);
-    }
-document.getElementById("btn-ausleihe").onclick = ()=>openAusleihe();
+    document.getElementById("btn-ausleihe").onclick = ()=>openAusleihe();
     window.openAusleihe = ()=>{
       if(IS_LOCKED || MODE!=="green"){ showToast("Eingeschränkter Modus: Diese Funktion ist derzeit deaktiviert."); return; }
       openView("Spielzeug Ausleihe");
@@ -324,19 +262,6 @@ document.getElementById("btn-ausleihe").onclick = ()=>openAusleihe();
       });
     };
 
-    document.getElementById("btn-mausdollar").onclick = ()=>openMausdollar();
-    window.openMausdollar = ()=>{
-      if(IS_LOCKED || MODE!=="green"){ showToast("Eingeschränkter Modus: Diese Funktion ist derzeit deaktiviert."); return; }
-      openView("Mausdollar hinzufügen");
-      const kinder=[]; onVal1(ref1(db1,"kinder"), snapshot=>{
-        view.innerHTML="";
-        snapshot.forEach(childSnap=>{ kinder.push(childSnap.key); });
-        kinder.forEach(name=>{
-          const btn=document.createElement("button"); btn.textContent=name;
-          btn.onclick=()=>checkSicherheitscode(name,()=>waehleBetrag(name)); view.appendChild(btn);
-        });
-      });
-    };
     function checkSicherheitscode(name,callback){
       if(IS_LOCKED || MODE==="red"){ showToast("Terminal gesperrt."); return; }
       const doCheck=async ()=>{
@@ -345,27 +270,6 @@ document.getElementById("btn-ausleihe").onclick = ()=>openAusleihe();
         eingabeMitZahl(`Bitte Sicherheitscode für ${name} eingeben:`, (eingabe)=>{ if(eingabe===code) callback(); else showToast("Falscher Code."); });
       };
       doCheck();
-    }
-    function waehleBetrag(name){
-      openView(`${name}: Wähle Betrag`);
-      const wrap=document.createElement("div"); wrap.className="amount-wrap";
-      const grid=document.createElement("div"); grid.className="amount-grid"; wrap.appendChild(grid);
-      [1,2,3,4,5,6].forEach(n=>{ const b=document.createElement("button"); b.className="amount-btn"; b.textContent=n; b.onclick=()=>waehleGrund(name,n); grid.appendChild(b); });
-      const custom=document.createElement("button"); custom.className="amount-btn custom"; custom.textContent="Eigener Betrag";
-      custom.onclick=()=>eingabeMitZahl("Eigener Betrag",(val)=>{ const n=Math.max(1,Math.floor(Number(val)||0)); waehleGrund(name,n); }); wrap.appendChild(custom);
-      view.appendChild(wrap);
-    }
-    function waehleGrund(name,betrag){
-      openView(`${name}: Grund wählen`); const gruende=["Quiz","Kurze Hilfe","Malwettbewerb","Tischdienst"];
-      gruende.forEach(g=>{ const btn=document.createElement("button"); btn.textContent=g; btn.onclick=()=>sendeAnfrage(name,betrag,g); view.appendChild(btn); });
-      const eigener=document.createElement("input"); eigener.placeholder="Eigener Grund"; eigener.type="text"; view.appendChild(eigener);
-      const abs=document.createElement("button"); abs.textContent="Absenden"; abs.onclick=()=>{ const g=eigener.value.trim(); if(g) sendeAnfrage(name,betrag,g); }; view.appendChild(abs);
-    }
-    function sendeAnfrage(name,betrag,grund){
-      if(IS_LOCKED || MODE!=="green"){ showToast("Eingeschränkter Modus: Diese Funktion ist derzeit deaktiviert."); return; }
-      const now=new Date(); const tag=String(now.getDate()).padStart(2,'0'); const monat=String(now.getMonth()+1).padStart(2,'0'); const stunde=String(now.getHours()).padStart(2,'0'); const minute=String(now.getMinutes()).padStart(2,'0');
-      const zeit=`${tag}.${monat} – ${stunde}:${minute}`; const anfrageRef=ref1(db1,`anfragen/${Date.now()}_${name}`);
-      set1(anfrageRef,{name,betrag,grund,zeit}); view.innerHTML=`<h2>Anfrage gesendet! (${betrag} Mausdollar für: ${grund})</h2>`;
     }
 
     (function handleDeepLinks(){
@@ -395,7 +299,6 @@ document.getElementById("btn-ausleihe").onclick = ()=>openAusleihe();
     init();
   </script>
 
-  <!-- Service Worker Registrierung -->
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(console.warn);
