@@ -73,12 +73,13 @@
     .modal-actions .red{background:#ef4444}
     .modal-actions .red:hover{background:#b91c1c}
     .modal-actions .secondary{background:#f0f0f0;color:#333}
+    .modal-locked-info { background: #ffebeb; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ff0000; }
+    .modal-locked-info strong { color: #ff0000; }
 
     /* Sperr-Anzeige */
     .kontostatus{font-weight:600;margin-bottom:10px}
     .kontostatus.gesperrt{color:#ef4444}
     .kontostatus.aktiv{color:#28a745}
-    /* NEU: Wichtig für die Durchstreichung */
     .konto-name.gesperrt{text-decoration:line-through;}
 
     /* List Item Clickable */
@@ -276,8 +277,10 @@
     function ladeKinderKonten(){
       const bereich=document.getElementById("mauscity-konten-liste");
       const eigeneKinder=new Map();
+      // Listener für db1/kinder (Zugangsdaten, Link, Code, Sperrstatus)
       onValue(ref1(db1,"kinder"),(snapshot)=>{
         eigeneKinder.clear(); snapshot.forEach(childSnap=>{ eigeneKinder.set(childSnap.key, childSnap.val() || {}); });
+        // Listener für db2/kinder (Punkte, Farbe, Progress)
         onVal2(ref2(db2,"kinder"),(snapshot2)=>{
           bereich.innerHTML="";
           snapshot2.forEach(childSnap2=>{
@@ -289,10 +292,11 @@
             const isLocked = data1.gesperrt === true;
             
             const zeile=document.createElement("div"); zeile.className="flex account-item";
+            // Klick auf die Zeile öffnet das Modal
             zeile.onclick = () => openAccountManager(name, { ...data1, ...data2 }); 
 
             const kontoInfo=document.createElement("div");
-            // Durchstreichung angewendet basierend auf data1.gesperrt
+            // Durchstreichung angewendet
             kontoInfo.innerHTML=`<span class="konto-name ${isLocked ? 'gesperrt' : ''}" style="color:${farbeToColor(data2.farbe)};font-weight:bold;">${name}</span>
               <button class="small-button" title="Aktives Ziel zeigen" onclick="event.stopPropagation(); zeigeAktivesZiel('${name}')">Z</button>`;
               
@@ -300,9 +304,9 @@
 
             if(data2.progress!==undefined){
               const plus5=document.createElement("button"); plus5.textContent="+5 %"; 
-              plus5.onclick=(e)=>{ e.stopPropagation(); updateProgress(name, 5); }; // Direkter Aufruf der Funktion
+              plus5.onclick=(e)=>{ e.stopPropagation(); updateProgress(name, 5); }; 
               const minus5=document.createElement("button"); minus5.textContent="–5 %"; 
-              minus5.onclick=(e)=>{ e.stopPropagation(); updateProgress(name, -5); }; // Direkter Aufruf der Funktion
+              minus5.onclick=(e)=>{ e.stopPropagation(); updateProgress(name, -5); };
               progressButtons.appendChild(plus5); progressButtons.appendChild(minus5);
             } else {
               progressButtons.innerHTML="—";
@@ -327,8 +331,7 @@
     async function alleAufGruen(){ const snapshot=await get2(ref2(db2,"kinder")); snapshot.forEach(childSnap=>{ const name=childSnap.key; const data=childSnap.val(); if(data.farbe!==undefined){ update2(ref2(db2,`kinder/${name}`),{farbe:"🟢"}); } }); }
     async function alleAufWeiss(){ const snapshot=await get2(ref2(db2,"kinder")); snapshot.forEach(childSnap=>{ const name=childSnap.key; const data=childSnap.val(); if(data.farbe!==undefined){ update2(ref2(db2,`kinder/${name}`),{farbe:"⚪"}); } }); }
 
-    // Modal Funktionen
-
+    // Modal Elemente
     const modal = document.getElementById('account-manager-modal');
     const modalTitle = document.getElementById('modal-title');
     const modalStatus = document.getElementById('modal-status');
@@ -337,50 +340,79 @@
     const sperrGrundInput = document.getElementById('modal-sperr-grund');
     const sperrButton = document.getElementById('modal-sperr-btn');
     const deleteButton = document.getElementById('modal-delete-btn');
+    const editSection = document.getElementById('modal-edit-section');
+    const lockedInfoSection = document.getElementById('modal-locked-info');
     let currentAccountName = null;
 
     function closeModal() { modal.style.display = 'none'; }
     window.closeModal = closeModal;
 
+    // KORRIGIERTE MODAL-ÖFFNUNGSFUNKTION
     window.openAccountManager = (name, data) => {
       currentAccountName = name;
       modalTitle.textContent = `Konto: ${name}`;
       
       const isLocked = data.gesperrt === true;
-      modalStatus.textContent = isLocked ? `Status: GESPERRT (Grund: ${data.sperrGrund || 'Nicht angegeben'})` : 'Status: Aktiv';
+      const sperrGrund = data.sperrGrund || 'Nicht angegeben';
+
+      // Statusanzeige
+      modalStatus.textContent = isLocked ? `Status: GESPERRT` : 'Status: Aktiv';
       modalStatus.className = 'kontostatus ' + (isLocked ? 'gesperrt' : 'aktiv');
 
-      linkInput.value = data.link || '';
-      codeInput.value = data.code || '';
-      sperrGrundInput.value = data.sperrGrund || '';
+      // Modus-Umschaltung
+      if (isLocked) {
+          // Entsperrungsmodus
+          editSection.style.display = 'none';
+          lockedInfoSection.style.display = 'block';
+          lockedInfoSection.querySelector('#locked-reason-text').textContent = sperrGrund;
+          
+          sperrButton.textContent = 'Konto entsperren';
+          sperrButton.className = 'action-button green full';
+          sperrButton.onclick = () => toggleLock(name);
 
-      sperrGrundInput.parentElement.style.display = 'block';
-      sperrGrundInput.placeholder = isLocked ? 'Aktueller Sperr-Grund' : 'Grund für die Sperrung angeben';
+      } else {
+          // Bearbeitungsmodus
+          editSection.style.display = 'block';
+          lockedInfoSection.style.display = 'none';
 
-      sperrButton.textContent = isLocked ? 'Entsperren' : 'Sperren';
-      sperrButton.className = 'action-button ' + (isLocked ? 'green' : 'red');
+          // Link & Code füllen
+          linkInput.value = data.link || '';
+          codeInput.value = data.code || '';
+          sperrGrundInput.value = ''; // Grund leeren für neue Sperrung
+
+          // Sperr-Button
+          sperrButton.textContent = 'Konto sperren';
+          sperrButton.className = 'action-button red';
+          sperrButton.onclick = () => toggleLock(name);
+      }
+      
+      // Dauerhaft löschen Button (immer sichtbar, aber mit Bestätigung)
+      deleteButton.onclick = () => permanentDelete(name);
 
       modal.style.display = 'flex';
     };
 
+    // KORRIGIERTE Speichern-Funktion
     window.saveLinkCode = async (name) => {
         const link = linkInput.value.trim();
         const code = codeInput.value.trim();
         if (!name) return;
+        // Speichert Link/Code in db1
         await update(ref1(db1, `kinder/${name}`), { link: link || null, code });
         alert(`Link/Code für ${name} gespeichert.`);
         closeModal();
     };
 
-    // FUNKTION MIT KORRIGIERTEM VERHALTEN (Bugfix)
+    // KORRIGIERTE Sperr-Funktion
     window.toggleLock = async (name) => {
         const snap = await get(ref1(db1, `kinder/${name}`));
         const data = snap.val() || {};
         const isCurrentlyLocked = data.gesperrt === true;
+        const kindRef = ref1(db1, `kinder/${name}`);
 
         if (isCurrentlyLocked) {
             // Entsperren: Setze gesperrt und sperrGrund auf null
-            await update(ref1(db1, `kinder/${name}`), { gesperrt: null, sperrGrund: null });
+            await update(kindRef, { gesperrt: null, sperrGrund: null });
             alert(`${name} wurde entsperrt.`);
         } else {
             // Sperren
@@ -391,16 +423,19 @@
                 return;
             }
             // Sperren: Setze gesperrt auf true und speichere den Grund
-            await update(ref1(db1, `kinder/${name}`), { gesperrt: true, sperrGrund: grund });
+            await update(kindRef, { gesperrt: true, sperrGrund: grund });
             alert(`${name} wurde gesperrt. Grund: ${grund}`);
         }
-        // Wichtig: Schließe das Modal und die Kontenliste wird durch den onValue-Listener neu gerendert
+        // Schließt das Modal und löst das Neuladen der Kontenliste aus (onValue Listener)
         closeModal();
     };
 
+    // FUNKTION ZUM DAUERHAFTEN LÖSCHEN
     window.permanentDelete = (name) => {
         if (confirm(`Bist du WIRKLICH SICHER, das gesamte Konto von ${name} dauerhaft zu löschen? Alle Punkte, Ziele und Zugänge werden gelöscht.`)) {
+            // Löscht aus db2 (Punkte/Ziele)
             remove2(ref2(db2,"kinder/"+name)).catch(err=>console.error("Fehler MausCity:",err));
+            // Löscht aus db1 (Zugangsdaten/Sperrstatus)
             remove(ref1(db1,"kinder/"+name)).catch(err=>console.error("Fehler AdminDB:",err));
             alert(`Konto von ${name} wurde dauerhaft gelöscht.`);
             closeModal();
@@ -472,7 +507,7 @@
 
     let GESAMTE_HISTORIE_CACHE = null;
     let SPIELZEUGE_CACHE = {};
-    let HISTORY_MODE = 'kind'; // 'kind' oder 'spielzeug'
+    let HISTORY_MODE = 'kind';
 
     // Formatiert Zeit wie gewünscht (z.B. 1.8.25 12:30)
     function formatTime(isoString) {
@@ -531,7 +566,7 @@
                     const spielzeugName = SPIELZEUGE_CACHE[eintrag.nummer] || `Nr. ${eintrag.nummer} (Unbekannt)`;
                     const von = formatTime(eintrag.ausgeliehen);
                     const bis = formatTime(eintrag.zurückgegeben);
-                    box.innerHTML += `<div class="entry">• **${spielzeugName}**: von ${von} bis ${bis} <span class="delete" onclick="loescheHistorie('${eintrag.kind}','${eintrag.key}')">x</span></div>`;
+                    box.innerHTML += `<div class="entry">• <b>${spielzeugName}</b>: von ${von} bis ${bis} <span class="delete" onclick="loescheHistorie('${eintrag.kind}','${eintrag.key}')">x</span></div>`;
                 });
                 elements.push(box);
             });
@@ -555,7 +590,7 @@
                 eintraege.forEach(eintrag => {
                     const von = formatTime(eintrag.ausgeliehen);
                     const bis = formatTime(eintrag.zurückgegeben);
-                    box.innerHTML += `<div class="entry">• **${eintrag.kind}**: von ${von} bis ${bis} <span class="delete" onclick="loescheHistorie('${eintrag.kind}','${eintrag.key}')">x</span></div>`;
+                    box.innerHTML += `<div class="entry">• <b>${eintrag.kind}</b>: von ${von} bis ${bis} <span class="delete" onclick="loescheHistorie('${eintrag.kind}','${eintrag.key}')">x</span></div>`;
                 });
                 elements.push(box);
             });
@@ -572,11 +607,10 @@
     };
 
     function ladeHistorie() {
-      // Setzt den Cache zurück und lädt die Daten neu bei Änderungen in Firebase
+      // Listener, der den Cache ungültig macht und neu lädt, wenn sich die Historie ändert
       onValue(ref1(db1, "historie"), async () => {
-          GESAMTE_HISTORIE_CACHE = null; // Cache ungültig machen
+          GESAMTE_HISTORIE_CACHE = null; 
           await ladeHistorieDaten();
-          // Nach dem Laden die aktuelle Ansicht neu rendern
           switchHistoryMode(HISTORY_MODE);
       });
     }
@@ -589,8 +623,8 @@
     
 
     window.addEventListener("DOMContentLoaded",()=>{
+      // Firebase-Aktionen (keine Notwendigkeit, sie zu warten, da die onValue-Listener sie aktualisieren)
       ladeAktuelleAusleihen();
-      // Wichtig: ladeKinderKonten muss zuerst kommen
       ladeKinderKonten();
       document.getElementById('durchfuehren-btn')?.addEventListener('click', async ()=>{ await durchfuehren(); });
       document.getElementById('alle-gruen-btn')?.addEventListener('click', alleAufGruen);
@@ -610,29 +644,37 @@
       <h3 id="modal-title">Konto: [Name]</h3>
       <div id="modal-status" class="kontostatus">Status: Aktiv</div>
 
-      <div class="form-group">
-        <label for="modal-link-input">Checkout-Link</label>
-        <input id="modal-link-input" type="text" placeholder="Checkout-Link" />
+      <div id="modal-locked-info" class="modal-locked-info" style="display:none">
+        <p><strong>Dieses Konto ist gesperrt.</strong></p>
+        <p>Grund: <span id="locked-reason-text">Nicht angegeben.</span></p>
       </div>
-      <div class="form-group">
-        <label for="modal-code-input">Sicherheitscode (PIN)</label>
-        <input id="modal-code-input" type="text" placeholder="3-stelliger Code" maxlength="3" />
-      </div>
-
-      <button onclick="saveLinkCode(currentAccountName)" class="action-button full">Link & Code speichern</button>
       
-      <hr style="margin: 15px 0; border: none; border-top: 1px solid #eee;">
+      <div id="modal-edit-section">
+          <div class="form-group">
+            <label for="modal-link-input">Checkout-Link</label>
+            <input id="modal-link-input" type="text" placeholder="Checkout-Link" />
+          </div>
+          <div class="form-group">
+            <label for="modal-code-input">Sicherheitscode (PIN)</label>
+            <input id="modal-code-input" type="text" placeholder="3-stelliger Code" maxlength="3" />
+          </div>
 
-      <div class="form-group">
-        <label for="modal-sperr-grund" id="sperr-grund-label">Sperr-Grund</label>
-        <textarea id="modal-sperr-grund" placeholder="Grund für die Sperrung"></textarea>
+          <button onclick="saveLinkCode(currentAccountName)" class="action-button full">Link & Code speichern</button>
+          
+          <hr style="margin: 15px 0; border: none; border-top: 1px solid #eee;">
+
+          <div class="form-group">
+            <label for="modal-sperr-grund" id="sperr-grund-label">Grund für Sperrung (optional)</label>
+            <textarea id="modal-sperr-grund" placeholder="Grund für die Sperrung"></textarea>
+          </div>
       </div>
-      <button id="modal-sperr-btn" onclick="toggleLock(currentAccountName)" class="action-button"></button>
-
+      
       <div class="modal-actions">
-        <button class="secondary" onclick="closeModal()">Abbrechen</button>
-        <button id="modal-delete-btn" class="red" onclick="permanentDelete(currentAccountName)">Dauerhaft löschen</button>
+        <button id="modal-sperr-btn" class="action-button" onclick="toggleLock(currentAccountName)"></button>
+        <button id="modal-delete-btn" class="red">Dauerhaft löschen</button>
       </div>
+      
+      <button class="secondary full" onclick="closeModal()" style="margin-top: 10px;">Abbrechen</button>
     </div>
   </div>
 
