@@ -62,8 +62,9 @@
     .title{font-size:22px;font-weight:600;color:var(--primary-color);margin-left:auto}
 
     /* Modal Styles */
-    .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);display:none;justify-content:center;align-items:center;z-index:1000}
-    .modal-content{background:var(--card-background-color);padding:20px;border-radius:var(--border-radius);width:90%;max-width:400px;box-shadow:var(--box-shadow);z-index:1001}
+    /* Korrektur: Fixed position, um Verschiebung zu verhindern */
+    .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);display:none;justify-content:center;align-items:center;z-index:1000; overflow-y: auto;}
+    .modal-content{background:var(--card-background-color);padding:20px;border-radius:var(--border-radius);width:90%;max-width:400px;box-shadow:var(--box-shadow);z-index:1001; margin: 50px auto;}
     .modal-content h3{margin-top:0;font-size:20px}
     .form-group{margin-bottom:15px}
     .form-group label{display:block;margin-bottom:5px;font-weight:600;font-size:var(--font-size-small)}
@@ -340,6 +341,7 @@
     const sperrGrundInput = document.getElementById('modal-sperr-grund');
     const sperrButton = document.getElementById('modal-sperr-btn');
     const deleteButton = document.getElementById('modal-delete-btn');
+    const saveLinkCodeButton = document.getElementById('save-link-code-btn');
     const editSection = document.getElementById('modal-edit-section');
     const lockedInfoSection = document.getElementById('modal-locked-info');
     let currentAccountName = null;
@@ -369,11 +371,13 @@
           sperrButton.textContent = 'Konto entsperren';
           sperrButton.className = 'action-button green full';
           sperrButton.onclick = () => toggleLock(name);
+          deleteButton.style.display = 'none'; // Löschen in diesem Modus ausblenden
 
       } else {
           // Bearbeitungsmodus
           editSection.style.display = 'block';
           lockedInfoSection.style.display = 'none';
+          deleteButton.style.display = 'block';
 
           // Link & Code füllen
           linkInput.value = data.link || '';
@@ -386,29 +390,34 @@
           sperrButton.onclick = () => toggleLock(name);
       }
       
-      // Dauerhaft löschen Button (immer sichtbar, aber mit Bestätigung)
+      // Event Listener für Speichern/Löschen
+      saveLinkCodeButton.onclick = () => saveLinkCode(name);
       deleteButton.onclick = () => permanentDelete(name);
 
       modal.style.display = 'flex';
+      // Wichtig für Mobile: Eingabefelder im Bearbeitungsmodus fokussieren
+      if (!isLocked) linkInput.focus();
     };
 
-    // KORRIGIERTE Speichern-Funktion
+    // KORRIGIERTE Speichern-Funktion (Code-Änderung Fix)
     window.saveLinkCode = async (name) => {
         const link = linkInput.value.trim();
-        const code = codeInput.value.trim();
+        const code = codeInput.value.trim(); // Code muss hier korrekt erfasst werden
+
         if (!name) return;
-        // Speichert Link/Code in db1
-        await update(ref1(db1, `kinder/${name}`), { link: link || null, code });
+
+        // Sicherstellen, dass der Code auch wirklich gespeichert wird
+        await update(ref1(db1, `kinder/${name}`), { link: link || null, code: code });
         alert(`Link/Code für ${name} gespeichert.`);
         closeModal();
     };
 
     // KORRIGIERTE Sperr-Funktion
     window.toggleLock = async (name) => {
-        const snap = await get(ref1(db1, `kinder/${name}`));
+        const kindRef = ref1(db1, `kinder/${name}`);
+        const snap = await get(kindRef);
         const data = snap.val() || {};
         const isCurrentlyLocked = data.gesperrt === true;
-        const kindRef = ref1(db1, `kinder/${name}`);
 
         if (isCurrentlyLocked) {
             // Entsperren: Setze gesperrt und sperrGrund auf null
@@ -426,7 +435,6 @@
             await update(kindRef, { gesperrt: true, sperrGrund: grund });
             alert(`${name} wurde gesperrt. Grund: ${grund}`);
         }
-        // Schließt das Modal und löst das Neuladen der Kontenliste aus (onValue Listener)
         closeModal();
     };
 
@@ -659,7 +667,7 @@
             <input id="modal-code-input" type="text" placeholder="3-stelliger Code" maxlength="3" />
           </div>
 
-          <button onclick="saveLinkCode(currentAccountName)" class="action-button full">Link & Code speichern</button>
+          <button id="save-link-code-btn" class="action-button full">Link & Code speichern</button>
           
           <hr style="margin: 15px 0; border: none; border-top: 1px solid #eee;">
 
@@ -670,7 +678,7 @@
       </div>
       
       <div class="modal-actions">
-        <button id="modal-sperr-btn" class="action-button" onclick="toggleLock(currentAccountName)"></button>
+        <button id="modal-sperr-btn" class="action-button"></button>
         <button id="modal-delete-btn" class="red">Dauerhaft löschen</button>
       </div>
       
