@@ -14,7 +14,8 @@
     }
     body{font-family:'SF Pro Display',sans-serif;padding:15px;background:var(--background-color);color:var(--text-color);font-size:var(--font-size-medium);line-height:1.6}
     h2{font-size:18px;margin:0 0 15px;font-weight:600}
-    input[type="text"],input[type="number"]{padding:8px;border:1px solid #ddd;border-radius:8px;font-size:var(--font-size-small);width:100%;box-sizing:border-box}
+    input[type="text"],input[type="number"],textarea{padding:8px;border:1px solid #ddd;border-radius:8px;font-size:var(--font-size-small);width:100%;box-sizing:border-box}
+    textarea{resize:vertical;min-height:80px}
     button{padding:8px 14px;font-size:var(--font-size-small);background:var(--primary-color);color:#fff;border:none;border-radius:10px;cursor:pointer;transition:background-color .2s;font-weight:600;white-space:nowrap}
     button.secondary{background:#f0f0f0;color:#333;border:1px solid #ccc}
     button.secondary:hover{background:#e0e0e0}
@@ -39,12 +40,14 @@
     .action-button.white:hover{background:#f0f0f0}
     .action-button.green{background:#28a745}
     .action-button.green:hover{background:#218838}
+    .action-button.red{background:#ef4444}
+    .action-button.red:hover{background:#b91c1c}
     .callout{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:10px}
     .row{display:flex;gap:10px;flex-wrap:wrap}
     .row>*{flex:1 1 220px}
     select,input[type="datetime-local"]{padding:8px;border:1px solid #ddd;border-radius:8px;font-size:var(--font-size-small);width:100%;box-sizing:border-box}
 
-    /* Topbar mit Modusschalter links, Titel rechts */
+    /* Topbar */
     .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
     .mode-wrap{display:flex;align-items:center;gap:10px}
     .mode-cycle{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid #ccc;color:#111;border-radius:999px;padding:6px 10px}
@@ -52,12 +55,35 @@
     .dot-green{background:#16a34a}.dot-yellow{background:#f59e0b}.dot-red{background:#ef4444}
     .mode-text{font-weight:700;font-size:14px}
     .title{font-size:22px;font-weight:600;color:var(--primary-color);margin-left:auto}
+
+    /* Neu: Modal Styles */
+    .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);display:none;justify-content:center;align-items:center;z-index:1000}
+    .modal-content{background:var(--card-background-color);padding:20px;border-radius:var(--border-radius);width:90%;max-width:400px;box-shadow:var(--box-shadow);z-index:1001}
+    .modal-content h3{margin-top:0;font-size:20px}
+    .form-group{margin-bottom:15px}
+    .form-group label{display:block;margin-bottom:5px;font-weight:600;font-size:var(--font-size-small)}
+    .modal-actions{display:flex;justify-content:space-between;margin-top:20px;gap:10px}
+    .modal-actions button{flex:1 1 0}
+    .modal-actions button.full{flex:1 1 100%}
+    .modal-actions .red{background:#ef4444}
+    .modal-actions .red:hover{background:#b91c1c}
+    .modal-actions .secondary{background:#f0f0f0;color:#333}
+
+    /* Sperr-Anzeige */
+    .kontostatus{font-weight:600;margin-bottom:10px}
+    .kontostatus.gesperrt{color:#ef4444}
+    .kontostatus.aktiv{color:#28a745}
+    .konto-name.gesperrt{text-decoration:line-through;}
+
+    /* List Item Clickable */
+    .account-item{cursor:pointer; padding:10px; border-radius:8px;}
+    .account-item:hover{background:#f9f9f9}
   </style>
 
   <script type="module">
     /* Firebase Imports */
     import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-    import { getDatabase as getDB1, ref as ref1, set, onValue, remove, get, push } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+    import { getDatabase as getDB1, ref as ref1, set, onValue, remove, get, push, update } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
     import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
     import { getDatabase as getDB2, ref as ref2, get as get2, update as update2, onValue as onVal2, remove as remove2, set as set2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
     import { initializeApp as initApp3 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
@@ -134,7 +160,7 @@
       });
     });
 
-    /* ===== Rest deines bestehenden Admin-Codes (unverändert) ===== */
+    /* ===== Anpassungen Kontenverwaltung ===== */
 
     /* Farben und Mappings */
     const farben = ["⚪","🔴","🟡","🟢","⚫","🟣"];
@@ -155,6 +181,24 @@
         alert(`Aktives Ziel für ${name}\n\nZiel ${idx+1}: ${titel}\nFortschritt: ${v.progress||0}%`);
       }catch(e){ console.error(e); alert("Fehler beim Laden des Ziels."); }
     };
+
+    // NEUE FUNKTION: Ziel-Fortschritt anpassen
+    async function updateProgress(name, delta) {
+        const kidRef = ref2(db2, `kinder/${name}`);
+        const snap = await get2(kidRef);
+        if (!snap.exists()) return;
+        const kid = snap.val() || {};
+        if (kid.progress === undefined) {
+            alert("Dieses Konto unterstützt keinen Ziel-Fortschritt.");
+            return;
+        }
+        const currentProgress = kid.progress || 0;
+        const newProgress = clamp01(currentProgress + delta);
+        await update2(kidRef, { progress: newProgress });
+    }
+    window.increaseProgress = (name) => updateProgress(name, 5);
+    window.decreaseProgress = (name) => updateProgress(name, -5);
+    // ENDE NEUE FUNKTION
 
     async function rewardMilestonesAndMaybeComplete(name,kid,newProgress){
       let saldo=kid.punkte||0; let last=kid.lastRewardedMilestone??0;
@@ -219,29 +263,48 @@
 
     function ladeKinderKonten(){
       const bereich=document.getElementById("mauscity-konten-liste");
-      const eigeneKinder=new Set();
+      const eigeneKinder=new Map(); // Ändern zu Map, um Daten zwischenzuspeichern
       onValue(ref1(db1,"kinder"),(snapshot)=>{
-        eigeneKinder.clear(); snapshot.forEach(childSnap=>{ eigeneKinder.add(childSnap.key); });
+        eigeneKinder.clear(); snapshot.forEach(childSnap=>{ eigeneKinder.set(childSnap.key, childSnap.val() || {}); });
         onVal2(ref2(db2,"kinder"),(snapshot2)=>{
           bereich.innerHTML="";
           snapshot2.forEach(childSnap2=>{
-            const name=childSnap2.key; const data=childSnap2.val();
-            if(!eigeneKinder.has(name)) return;
-            const zeile=document.createElement("div"); zeile.className="flex";
+            const name=childSnap2.key; const data2=childSnap2.val(); // Daten aus db2 (Punkte, Farbe, Progress)
+            const data1 = eigeneKinder.get(name); // Daten aus db1 (Link, Code, gesperrt)
+
+            if(!data1) return; // Nur Konten anzeigen, die auch in db1 existieren
+
+            const isLocked = data1.gesperrt === true;
+            
+            const zeile=document.createElement("div"); zeile.className="flex account-item";
+            // Klick auf die Zeile öffnet das Verwaltungs-Modal
+            zeile.onclick = () => openAccountManager(name, { ...data1, ...data2 }); 
+
             const kontoInfo=document.createElement("div");
-            kontoInfo.innerHTML=`<span style="color:${farbeToColor(data.farbe)};font-weight:bold;">${name}</span>
-              (<span style="color:${farbeToColor(data.farbe)};font-weight:bold;">${data.punkte||0}</span>)
-              <button class="small-button" title="Aktives Ziel zeigen" onclick="zeigeAktivesZiel('${name}')">Z</button>`;
-            const punkteButtons=document.createElement("div"); punkteButtons.className="flex-buttons";
-            const plus=document.createElement("button"); plus.textContent="+"; plus.onclick=()=>update2(ref2(db2,`kinder/${name}`),{punkte:(data.punkte||0)+1});
-            const minus=document.createElement("button"); minus.textContent="–"; minus.onclick=()=>update2(ref2(db2,`kinder/${name}`),{punkte:(data.punkte||0)-1});
-            punkteButtons.appendChild(plus); punkteButtons.appendChild(minus);
-            zeile.appendChild(kontoInfo); zeile.appendChild(punkteButtons);
-            if(!name.includes("~")){
+            // Durchgestrichener Name bei Sperrung
+            kontoInfo.innerHTML=`<span class="konto-name ${isLocked ? 'gesperrt' : ''}" style="color:${farbeToColor(data2.farbe)};font-weight:bold;">${name}</span>
+              <button class="small-button" title="Aktives Ziel zeigen" onclick="event.stopPropagation(); zeigeAktivesZiel('${name}')">Z</button>`;
+              
+            const progressButtons=document.createElement("div"); progressButtons.className="flex-buttons";
+
+            if(data2.progress!==undefined){
+              const plus5=document.createElement("button"); plus5.textContent="+5 %"; 
+              plus5.onclick=(e)=>{ e.stopPropagation(); increaseProgress(name); }; 
+              const minus5=document.createElement("button"); minus5.textContent="–5 %"; 
+              minus5.onclick=(e)=>{ e.stopPropagation(); decreaseProgress(name); };
+              progressButtons.appendChild(plus5); progressButtons.appendChild(minus5);
+            } else {
+              progressButtons.innerHTML="—";
+            }
+            
+            zeile.appendChild(kontoInfo); 
+            zeile.appendChild(progressButtons); 
+            
+            if(data2.farbe!==undefined){
               const farbButtons=document.createElement("div"); farbButtons.className="flex-buttons";
               ["⚪","🔴","🟡","🟢","⚫","🟣"].forEach(f=>{
                 const btn=document.createElement("button"); btn.textContent=f; btn.className="color-button"; btn.title="Farbe setzen";
-                btn.onclick=()=>update2(ref2(db2,`kinder/${name}`),{farbe:f}); farbButtons.appendChild(btn);
+                btn.onclick=(e)=>{ e.stopPropagation(); update2(ref2(db2,`kinder/${name}`),{farbe:f}); }; farbButtons.appendChild(btn);
               });
               zeile.appendChild(farbButtons);
             }
@@ -253,60 +316,82 @@
     async function alleAufGruen(){ const snapshot=await get2(ref2(db2,"kinder")); snapshot.forEach(childSnap=>{ const name=childSnap.key; const data=childSnap.val(); if(data.farbe!==undefined){ update2(ref2(db2,`kinder/${name}`),{farbe:"🟢"}); } }); }
     async function alleAufWeiss(){ const snapshot=await get2(ref2(db2,"kinder")); snapshot.forEach(childSnap=>{ const name=childSnap.key; const data=childSnap.val(); if(data.farbe!==undefined){ update2(ref2(db2,`kinder/${name}`),{farbe:"⚪"}); } }); }
 
-    function ladeShopBestellungen(){
-      const pendingOrdersList=document.getElementById('pending-orders-list');
-      const ordersRef=ref3(db3,'bestellungen');
-      onVal3(ordersRef,(snapshot)=>{
-        pendingOrdersList.innerHTML=''; const orders=snapshot.val();
-        if(orders){ Object.keys(orders).forEach(key=>{
-          const order=orders[key];
-          if(order.status==='wird geliefert'){
-            const li=document.createElement('div'); li.className='request-item';
-            li.innerHTML=`<div class="request-info"><strong>${order.name}</strong> hat "${order.artikel}" bestellt.<br>
-              <small>Kaufpreis: ${order.gezahlterPreis} Mausdollar, Datum: ${new Date(order.kaufdatum).toLocaleDateString()}</small></div>
-              <div class="flex-buttons">
-                <button class="confirm-delivery-btn" data-id="${key}" data-user-type="${order.userType}" data-user-name="${order.name}" data-item-name="${order.artikel}">✔️</button>
-                <button class="reject-purchase-btn" data-id="${key}" data-user-type="${order.userType}" data-user-name="${order.name}" data-price="${order.gezahlterPreis}">❌</button>
-              </div>`;
-            pendingOrdersList.appendChild(li);
-          }
-        });}
-      });
-      pendingOrdersList?.addEventListener('click', async (e)=>{
-        const orderId=e.target.dataset.id; const userType=e.target.dataset.userType; const userName=e.target.dataset.userName; const price=parseFloat(e.target.dataset.price);
-        if(e.target.classList.contains('confirm-delivery-btn')){
-          const itemName=e.target.dataset.itemName; update3(ref3(db3,`bestellungen/${orderId}`),{status:'Produkt geliefert'});
-          alert(`Bestellung von ${userName} (${itemName}) als geliefert markiert.`);
-        } else if(e.target.classList.contains('reject-purchase-btn')){
-          const userRef=ref3(db3,`${userType}/${userName}`); const userSnap=await get3(userRef); const user=userSnap.val();
-          if(user){ const newPoints=(user.punkte||0)+price; update3(ref3(db3,`${userType}/${userName}`),{punkte:newPoints}); }
-          update3(ref3(db3,`bestellungen/${orderId}`),{status:'Kauf abgelehnt'});
-          alert(`Kauf von ${userName} abgelehnt. ${price} Mausdollar wurden erstattet.`);
-        }
-      });
-    }
+    // Modal Funktionen
 
-    function ladeMausdollarAnfragen(){
-      const container=document.getElementById("mausdollar-anfragen-liste");
-      onValue(ref1(db1,"anfragen"),(snapshot)=>{
-        container.innerHTML="";
-        snapshot.forEach(childSnap=>{
-          const id=childSnap.key; const data=childSnap.val();
-          const zeile=document.createElement("div"); zeile.className="request-item";
-          zeile.innerHTML=`<div class="request-info">${data.name} möchte ${data.betrag} Punkt(e) wegen **${data.grund}**</div>
-            <div class="flex-buttons">
-              <button onclick="bestaetigeAnfrage('${id}','${data.name}',${data.betrag})">✔️</button>
-              <button onclick="lehneAnfrage('${id}')">❌</button>
-            </div>`;
-          container.appendChild(zeile);
-        });
-      });
-    }
-    window.bestaetigeAnfrage = async function(id,name,betrag){
-      const kindRef=ref2(db2,`kinder/${name}`); const kindSnap=await get2(kindRef); const val=kindSnap.val()||{punkte:0,farbe:"⚪"};
-      await update2(kindRef,{punkte:val.punkte+betrag}); remove(ref1(db1,"anfragen/"+id));
+    const modal = document.getElementById('account-manager-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalStatus = document.getElementById('modal-status');
+    const linkInput = document.getElementById('modal-link-input');
+    const codeInput = document.getElementById('modal-code-input');
+    const sperrGrundInput = document.getElementById('modal-sperr-grund');
+    const sperrButton = document.getElementById('modal-sperr-btn');
+    const deleteButton = document.getElementById('modal-delete-btn');
+    let currentAccountName = null;
+
+    function closeModal() { modal.style.display = 'none'; }
+    window.closeModal = closeModal; // Global verfügbar machen
+
+    window.openAccountManager = (name, data) => {
+      currentAccountName = name;
+      modalTitle.textContent = `Konto: ${name}`;
+      
+      const isLocked = data.gesperrt === true;
+      modalStatus.textContent = isLocked ? `Status: GESPERRT (Grund: ${data.sperrGrund || 'Nicht angegeben'})` : 'Status: Aktiv';
+      modalStatus.className = 'kontostatus ' + (isLocked ? 'gesperrt' : 'aktiv');
+
+      linkInput.value = data.link || '';
+      codeInput.value = data.code || '';
+      sperrGrundInput.value = data.sperrGrund || '';
+
+      sperrGrundInput.style.display = isLocked ? 'none' : 'block';
+      sperrButton.textContent = isLocked ? 'Entsperren' : 'Sperren';
+      sperrButton.className = isLocked ? 'action-button green' : 'action-button red';
+
+      modal.style.display = 'flex';
     };
-    window.lehneAnfrage = function(id){ remove(ref1(db1,"anfragen/"+id)); };
+
+    window.saveLinkCode = async (name) => {
+        const link = linkInput.value.trim();
+        const code = codeInput.value.trim();
+        if (!name) return;
+        await update(ref1(db1, `kinder/${name}`), { link: link || null, code });
+        alert(`Link/Code für ${name} gespeichert.`);
+        closeModal();
+    };
+
+    window.toggleLock = async (name) => {
+        const snap = await get(ref1(db1, `kinder/${name}`));
+        const data = snap.val() || {};
+        const isCurrentlyLocked = data.gesperrt === true;
+
+        if (isCurrentlyLocked) {
+            // Entsperren
+            await update(ref1(db1, `kinder/${name}`), { gesperrt: null, sperrGrund: null });
+            alert(`${name} wurde entsperrt.`);
+        } else {
+            // Sperren
+            const grund = sperrGrundInput.value.trim();
+            if (!grund) {
+                alert("Bitte einen Grund für die Sperrung angeben.");
+                sperrGrundInput.focus();
+                return;
+            }
+            await update(ref1(db1, `kinder/${name}`), { gesperrt: true, sperrGrund: grund });
+            alert(`${name} wurde gesperrt. Grund: ${grund}`);
+        }
+        closeModal();
+    };
+
+    window.permanentDelete = (name) => {
+        if (confirm(`Bist du WIRKLICH SICHER, das gesamte Konto von ${name} dauerhaft zu löschen? Alle Punkte, Ziele und Zugänge werden gelöscht.`)) {
+            remove2(ref2(db2,"kinder/"+name)).catch(err=>console.error("Fehler MausCity:",err));
+            remove(ref1(db1,"kinder/"+name)).catch(err=>console.error("Fehler AdminDB:",err));
+            alert(`Konto von ${name} wurde dauerhaft gelöscht.`);
+            closeModal();
+        }
+    };
+    
+    // Alte/andere Funktionen
 
     function ladeAktuelleAusleihen(){
       const ausleihenListe=document.getElementById("ausleihen-liste");
@@ -335,28 +420,31 @@
         let link=document.getElementById("checkout-link").value.trim();
         const code=document.getElementById("security-code").value.trim();
         const istGruppenkonto=document.getElementById("ist-gruppen")?.checked;
-        const istAuslandskonto=document.getElementById("ist-ausland")?.checked;
+        const istGastkonto=document.getElementById("ist-gast")?.checked;
         if(!name||!code) return alert("Name und Sicherheitscode sind erforderlich.");
         if(link && !link.startsWith("http")) link="https://"+link;
-        set(ref1(db1,`kinder/${name}`),{link:link||null,code});
-        if(istGruppenkonto){ set2(ref2(db2,`kinder/${name}`),{punkte:0,farbe:"⚪"}); }
-        else if(istAuslandskonto){ set2(ref2(db2,`kinder/${name}`),{punkte:0}); }
+        // Beim Hinzufügen: gesperrt und sperrGrund sind noch nicht gesetzt
+        set(ref1(db1,`kinder/${name}`),{link:link||null,code, gesperrt: null, sperrGrund: null}); 
+        if(istGruppenkonto){ set2(ref2(db2,`kinder/${name}`),{punkte:0,farbe:"⚪", progress: 0}); }
+        else if(istGastkonto){ set2(ref2(db2,`kinder/${name}`),{punkte:0}); }
         document.getElementById("kind-name").value=""; document.getElementById("checkout-link").value=""; document.getElementById("security-code").value="";
         if(document.getElementById("ist-gruppen")) document.getElementById("ist-gruppen").checked=false;
-        if(document.getElementById("ist-ausland")) document.getElementById("ist-ausland").checked=false;
+        if(document.getElementById("ist-gast")) document.getElementById("ist-gast").checked=false; 
       };
       const kinderListe=document.getElementById("kinder-liste");
       onValue(ref1(db1,"kinder"),(snapshot)=>{
         kinderListe.innerHTML="";
         snapshot.forEach(childSnap=>{
           const name=childSnap.key; const data=childSnap.val();
+          const isLocked = data.gesperrt === true;
           const div=document.createElement("div");
-          div.innerHTML=`${name} – Link: ${data.link||"kein Link"} – Code: ${data.code||"kein Code"} <span class="delete" onclick="loescheKind('${name}')">x</span>`;
+          // Lösch-Link in dieser Liste gelöscht, da die vollständige Löschung im Modal ist
+          div.innerHTML=`<span class="konto-name ${isLocked ? 'gesperrt' : ''}">${name}</span> – Link: ${data.link||"kein Link"} – Code: ${data.code||"kein Code"}`;
           kinderListe.appendChild(div);
         });
       });
     }
-    window.loescheKind = function(name){ if(confirm(`Soll ${name} wirklich gelöscht werden?`)){ remove(ref1(db1,"kinder/"+name)); } };
+    // window.loescheKind Funktion wurde entfernt, da die schnelle Löschung aus der Liste nicht mehr gewünscht ist
 
     function ladeSpielzeugeHinzufuegen(){
       const addSpielzeugBtn=document.getElementById("add-spielzeug-btn");
@@ -386,7 +474,7 @@
         historieListe.innerHTML=""; const alleEintraege={};
         snapshot.forEach(childSnap=>{
           const kind=childSnap.key; const eintraege=childSnap.val();
-          for(const key in eintraege){ const eintrag=eintraege[key]; const nummer=eitrag.nummer;
+          for(const key in eintraege){ const eintrag=eintraege[key]; const nummer=eintrag.nummer;
             if(!alleEintraege[nummer]) alleEintraege[nummer]=[]; alleEintraege[nummer].push({...eintrag,kind,key});
           }
         });
@@ -409,21 +497,9 @@
 
     function ladeKontoLoeschen(){
       const liste=document.getElementById("konto-loeschen-liste");
-      onVal2(ref2(db2,"kinder"),snapshot=>{
-        liste.innerHTML="";
-        snapshot.forEach(child=>{
-          const name=child.key; const div=document.createElement("div");
-          div.innerHTML=`${name} <span class="delete" onclick="loescheKonto('${name}')">x</span>`;
-          liste.appendChild(div);
-        });
-      });
+      // Diese Sektion wird entfernt, da die Funktion nun im Modal ist
+      if (liste) liste.parentElement.style.display = 'none';
     }
-    window.loescheKonto=function(name){
-      if(confirm(`Konto von ${name} wirklich löschen?`)){
-        remove2(ref2(db2,"kinder/"+name)).catch(err=>console.error("Fehler MausCity:",err));
-        remove(ref1(db1,"kinder/"+name)).catch(err=>console.error("Fehler AdminDB:",err));
-      }
-    };
 
     function ladeKurznachrichten(){
       const addBtn=document.getElementById("add-notice-btn");
@@ -464,24 +540,49 @@
     window.loescheNotice=function(id){ if(confirm("Nachricht wirklich löschen?")){ remove(ref1(db1,"kurznachrichten/"+id)); } };
 
     window.addEventListener("DOMContentLoaded",()=>{
-      // Topbar init ist oben
-      // Shop, Anfragen, Ausleihen
-      ladeShopBestellungen(); ladeMausdollarAnfragen(); ladeAktuelleAusleihen();
-      // MausCity Konten + Buttons
+      ladeAktuelleAusleihen();
       ladeKinderKonten();
       document.getElementById('durchfuehren-btn')?.addEventListener('click', async ()=>{ await durchfuehren(); });
       document.getElementById('alle-gruen-btn')?.addEventListener('click', alleAufGruen);
       document.getElementById('alle-weiss-btn')?.addEventListener('click', alleAufWeiss);
-      // Abschlüsse
       renderAbschluesse();
-      // Kinder/Spielzeug, Historie, Konto löschen
-      ladeKinderHinzufuegen(); ladeSpielzeugeHinzufuegen(); ladeHistorie(); ladeKontoLoeschen();
-      // Kurznachrichten
+      ladeKinderHinzufuegen(); ladeSpielzeugeHinzufuegen(); ladeHistorie(); ladeKontoLoeschen(); // ladeKontoLoeschen wird die Sektion verstecken
       ladeKurznachrichten();
     });
   </script>
 </head>
 <body>
+  <div id="account-manager-modal" class="modal-overlay" onclick="if(event.target === this) closeModal()">
+    <div class="modal-content">
+      <h3 id="modal-title">Konto: [Name]</h3>
+      <div id="modal-status" class="kontostatus">Status: Aktiv</div>
+
+      <div class="form-group">
+        <label for="modal-link-input">Checkout-Link</label>
+        <input id="modal-link-input" type="text" placeholder="Checkout-Link" />
+      </div>
+      <div class="form-group">
+        <label for="modal-code-input">Sicherheitscode (PIN)</label>
+        <input id="modal-code-input" type="text" placeholder="3-stelliger Code" maxlength="3" />
+      </div>
+
+      <button onclick="saveLinkCode(currentAccountName)" class="action-button full">Link & Code speichern</button>
+      
+      <hr style="margin: 15px 0; border: none; border-top: 1px solid #eee;">
+
+      <div class="form-group">
+        <label for="modal-sperr-grund" id="sperr-grund-label">Sperr-Grund (falls gesperrt wird)</label>
+        <textarea id="modal-sperr-grund" placeholder="Grund für die Sperrung"></textarea>
+      </div>
+      <button id="modal-sperr-btn" onclick="toggleLock(currentAccountName)" class="action-button"></button>
+
+      <div class="modal-actions">
+        <button class="secondary" onclick="closeModal()">Abbrechen</button>
+        <button id="modal-delete-btn" class="red" onclick="permanentDelete(currentAccountName)">Dauerhaft löschen</button>
+      </div>
+    </div>
+  </div>
+
   <div class="topbar">
     <div class="mode-wrap">
       <button id="mode-cycle" class="mode-cycle" title="Modus wechseln">
@@ -490,21 +591,6 @@
       </button>
     </div>
     <div class="title">Adminbereich</div>
-  </div>
-
-  <div class="section">
-    <div class="shop-admin-header">
-      <h2>Shop Bestellungen</h2>
-      <a href="https://frederickoeller1207.github.io/Mousecity-Store/admin" target="_blank">
-        <button class="secondary">Zur Shop Administration</button>
-      </a>
-    </div>
-    <div class="liste" id="pending-orders-list"></div>
-  </div>
-
-  <div class="section">
-    <h2>Mausdollar Anfragen</h2>
-    <div class="liste" id="mausdollar-anfragen-liste"></div>
   </div>
 
   <div class="section">
@@ -518,8 +604,8 @@
   </div>
 
   <div class="section">
-    <div class="shop-admin-header">
-      <h2>MausCity Konten</h2>
+    <div class="shop-admin-header"> 
+      <h2>Konten (Klicken zur Verwaltung)</h2>
       <div class="action-buttons">
         <button id="durchfuehren-btn" class="action-button execute" title="Farben → Ziel-Fortschritt anwenden">✔️</button>
         <button id="alle-gruen-btn" class="action-button green" title="Alle auf Grün setzen">Alle</button>
@@ -556,7 +642,7 @@
     </div>
     <div class="checkboxes">
       <label><input type="checkbox" id="ist-gruppen"> Gruppenkonto hinzufügen</label>
-      <label><input type="checkbox" id="ist-ausland"> Auslandskonto hinzufügen</label>
+      <label><input type="checkbox" id="ist-gast"> Gastkonto hinzufügen</label>
     </div>
     <button id="add-kind-btn">Hinzufügen</button>
     <div class="liste" id="kinder-liste"></div>
@@ -577,9 +663,5 @@
     <div class="liste" id="historie-liste"></div>
   </div>
   
-  <div class="section">
-    <h2>Konto löschen</h2>
-    <div class="liste" id="konto-loeschen-liste"></div>
-  </div>
-</body>
+  </body>
 </html>
