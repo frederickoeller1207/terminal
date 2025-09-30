@@ -11,8 +11,12 @@
       --background-color:#f4f4f4; --card-background-color:#fff;
       --text-color:#333; --border-radius:12px; --box-shadow:0 4px 10px rgba(0,0,0,.08);
       --font-size-small:14px; --font-size-medium:16px;
+      --page-width: 480px; /* Neue Max-Breite */
     }
-    body{font-family:'SF Pro Display',sans-serif;padding:15px;background:var(--background-color);color:var(--text-color);font-size:var(--font-size-medium);line-height:1.6}
+    /* Mobile-Optimierung: Zentrierung und Max-Breite */
+    body{font-family:'SF Pro Display',sans-serif;padding:15px 12px;background:var(--background-color);color:var(--text-color);font-size:var(--font-size-medium);line-height:1.6; display: flex; flex-direction: column; align-items: center;}
+    .page-wrap { width: 100%; max-width: var(--page-width); } /* Wrapper für die Inhalte */
+    
     h2{font-size:18px;margin:0 0 15px;font-weight:600}
     input[type="text"],input[type="number"],textarea{padding:8px;border:1px solid #ddd;border-radius:8px;font-size:var(--font-size-small);width:100%;box-sizing:border-box}
     textarea{resize:vertical;min-height:80px}
@@ -20,7 +24,7 @@
     button.secondary{background:#f0f0f0;color:#333;border:1px solid #ccc}
     button.secondary:hover{background:#e0e0e0}
     button:hover{background:var(--primary-hover-color)}
-    .section{background:var(--card-background-color);padding:15px;margin-bottom:20px;border-radius:var(--border-radius);box-shadow:var(--box-shadow)}
+    .section{background:var(--card-background-color);padding:15px;margin-bottom:20px;border-radius:var(--border-radius);box-shadow:var(--box-shadow); width: 100%;}
     .liste{margin-top:15px;padding-top:15px;border-top:1px solid #eee}
     .liste>div{padding:10px 0;border-bottom:1px solid #f9f9f9;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
     .liste>div:last-child{border-bottom:none}
@@ -44,11 +48,12 @@
     .action-button.red:hover{background:#b91c1c}
     .callout{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:10px}
     .row{display:flex;gap:10px;flex-wrap:wrap}
-    .row>*{flex:1 1 220px}
+    .row>*{flex:1 1 100%} /* Anpassung für Mobile */
+    @media (min-width: 400px) { .row>*{flex:1 1 220px} } /* Zurück auf 2 Spalten, wenn genug Platz */
     select,input[type="datetime-local"]{padding:8px;border:1px solid #ddd;border-radius:8px;font-size:var(--font-size-small);width:100%;box-sizing:border-box}
 
     /* Topbar */
-    .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px; width: 100%;}
     .mode-wrap{display:flex;align-items:center;gap:10px}
     .mode-cycle{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid #ccc;color:#111;border-radius:999px;padding:6px 10px}
     .mode-dot{width:12px;height:12px;border-radius:50%}
@@ -56,7 +61,7 @@
     .mode-text{font-weight:700;font-size:14px}
     .title{font-size:22px;font-weight:600;color:var(--primary-color);margin-left:auto}
 
-    /* Neu: Modal Styles */
+    /* Modal Styles */
     .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);display:none;justify-content:center;align-items:center;z-index:1000}
     .modal-content{background:var(--card-background-color);padding:20px;border-radius:var(--border-radius);width:90%;max-width:400px;box-shadow:var(--box-shadow);z-index:1001}
     .modal-content h3{margin-top:0;font-size:20px}
@@ -78,6 +83,13 @@
     /* List Item Clickable */
     .account-item{cursor:pointer; padding:10px; border-radius:8px;}
     .account-item:hover{background:#f9f9f9}
+    
+    /* Historie Tabs */
+    .history-tabs{display:flex;margin-bottom:10px;gap:5px;}
+    .history-tabs button{padding:6px 10px; font-size:14px; background:#f0f0f0; color:#333; border:1px solid #ccc; border-radius:8px;}
+    .history-tabs button.active{background:var(--primary-color); color:#fff; border-color:var(--primary-color);}
+    .history-detail-list h4{margin:5px 0 8px; font-size:16px; font-weight:600;}
+    .history-detail-list .entry{font-size:13px; margin-bottom: 5px; padding-left: 10px; border-left: 2px solid #ccc; white-space: pre-wrap;}
   </style>
 
   <script type="module">
@@ -182,7 +194,6 @@
       }catch(e){ console.error(e); alert("Fehler beim Laden des Ziels."); }
     };
 
-    // NEUE FUNKTION: Ziel-Fortschritt anpassen
     async function updateProgress(name, delta) {
         const kidRef = ref2(db2, `kinder/${name}`);
         const snap = await get2(kidRef);
@@ -198,7 +209,6 @@
     }
     window.increaseProgress = (name) => updateProgress(name, 5);
     window.decreaseProgress = (name) => updateProgress(name, -5);
-    // ENDE NEUE FUNKTION
 
     async function rewardMilestonesAndMaybeComplete(name,kid,newProgress){
       let saldo=kid.punkte||0; let last=kid.lastRewardedMilestone??0;
@@ -263,25 +273,23 @@
 
     function ladeKinderKonten(){
       const bereich=document.getElementById("mauscity-konten-liste");
-      const eigeneKinder=new Map(); // Ändern zu Map, um Daten zwischenzuspeichern
+      const eigeneKinder=new Map();
       onValue(ref1(db1,"kinder"),(snapshot)=>{
         eigeneKinder.clear(); snapshot.forEach(childSnap=>{ eigeneKinder.set(childSnap.key, childSnap.val() || {}); });
         onVal2(ref2(db2,"kinder"),(snapshot2)=>{
           bereich.innerHTML="";
           snapshot2.forEach(childSnap2=>{
-            const name=childSnap2.key; const data2=childSnap2.val(); // Daten aus db2 (Punkte, Farbe, Progress)
-            const data1 = eigeneKinder.get(name); // Daten aus db1 (Link, Code, gesperrt)
+            const name=childSnap2.key; const data2=childSnap2.val();
+            const data1 = eigeneKinder.get(name);
 
-            if(!data1) return; // Nur Konten anzeigen, die auch in db1 existieren
+            if(!data1) return;
 
             const isLocked = data1.gesperrt === true;
             
             const zeile=document.createElement("div"); zeile.className="flex account-item";
-            // Klick auf die Zeile öffnet das Verwaltungs-Modal
             zeile.onclick = () => openAccountManager(name, { ...data1, ...data2 }); 
 
             const kontoInfo=document.createElement("div");
-            // Durchgestrichener Name bei Sperrung
             kontoInfo.innerHTML=`<span class="konto-name ${isLocked ? 'gesperrt' : ''}" style="color:${farbeToColor(data2.farbe)};font-weight:bold;">${name}</span>
               <button class="small-button" title="Aktives Ziel zeigen" onclick="event.stopPropagation(); zeigeAktivesZiel('${name}')">Z</button>`;
               
@@ -329,7 +337,7 @@
     let currentAccountName = null;
 
     function closeModal() { modal.style.display = 'none'; }
-    window.closeModal = closeModal; // Global verfügbar machen
+    window.closeModal = closeModal;
 
     window.openAccountManager = (name, data) => {
       currentAccountName = name;
@@ -343,9 +351,12 @@
       codeInput.value = data.code || '';
       sperrGrundInput.value = data.sperrGrund || '';
 
-      sperrGrundInput.style.display = isLocked ? 'none' : 'block';
+      // Grund anzeigen, wenn gesperrt oder wenn gesperrt werden soll
+      sperrGrundInput.parentElement.style.display = isLocked ? 'block' : 'block';
+      sperrGrundInput.placeholder = isLocked ? 'Aktueller Sperr-Grund' : 'Grund für die Sperrung angeben';
+
       sperrButton.textContent = isLocked ? 'Entsperren' : 'Sperren';
-      sperrButton.className = isLocked ? 'action-button green' : 'action-button red';
+      sperrButton.className = 'action-button ' + (isLocked ? 'green' : 'red');
 
       modal.style.display = 'flex';
     };
@@ -354,6 +365,7 @@
         const link = linkInput.value.trim();
         const code = codeInput.value.trim();
         if (!name) return;
+        // Wichtig: 'update' verwenden, um nur die Link/Code-Felder zu ändern
         await update(ref1(db1, `kinder/${name}`), { link: link || null, code });
         alert(`Link/Code für ${name} gespeichert.`);
         closeModal();
@@ -376,6 +388,7 @@
                 sperrGrundInput.focus();
                 return;
             }
+            // Bugfix: 'update' verwenden, um nur die Sperr-Felder zu setzen
             await update(ref1(db1, `kinder/${name}`), { gesperrt: true, sperrGrund: grund });
             alert(`${name} wurde gesperrt. Grund: ${grund}`);
         }
@@ -411,6 +424,8 @@
       const daten=snapshot.val(); const historieRef=ref1(db1,"historie/"+name);
       const neueHistorie={spielzeug:daten.spielzeug,nummer:daten.nummer,ausgeliehen:daten.zeit,zurückgegeben:new Date().toISOString()};
       const neueRef=push(historieRef); await set(neueRef,neueHistorie); await remove(ausleiheRef);
+      // Nach Rückgabe Historie neu laden
+      ladeHistorie();
     };
 
     function ladeKinderHinzufuegen(){
@@ -423,29 +438,16 @@
         const istGastkonto=document.getElementById("ist-gast")?.checked;
         if(!name||!code) return alert("Name und Sicherheitscode sind erforderlich.");
         if(link && !link.startsWith("http")) link="https://"+link;
-        // Beim Hinzufügen: gesperrt und sperrGrund sind noch nicht gesetzt
-        set(ref1(db1,`kinder/${name}`),{link:link||null,code, gesperrt: null, sperrGrund: null}); 
+        // Wichtig: 'set' verwenden, um das neue Kind zu erstellen, inkl. Sperr-Initialisierung
+        set(ref1(db1,`kinder/${name}`),{link:link || null, code, gesperrt: null, sperrGrund: null});
         if(istGruppenkonto){ set2(ref2(db2,`kinder/${name}`),{punkte:0,farbe:"⚪", progress: 0}); }
         else if(istGastkonto){ set2(ref2(db2,`kinder/${name}`),{punkte:0}); }
         document.getElementById("kind-name").value=""; document.getElementById("checkout-link").value=""; document.getElementById("security-code").value="";
         if(document.getElementById("ist-gruppen")) document.getElementById("ist-gruppen").checked=false;
         if(document.getElementById("ist-gast")) document.getElementById("ist-gast").checked=false; 
       };
-      const kinderListe=document.getElementById("kinder-liste");
-      onValue(ref1(db1,"kinder"),(snapshot)=>{
-        kinderListe.innerHTML="";
-        snapshot.forEach(childSnap=>{
-          const name=childSnap.key; const data=childSnap.val();
-          const isLocked = data.gesperrt === true;
-          const div=document.createElement("div");
-          // Lösch-Link in dieser Liste gelöscht, da die vollständige Löschung im Modal ist
-          div.innerHTML=`<span class="konto-name ${isLocked ? 'gesperrt' : ''}">${name}</span> – Link: ${data.link||"kein Link"} – Code: ${data.code||"kein Code"}`;
-          kinderListe.appendChild(div);
-        });
-      });
     }
-    // window.loescheKind Funktion wurde entfernt, da die schnelle Löschung aus der Liste nicht mehr gewünscht ist
-
+    
     function ladeSpielzeugeHinzufuegen(){
       const addSpielzeugBtn=document.getElementById("add-spielzeug-btn");
       addSpielzeugBtn.onclick=()=>{
@@ -468,76 +470,123 @@
     }
     window.loescheSpielzeug = function(nummer){ if(confirm(`Soll Spielzeug ${nummer} wirklich gelöscht werden?`)){ remove(ref1(db1,"spielzeuge/"+nummer)); } };
 
-    function ladeHistorie(){
-      const historieListe=document.getElementById("historie-liste");
-      onValue(ref1(db1,"historie"),async (snapshot)=>{
-        historieListe.innerHTML=""; const alleEintraege={};
-        snapshot.forEach(childSnap=>{
-          const kind=childSnap.key; const eintraege=childSnap.val();
-          for(const key in eintraege){ const eintrag=eintraege[key]; const nummer=eintrag.nummer;
-            if(!alleEintraege[nummer]) alleEintraege[nummer]=[]; alleEintraege[nummer].push({...eintrag,kind,key});
-          }
-        });
-        const sortierteNummern=Object.keys(alleEintraege).sort((a,b)=>Number(a)-Number(b));
-        for(const nummer of sortierteNummern){
-          const box=document.createElement("div"); const nameRef=ref1(db1,"spielzeuge/"+nummer); const nameSnap=await get(nameRef);
-          const name=nameSnap.exists()? nameSnap.val():"Unbekannt"; box.innerHTML=`<h3>${nummer}: ${name}</h3>`;
-          alleEintraege[nummer].sort((a,b)=>new Date(b.zurückgegeben)-new Date(a.zurückgegeben));
-          for(const eintrag of alleEintraege[nummer]){
-            function formatZeit(datum){ const date=new Date(datum); const tag=String(date.getDate()).padStart(2,'0'); const monat=String(date.getMonth()+1).padStart(2,'0'); const stunde=String(date.getHours()).padStart(2,'0'); const minute=String(date.getMinutes()).padStart(2,'0'); return `${tag}.${monat} – ${stunde}:${minute}`; }
-            const aus=formatZeit(eintrag.ausgeliehen); const zr=formatZeit(eintrag.zurückgegeben);
-            const zeile=document.createElement("div"); zeile.innerHTML=`• ${eintrag.kind}: von ${aus} bis ${zr} <span class="delete" onclick="loescheHistorie('${eintrag.kind}','${eintrag.key}')">x</span>`;
-            box.appendChild(zeile);
-          }
-          historieListe.appendChild(box);
+    let GESAMTE_HISTORIE_CACHE = null;
+    let SPIELZEUGE_CACHE = {};
+    let HISTORY_MODE = 'kind'; // 'kind' oder 'spielzeug'
+
+    function formatTime(isoString) {
+        if (!isoString) return 'Unbekannt';
+        const d = new Date(isoString);
+        const tag = d.getDate();
+        const monat = d.getMonth() + 1; // Monate sind 0-basiert
+        const jahr = d.getFullYear() % 100; // Letzte zwei Stellen
+        const stunde = d.getHours();
+        const minute = String(d.getMinutes()).padStart(2, '0');
+        
+        return `${tag}.${monat}.${jahr} ${stunde}:${minute}`;
+    }
+
+    async function ladeHistorieDaten() {
+        if (GESAMTE_HISTORIE_CACHE) return GESAMTE_HISTORIE_CACHE;
+
+        const [historieSnap, spielzeugSnap] = await Promise.all([
+            get(ref1(db1, "historie")),
+            get(ref1(db1, "spielzeuge"))
+        ]);
+
+        SPIELZEUGE_CACHE = spielzeugSnap.exists() ? spielzeugSnap.val() : {};
+
+        const alleEintraege = {};
+        if (historieSnap.exists()) {
+            historieSnap.forEach(kindSnap => {
+                const kind = kindSnap.key;
+                const eintraege = kindSnap.val();
+                for (const key in eintraege) {
+                    const eintrag = eintraege[key];
+                    if (!alleEintraege[kind]) alleEintraege[kind] = [];
+                    alleEintraege[kind].push({ ...eintrag, kind, key, sortTime: new Date(eintrag.zurückgegeben).getTime() });
+                }
+            });
         }
+        GESAMTE_HISTORIE_CACHE = alleEintraege;
+        return alleEintraege;
+    }
+
+    function renderHistorieListe(mode) {
+        const liste = document.getElementById("historie-detail-list");
+        liste.innerHTML = "";
+        
+        if (!GESAMTE_HISTORIE_CACHE) return;
+        
+        let elements = [];
+
+        if (mode === 'kind') {
+            const kinder = Object.keys(GESAMTE_HISTORIE_CACHE).sort();
+            kinder.forEach(kind => {
+                const eintraege = GESAMTE_HISTORIE_CACHE[kind].sort((a, b) => b.sortTime - a.sortTime);
+                const box = document.createElement("div");
+                box.innerHTML = `<h4>${kind}</h4>`;
+                eintraege.forEach(eintrag => {
+                    const spielzeugName = SPIELZEUGE_CACHE[eintrag.nummer] || `Nr. ${eintrag.nummer} (Unbekannt)`;
+                    const von = formatTime(eintrag.ausgeliehen);
+                    const bis = formatTime(eintrag.zurückgegeben);
+                    box.innerHTML += `<div class="entry">• **${spielzeugName}**: von ${von} bis ${bis} <span class="delete" onclick="loescheHistorie('${eintrag.kind}','${eintrag.key}')">x</span></div>`;
+                });
+                elements.push(box);
+            });
+        } else if (mode === 'spielzeug') {
+            const spielzeugeMap = {};
+            // Einträge nach Spielzeug gruppieren
+            Object.values(GESAMTE_HISTORIE_CACHE).flat().forEach(eintrag => {
+                const nummer = eintrag.nummer;
+                if (!spielzeugeMap[nummer]) spielzeugeMap[nummer] = [];
+                spielzeugeMap[nummer].push(eintrag);
+            });
+            
+            const nummern = Object.keys(spielzeugeMap).sort((a, b) => Number(a) - Number(b));
+            
+            nummern.forEach(nummer => {
+                const eintraege = spielzeugeMap[nummer].sort((a, b) => b.sortTime - a.sortTime);
+                const spielzeugName = SPIELZEUGE_CACHE[nummer] || `Nr. ${nummer} (Unbekannt)`;
+                
+                const box = document.createElement("div");
+                box.innerHTML = `<h4>${spielzeugName} (Nr. ${nummer})</h4>`;
+                eintraege.forEach(eintrag => {
+                    const von = formatTime(eintrag.ausgeliehen);
+                    const bis = formatTime(eintrag.zurückgegeben);
+                    box.innerHTML += `<div class="entry">• **${eintrag.kind}**: von ${von} bis ${bis} <span class="delete" onclick="loescheHistorie('${eintrag.kind}','${eintrag.key}')">x</span></div>`;
+                });
+                elements.push(box);
+            });
+        }
+        
+        elements.forEach(el => liste.appendChild(el));
+    }
+    
+    window.switchHistoryMode = (mode) => {
+        HISTORY_MODE = mode;
+        document.getElementById('tab-kind').classList.toggle('active', mode === 'kind');
+        document.getElementById('tab-spielzeug').classList.toggle('active', mode === 'spielzeug');
+        renderHistorieListe(mode);
+    };
+
+    function ladeHistorie() {
+      // Setzt den Cache zurück und lädt die Daten neu bei Änderungen in Firebase
+      onValue(ref1(db1, "historie"), async () => {
+          GESAMTE_HISTORIE_CACHE = null; // Cache ungültig machen
+          await ladeHistorieDaten();
+          // Nach dem Laden die aktuelle Ansicht neu rendern
+          switchHistoryMode(HISTORY_MODE);
       });
     }
-    window.loescheHistorie=function(name,key){ if(confirm(`Eintrag von ${name} wirklich löschen?`)){ remove(ref1(db1,`historie/${name}/${key}`)); } };
 
-    function ladeKontoLoeschen(){
-      const liste=document.getElementById("konto-loeschen-liste");
-      // Diese Sektion wird entfernt, da die Funktion nun im Modal ist
-      if (liste) liste.parentElement.style.display = 'none';
-    }
-
-    function ladeKurznachrichten(){
-      const addBtn=document.getElementById("add-notice-btn");
-      if(addBtn){
-        addBtn.onclick=()=>{
-          const title=document.getElementById("notice-title").value.trim();
-          const text=document.getElementById("notice-text").value.trim();
-          const color=document.getElementById("notice-color").value;
-          const startISO=document.getElementById("notice-start").value;
-          const endISO=document.getElementById("notice-end").value;
-          if(!text||!startISO||!endISO){ alert("Text, Start- und Endzeit sind erforderlich."); return; }
-          const id=Date.now();
-          set(ref1(db1,`kurznachrichten/${id}`),{title,text,color,startISO,endISO,createdAt:id});
-          document.getElementById("notice-title").value="";
-          document.getElementById("notice-text").value="";
-          document.getElementById("notice-start").value="";
-          document.getElementById("notice-end").value="";
-        };
-      }
-      const list=document.getElementById("kurznachrichten-liste");
-      if(list){
-        onValue(ref1(db1,"kurznachrichten"),snap=>{
-          list.innerHTML="";
-          if(snap.exists()){
-            const arr=[]; snap.forEach(ch=>arr.push({id:ch.key,...ch.val()}));
-            arr.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-            arr.forEach(n=>{
-              const div=document.createElement("div"); div.className="flex";
-              const label=(n.title&&n.title.trim())?n.title:"Nachricht";
-              div.innerHTML=`<div><b>${label}</b>: ${n.text} <small>[${n.color}]</small></div>
-                <span class="delete" onclick="loescheNotice('${n.id}')">x</span>`;
-              list.appendChild(div);
-            });
-          }
-        });
-      }
-    }
-    window.loescheNotice=function(id){ if(confirm("Nachricht wirklich löschen?")){ remove(ref1(db1,"kurznachrichten/"+id)); } };
+    window.loescheHistorie=function(name,key){ 
+        if(confirm(`Eintrag von ${name} wirklich löschen?`)){ 
+            remove(ref1(db1,`historie/${name}/${key}`)); 
+            // Der onValue-Listener oben kümmert sich um das Neuladen
+        } 
+    };
+    
 
     window.addEventListener("DOMContentLoaded",()=>{
       ladeAktuelleAusleihen();
@@ -546,7 +595,11 @@
       document.getElementById('alle-gruen-btn')?.addEventListener('click', alleAufGruen);
       document.getElementById('alle-weiss-btn')?.addEventListener('click', alleAufWeiss);
       renderAbschluesse();
-      ladeKinderHinzufuegen(); ladeSpielzeugeHinzufuegen(); ladeHistorie(); ladeKontoLoeschen(); // ladeKontoLoeschen wird die Sektion verstecken
+      ladeKinderHinzufuegen(); 
+      ladeSpielzeugeHinzufuegen(); 
+      ladeHistorie(); 
+      // Initialen Modus setzen
+      switchHistoryMode('kind');
       ladeKurznachrichten();
     });
   </script>
@@ -571,7 +624,7 @@
       <hr style="margin: 15px 0; border: none; border-top: 1px solid #eee;">
 
       <div class="form-group">
-        <label for="modal-sperr-grund" id="sperr-grund-label">Sperr-Grund (falls gesperrt wird)</label>
+        <label for="modal-sperr-grund" id="sperr-grund-label">Sperr-Grund</label>
         <textarea id="modal-sperr-grund" placeholder="Grund für die Sperrung"></textarea>
       </div>
       <button id="modal-sperr-btn" onclick="toggleLock(currentAccountName)" class="action-button"></button>
@@ -583,6 +636,7 @@
     </div>
   </div>
 
+<div class="page-wrap">
   <div class="topbar">
     <div class="mode-wrap">
       <button id="mode-cycle" class="mode-cycle" title="Modus wechseln">
@@ -605,7 +659,7 @@
 
   <div class="section">
     <div class="shop-admin-header"> 
-      <h2>Konten (Klicken zur Verwaltung)</h2>
+      <h2>Konten</h2>
       <div class="action-buttons">
         <button id="durchfuehren-btn" class="action-button execute" title="Farben → Ziel-Fortschritt anwenden">✔️</button>
         <button id="alle-gruen-btn" class="action-button green" title="Alle auf Grün setzen">Alle</button>
@@ -645,8 +699,7 @@
       <label><input type="checkbox" id="ist-gast"> Gastkonto hinzufügen</label>
     </div>
     <button id="add-kind-btn">Hinzufügen</button>
-    <div class="liste" id="kinder-liste"></div>
-  </div>
+    </div>
 
   <div class="section">
     <h2>Spielzeuge hinzufügen</h2>
@@ -659,9 +712,14 @@
   </div>
 
   <div class="section">
-    <h2>Historie</h2>
-    <div class="liste" id="historie-liste"></div>
+    <h2>Ausleih-Historie</h2>
+    <div class="history-tabs">
+        <button id="tab-kind" class="active" onclick="switchHistoryMode('kind')">Nach Kind auswählen</button>
+        <button id="tab-spielzeug" onclick="switchHistoryMode('spielzeug')">Nach Spielzeug auswählen</button>
+    </div>
+    <div class="history-detail-list" id="historie-detail-list"></div>
   </div>
   
-  </body>
+  </div>
+</body>
 </html>
