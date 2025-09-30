@@ -11,11 +11,11 @@
       --background-color:#f4f4f4; --card-background-color:#fff;
       --text-color:#333; --border-radius:12px; --box-shadow:0 4px 10px rgba(0,0,0,.08);
       --font-size-small:14px; --font-size-medium:16px;
-      --page-width: 480px; /* Neue Max-Breite */
+      --page-width: 480px;
     }
     /* Mobile-Optimierung: Zentrierung und Max-Breite */
     body{font-family:'SF Pro Display',sans-serif;padding:15px 12px;background:var(--background-color);color:var(--text-color);font-size:var(--font-size-medium);line-height:1.6; display: flex; flex-direction: column; align-items: center;}
-    .page-wrap { width: 100%; max-width: var(--page-width); } /* Wrapper für die Inhalte */
+    .page-wrap { width: 100%; max-width: var(--page-width); }
     
     h2{font-size:18px;margin:0 0 15px;font-weight:600}
     input[type="text"],input[type="number"],textarea{padding:8px;border:1px solid #ddd;border-radius:8px;font-size:var(--font-size-small);width:100%;box-sizing:border-box}
@@ -48,8 +48,8 @@
     .action-button.red:hover{background:#b91c1c}
     .callout{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:10px}
     .row{display:flex;gap:10px;flex-wrap:wrap}
-    .row>*{flex:1 1 100%} /* Anpassung für Mobile */
-    @media (min-width: 400px) { .row>*{flex:1 1 220px} } /* Zurück auf 2 Spalten, wenn genug Platz */
+    .row>*{flex:1 1 100%}
+    @media (min-width: 400px) { .row>*{flex:1 1 220px} }
     select,input[type="datetime-local"]{padding:8px;border:1px solid #ddd;border-radius:8px;font-size:var(--font-size-small);width:100%;box-sizing:border-box}
 
     /* Topbar */
@@ -78,6 +78,7 @@
     .kontostatus{font-weight:600;margin-bottom:10px}
     .kontostatus.gesperrt{color:#ef4444}
     .kontostatus.aktiv{color:#28a745}
+    /* NEU: Wichtig für die Durchstreichung */
     .konto-name.gesperrt{text-decoration:line-through;}
 
     /* List Item Clickable */
@@ -89,7 +90,8 @@
     .history-tabs button{padding:6px 10px; font-size:14px; background:#f0f0f0; color:#333; border:1px solid #ccc; border-radius:8px;}
     .history-tabs button.active{background:var(--primary-color); color:#fff; border-color:var(--primary-color);}
     .history-detail-list h4{margin:5px 0 8px; font-size:16px; font-weight:600;}
-    .history-detail-list .entry{font-size:13px; margin-bottom: 5px; padding-left: 10px; border-left: 2px solid #ccc; white-space: pre-wrap;}
+    /* Formatierung für Historie (kleiner und kompakter) */
+    .history-detail-list .entry{font-size:12px; margin-bottom: 5px; padding-left: 10px; border-left: 2px solid #ccc; white-space: pre-wrap;}
   </style>
 
   <script type="module">
@@ -290,6 +292,7 @@
             zeile.onclick = () => openAccountManager(name, { ...data1, ...data2 }); 
 
             const kontoInfo=document.createElement("div");
+            // Durchstreichung angewendet basierend auf data1.gesperrt
             kontoInfo.innerHTML=`<span class="konto-name ${isLocked ? 'gesperrt' : ''}" style="color:${farbeToColor(data2.farbe)};font-weight:bold;">${name}</span>
               <button class="small-button" title="Aktives Ziel zeigen" onclick="event.stopPropagation(); zeigeAktivesZiel('${name}')">Z</button>`;
               
@@ -297,9 +300,9 @@
 
             if(data2.progress!==undefined){
               const plus5=document.createElement("button"); plus5.textContent="+5 %"; 
-              plus5.onclick=(e)=>{ e.stopPropagation(); increaseProgress(name); }; 
+              plus5.onclick=(e)=>{ e.stopPropagation(); updateProgress(name, 5); }; // Direkter Aufruf der Funktion
               const minus5=document.createElement("button"); minus5.textContent="–5 %"; 
-              minus5.onclick=(e)=>{ e.stopPropagation(); decreaseProgress(name); };
+              minus5.onclick=(e)=>{ e.stopPropagation(); updateProgress(name, -5); }; // Direkter Aufruf der Funktion
               progressButtons.appendChild(plus5); progressButtons.appendChild(minus5);
             } else {
               progressButtons.innerHTML="—";
@@ -351,8 +354,7 @@
       codeInput.value = data.code || '';
       sperrGrundInput.value = data.sperrGrund || '';
 
-      // Grund anzeigen, wenn gesperrt oder wenn gesperrt werden soll
-      sperrGrundInput.parentElement.style.display = isLocked ? 'block' : 'block';
+      sperrGrundInput.parentElement.style.display = 'block';
       sperrGrundInput.placeholder = isLocked ? 'Aktueller Sperr-Grund' : 'Grund für die Sperrung angeben';
 
       sperrButton.textContent = isLocked ? 'Entsperren' : 'Sperren';
@@ -365,19 +367,19 @@
         const link = linkInput.value.trim();
         const code = codeInput.value.trim();
         if (!name) return;
-        // Wichtig: 'update' verwenden, um nur die Link/Code-Felder zu ändern
         await update(ref1(db1, `kinder/${name}`), { link: link || null, code });
         alert(`Link/Code für ${name} gespeichert.`);
         closeModal();
     };
 
+    // FUNKTION MIT KORRIGIERTEM VERHALTEN (Bugfix)
     window.toggleLock = async (name) => {
         const snap = await get(ref1(db1, `kinder/${name}`));
         const data = snap.val() || {};
         const isCurrentlyLocked = data.gesperrt === true;
 
         if (isCurrentlyLocked) {
-            // Entsperren
+            // Entsperren: Setze gesperrt und sperrGrund auf null
             await update(ref1(db1, `kinder/${name}`), { gesperrt: null, sperrGrund: null });
             alert(`${name} wurde entsperrt.`);
         } else {
@@ -388,10 +390,11 @@
                 sperrGrundInput.focus();
                 return;
             }
-            // Bugfix: 'update' verwenden, um nur die Sperr-Felder zu setzen
+            // Sperren: Setze gesperrt auf true und speichere den Grund
             await update(ref1(db1, `kinder/${name}`), { gesperrt: true, sperrGrund: grund });
             alert(`${name} wurde gesperrt. Grund: ${grund}`);
         }
+        // Wichtig: Schließe das Modal und die Kontenliste wird durch den onValue-Listener neu gerendert
         closeModal();
     };
 
@@ -404,8 +407,6 @@
         }
     };
     
-    // Alte/andere Funktionen
-
     function ladeAktuelleAusleihen(){
       const ausleihenListe=document.getElementById("ausleihen-liste");
       onValue(ref1(db1,"ausleihen"),(snapshot)=>{
@@ -424,7 +425,6 @@
       const daten=snapshot.val(); const historieRef=ref1(db1,"historie/"+name);
       const neueHistorie={spielzeug:daten.spielzeug,nummer:daten.nummer,ausgeliehen:daten.zeit,zurückgegeben:new Date().toISOString()};
       const neueRef=push(historieRef); await set(neueRef,neueHistorie); await remove(ausleiheRef);
-      // Nach Rückgabe Historie neu laden
       ladeHistorie();
     };
 
@@ -438,7 +438,7 @@
         const istGastkonto=document.getElementById("ist-gast")?.checked;
         if(!name||!code) return alert("Name und Sicherheitscode sind erforderlich.");
         if(link && !link.startsWith("http")) link="https://"+link;
-        // Wichtig: 'set' verwenden, um das neue Kind zu erstellen, inkl. Sperr-Initialisierung
+        // Beim Hinzufügen: gesperrt und sperrGrund initialisieren
         set(ref1(db1,`kinder/${name}`),{link:link || null, code, gesperrt: null, sperrGrund: null});
         if(istGruppenkonto){ set2(ref2(db2,`kinder/${name}`),{punkte:0,farbe:"⚪", progress: 0}); }
         else if(istGastkonto){ set2(ref2(db2,`kinder/${name}`),{punkte:0}); }
@@ -474,12 +474,13 @@
     let SPIELZEUGE_CACHE = {};
     let HISTORY_MODE = 'kind'; // 'kind' oder 'spielzeug'
 
+    // Formatiert Zeit wie gewünscht (z.B. 1.8.25 12:30)
     function formatTime(isoString) {
         if (!isoString) return 'Unbekannt';
         const d = new Date(isoString);
         const tag = d.getDate();
-        const monat = d.getMonth() + 1; // Monate sind 0-basiert
-        const jahr = d.getFullYear() % 100; // Letzte zwei Stellen
+        const monat = d.getMonth() + 1;
+        const jahr = d.getFullYear() % 100;
         const stunde = d.getHours();
         const minute = String(d.getMinutes()).padStart(2, '0');
         
@@ -487,8 +488,7 @@
     }
 
     async function ladeHistorieDaten() {
-        if (GESAMTE_HISTORIE_CACHE) return GESAMTE_HISTORIE_CACHE;
-
+        // Lade alle benötigten Daten (Historie und Spielzeugnamen)
         const [historieSnap, spielzeugSnap] = await Promise.all([
             get(ref1(db1, "historie")),
             get(ref1(db1, "spielzeuge"))
@@ -504,6 +504,7 @@
                 for (const key in eintraege) {
                     const eintrag = eintraege[key];
                     if (!alleEintraege[kind]) alleEintraege[kind] = [];
+                    // Umwandlung in Millisekunden für die Sortierung
                     alleEintraege[kind].push({ ...eintrag, kind, key, sortTime: new Date(eintrag.zurückgegeben).getTime() });
                 }
             });
@@ -583,13 +584,13 @@
     window.loescheHistorie=function(name,key){ 
         if(confirm(`Eintrag von ${name} wirklich löschen?`)){ 
             remove(ref1(db1,`historie/${name}/${key}`)); 
-            // Der onValue-Listener oben kümmert sich um das Neuladen
         } 
     };
     
 
     window.addEventListener("DOMContentLoaded",()=>{
       ladeAktuelleAusleihen();
+      // Wichtig: ladeKinderKonten muss zuerst kommen
       ladeKinderKonten();
       document.getElementById('durchfuehren-btn')?.addEventListener('click', async ()=>{ await durchfuehren(); });
       document.getElementById('alle-gruen-btn')?.addEventListener('click', alleAufGruen);
@@ -598,7 +599,6 @@
       ladeKinderHinzufuegen(); 
       ladeSpielzeugeHinzufuegen(); 
       ladeHistorie(); 
-      // Initialen Modus setzen
       switchHistoryMode('kind');
       ladeKurznachrichten();
     });
@@ -699,7 +699,7 @@
       <label><input type="checkbox" id="ist-gast"> Gastkonto hinzufügen</label>
     </div>
     <button id="add-kind-btn">Hinzufügen</button>
-    </div>
+  </div>
 
   <div class="section">
     <h2>Spielzeuge hinzufügen</h2>
@@ -719,7 +719,6 @@
     </div>
     <div class="history-detail-list" id="historie-detail-list"></div>
   </div>
-  
-  </div>
+</div>
 </body>
 </html>
