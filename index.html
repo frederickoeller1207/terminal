@@ -46,6 +46,25 @@
     #lock-overlay{display:none;position:fixed;inset:0;pointer-events:none;z-index:99998}
     #lock-overlay::before{content:"";position:absolute;left:50%;top:50%;width:140vmax;height:8px;background:#ef4444;transform:translate(-50%,-50%) rotate(-45deg);box-shadow:0 0 0 2px #ef4444}
     #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 8px 18px rgba(0,0,0,.25);font-size:14px;display:none;z-index:99999;max-width:90%;text-align:center}
+    
+    /* Sperr-Pop-up Struktur */
+    .lock-popup-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none;
+      justify-content: center; align-items: center; z-index: 99999;
+    }
+    .lock-popup-content {
+      background: var(--card); border-radius: 12px; padding: 20px;
+      box-shadow: var(--shadow); width: 90%; max-width: 350px; text-align: center;
+    }
+    .lock-popup-title {
+      font-size: 18px; font-weight: 700; color: #fff; background: #ef4444;
+      border-radius: 8px; padding: 8px 12px; margin-bottom: 15px;
+    }
+    .lock-popup-reason {
+      font-size: 14px; color: var(--ink); text-align: left;
+      border: 1px solid #eee; padding: 10px; border-radius: 8px;
+    }
+    .lock-popup-reason strong { color: #111827; }
   </style>
 </head>
 <body>
@@ -93,6 +112,16 @@
   <div id="lock-overlay"></div>
   <div id="toast"></div>
 
+  <div id="account-lock-popup" class="lock-popup-overlay" onclick="if(event.target === this) this.style.display='none';">
+    <div class="lock-popup-content">
+      <div class="lock-popup-title">Dein Konto wurde vorübergehend gesperrt</div>
+      <div class="lock-popup-reason">
+        <strong>Grund:</strong> <span id="lock-reason-text"></span>
+      </div>
+      <button onclick="document.getElementById('account-lock-popup').style.display='none'" style="margin-top: 15px;">Schließen</button>
+    </div>
+  </div>
+
   <script type="module">
     import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
     import { getDatabase as getDB1, ref as ref1, get as get1, onValue as onVal1, set as set1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
@@ -118,6 +147,9 @@
     const grid=document.getElementById('app-grid');
     const lockOverlay=document.getElementById('lock-overlay');
     const toast=document.getElementById('toast');
+    const lockPopup = document.getElementById('account-lock-popup');
+    const lockReasonText = document.getElementById('lock-reason-text');
+
 
     let IS_HOME=true;
     let latestNotices=[];
@@ -126,6 +158,11 @@
     function showToast(msg, ms=3500){
       toast.textContent=msg; toast.style.display='block';
       clearTimeout(showToast._t); showToast._t=setTimeout(()=>{ toast.style.display='none'; }, ms);
+    }
+
+    function showAccountLocked(grund){
+      lockReasonText.textContent = grund || 'Kein Grund angegeben.';
+      lockPopup.style.display = 'flex';
     }
 
     const resetView=()=>{
@@ -262,14 +299,26 @@
       });
     };
 
-    function checkSicherheitscode(name,callback){
+    async function checkSicherheitscode(name,callback){
       if(IS_LOCKED || MODE==="red"){ showToast("Terminal gesperrt."); return; }
-      const doCheck=async ()=>{
-        const snap=await get1(ref1(db1,`kinder/${name}`)); const code=snap.exists()?snap.val().code:null;
-        if(!code){ showToast("Kein Sicherheitscode hinterlegt."); return; }
-        eingabeMitZahl(`Bitte Sicherheitscode für ${name} eingeben:`, (eingabe)=>{ if(eingabe===code) callback(); else showToast("Falscher Code."); });
-      };
-      doCheck();
+
+      const snap=await get1(ref1(db1,`kinder/${name}`));
+      if(!snap.exists()){ showToast("Konto nicht gefunden."); return; }
+      const data = snap.val() || {};
+
+      // PRÜFUNG: Ist das Konto gesperrt?
+      if (data.gesperrt === true) {
+          showAccountLocked(data.sperrGrund);
+          return; // Abbruch, wenn gesperrt
+      }
+
+      const code=data.code;
+      if(!code){ showToast("Kein Sicherheitscode hinterlegt."); return; }
+
+      eingabeMitZahl(`Bitte Sicherheitscode für ${name} eingeben:`, (eingabe)=>{ 
+          if(eingabe===code) callback(); 
+          else showToast("Falscher Code."); 
+      });
     }
 
     (function handleDeepLinks(){
