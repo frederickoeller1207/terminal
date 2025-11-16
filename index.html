@@ -1,357 +1,362 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <title>Mäusegruppe Terminal</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600&display=swap" rel="stylesheet">
-  <style>
-    :root{--bg:#f2f4f8;--ink:#1c1c1e;--muted:#6b7280;--card:#ffffff;--ring:#e5e7eb;--brand:#007aff;--shadow:0 10px 25px rgba(0,0,0,.08)}
-    *,*::before,*::after{box-sizing:border-box}
-    html,body{height:100%}
-    body{font-family:'SF Pro Display',sans-serif;background:linear-gradient(135deg,#e6f0ff 0%,#fef3f7 100%);min-height:100vh;margin:0;color:var(--ink);display:flex;flex-direction:column;overflow-x:hidden}
-    .page{width:100%;max-width:420px;margin:0 auto;padding:12px}
-    h1{margin:12px 0 8px;font-size:24px;font-weight:700;text-align:center}
-    #home-btn{display:none;justify-content:center;font-size:16px;color:var(--brand);cursor:pointer;margin:6px 0 10px}
-    #notices{width:100%;margin:6px 0 10px;display:none}
-    .notice{border-radius:12px;padding:10px 12px;margin:8px 0;box-shadow:var(--shadow);color:#fff}
-    .notice h3{margin:0 0 4px 0;font-size:14px;font-weight:700;opacity:.95}
-    .notice p{margin:0;font-size:13px;line-height:1.35;white-space:pre-wrap}
-    .n-blue{background:#1e40af}.n-red{background:#b91c1c}.n-green{background:#047857}
-    .n-orange{background:#c2410c}.n-purple{background:#6d28d9}.n-black{background:#111827}.n-gray{background:#374151}
+  <meta charset="UTF-8" />
+  <title>Mäusegruppe Terminal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#f2f4f8;--ink:#1c1c1e;--muted:#6b7280;--card:#ffffff;--ring:#e5e7eb;--brand:#007aff;--shadow:0 10px 25px rgba(0,0,0,.08)}
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{height:100%}
+    body{font-family:'SF Pro Display',sans-serif;background:linear-gradient(135deg,#e6f0ff 0%,#fef3f7 100%);min-height:100vh;margin:0;color:var(--ink);display:flex;flex-direction:column;overflow-x:hidden}
+    .page{width:100%;max-width:420px;margin:0 auto;padding:12px}
+    h1{margin:12px 0 8px;font-size:24px;font-weight:700;text-align:center}
+    #home-btn{display:none;justify-content:center;font-size:16px;color:var(--brand);cursor:pointer;margin:6px 0 10px}
+    #notices{width:100%;margin:6px 0 10px;display:none}
+    .notice{border-radius:12px;padding:10px 12px;margin:8px 0;box-shadow:var(--shadow);color:#fff}
+    .notice h3{margin:0 0 4px 0;font-size:14px;font-weight:700;opacity:.95}
+    .notice p{margin:0;font-size:13px;line-height:1.35;white-space:pre-wrap}
+    .n-blue{background:#1e40af}.n-red{background:#b91c1c}.n-green{background:#047857}
+    .n-orange{background:#c2410c}.n-purple{background:#6d28d9}.n-black{background:#111827}.n-gray{background:#374151}
 
-    .mode-banner{display:none;border:1px dashed #f59e0b;background:#fff8e1;color:#7a4d00;border-radius:10px;padding:10px 12px;font-weight:700;margin:8px 0}
-    .locked-banner{display:none;border:1px solid #ef4444;background:#ffecec;color:#7a0000;border-radius:10px;padding:10px 12px;font-weight:800;margin:8px 0;text-align:center}
+    .mode-banner{display:none;border:1px dashed #f59e0b;background:#fff8e1;color:#7a4d00;border-radius:10px;padding:10px 12px;font-weight:700;margin:8px 0}
+    .locked-banner{display:none;border:1px solid #ef4444;background:#ffecec;color:#7a0000;border-radius:10px;padding:10px 12px;font-weight:800;margin:8px 0;text-align:center}
 
-    .app-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;width:100%;margin:8px 0 16px}
-    .app{background:var(--card);border:1px solid var(--ring);border-radius:14px;box-shadow:var(--shadow);padding:10px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;transition:transform .08s ease,box-shadow .2s;min-height:118px}
-    .app:active{transform:translateY(1px)} .app:hover{box-shadow:0 14px 32px rgba(0,0,0,.1)}
-    .app img{width:60px;height:60px;object-fit:contain;border-radius:12px}
-    .app .title{font-weight:700;font-size:14px;text-align:center}
-    .app .sub{font-size:11px;color:var(--muted);text-align:center}
+    .app-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;width:100%;margin:8px 0 16px}
+    .app{background:var(--card);border:1px solid var(--ring);border-radius:14px;box-shadow:var(--shadow);padding:10px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;transition:transform .08s ease,box-shadow .2s;min-height:118px}
+    .app:active{transform:translateY(1px)} .app:hover{box-shadow:0 14px 32px rgba(0,0,0,.1)}
+    .app img{width:60px;height:60px;object-fit:contain;border-radius:12px}
+    .app .title{font-weight:700;font-size:14px;text-align:center}
+    .app .sub{font-size:11px;color:var(--muted);text-align:center}
 
-    .legacy-menu{display:none}
-    #view{display:flex;flex-direction:column;align-items:center;gap:12px}
-    input{width:95%;max-width:340px;font-size:16px;padding:12px;margin-top:12px;border:1px solid #ccc;border-radius:10px}
-    button{background:#fff;border:1px solid #ccc;border-radius:10px;padding:14px 18px;font-size:16px;font-weight:600;color:#000;box-shadow:0 2px 5px rgba(0,0,0,.05);cursor:pointer;width:95%;max-width:340px;text-align:center;transition:all .2s,transform .1s}
-    button:hover{background:#f0f0f5} button:active{background:#e0e0e5;transform:scale(.98)}
-    #konto-details{display:flex;flex-direction:column;align-items:center;gap:10px;font-size:16px;text-align:center}
-    .color-circle{width:22px;height:22px;border-radius:50%;border:1px solid #ccc;margin-top:4px}
+    .legacy-menu{display:none}
+    #view{display:flex;flex-direction:column;align-items:center;gap:12px}
+    input{width:95%;max-width:340px;font-size:16px;padding:12px;margin-top:12px;border:1px solid #ccc;border-radius:10px}
+    button{background:#fff;border:1px solid #ccc;border-radius:10px;padding:14px 18px;font-size:16px;font-weight:600;color:#000;box-shadow:0 2px 5px rgba(0,0,0,.05);cursor:pointer;width:95%;max-width:340px;text-align:center;transition:all .2s,transform .1s}
+    button:hover{background:#f0f0f5} button:active{background:#e0e0e5;transform:scale(.98)}
+    #konto-details{display:flex;flex-direction:column;align-items:center;gap:10px;font-size:16px;text-align:center}
+    .color-circle{width:22px;height:22px;border-radius:50%;border:1px solid #ccc;margin-top:4px}
 
-    .amount-wrap{width:100%;max-width:520px;display:flex;flex-direction:column;align-items:center;margin-top:6px;padding-bottom:8px}
-    .amount-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;width:100%}
-    .amount-btn{padding:14px 0;font-size:20px;font-weight:800;border:1px solid #ccc;border-radius:12px;background:#fff}
-    .amount-btn.custom{grid-column:1/-1;font-size:16px}
+    .amount-wrap{width:100%;max-width:520px;display:flex;flex-direction:column;align-items:center;margin-top:6px;padding-bottom:8px}
+    .amount-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;width:100%}
+    .amount-btn{padding:14px 0;font-size:20px;font-weight:800;border:1px solid #ccc;border-radius:12px;background:#fff}
+    .amount-btn.custom{grid-column:1/-1;font-size:16px}
 
-    #lock-overlay{display:none;position:fixed;inset:0;pointer-events:none;z-index:99998}
-    #lock-overlay::before{content:"";position:absolute;left:50%;top:50%;width:140vmax;height:8px;background:#ef4444;transform:translate(-50%,-50%) rotate(-45deg);box-shadow:0 0 0 2px #ef4444}
-    #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 8px 18px rgba(0,0,0,.25);font-size:14px;display:none;z-index:99999;max-width:90%;text-align:center}
-    
-    /* Sperr-Pop-up Struktur */
-    .lock-popup-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none;
-      justify-content: center; align-items: center; z-index: 99999;
-    }
-    .lock-popup-content {
-      background: var(--card); border-radius: 12px; padding: 20px;
-      box-shadow: var(--shadow); width: 90%; max-width: 350px; text-align: center;
-    }
-    .lock-popup-title {
-      font-size: 18px; font-weight: 700; color: #fff; background: #ef4444;
-      border-radius: 8px; padding: 8px 12px; margin-bottom: 15px;
-    }
-    .lock-popup-reason {
-      font-size: 14px; color: var(--ink); text-align: left;
-      border: 1px solid #eee; padding: 10px; border-radius: 8px;
-    }
-    .lock-popup-reason strong { color: #111827; }
-  </style>
+    #lock-overlay{display:none;position:fixed;inset:0;pointer-events:none;z-index:99998}
+    #lock-overlay::before{content:"";position:absolute;left:50%;top:50%;width:140vmax;height:8px;background:#ef4444;transform:translate(-50%,-50%) rotate(-45deg);box-shadow:0 0 0 2px #ef4444}
+    #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 8px 18px rgba(0,0,0,.25);font-size:14px;display:none;z-index:99999;max-width:90%;text-align:center}
+    
+    /* Sperr-Pop-up Struktur */
+    .lock-popup-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none;
+      justify-content: center; align-items: center; z-index: 99999;
+    }
+    .lock-popup-content {
+      background: var(--card); border-radius: 12px; padding: 20px;
+      box-shadow: var(--shadow); width: 90%; max-width: 350px; text-align: center;
+    }
+    .lock-popup-title {
+      font-size: 18px; font-weight: 700; color: #fff; background: #ef4444;
+      border-radius: 8px; padding: 8px 12px; margin-bottom: 15px;
+    }
+    .lock-popup-reason {
+      font-size: 14px; color: var(--ink); text-align: left;
+      border: 1px solid #eee; padding: 10px; border-radius: 8px;
+    }
+    .lock-popup-reason strong { color: #111827; }
+  </style>
 </head>
 <body>
-  <div class="page">
-    <h1 id="title">Mäusegruppe Terminal</h1>
+  <div class="page">
+    <h1 id="title">Mäusegruppe Terminal</h1>
 
-    <div id="mode-banner" class="mode-banner">Eingeschränkter Modus</div>
-    <div id="locked-banner" class="locked-banner">Terminal gesperrt: Das Terminal ist zurzeit gesperrt.</div>
+    <div id="mode-banner" class="mode-banner">Eingeschränkter Modus</div>
+    <div id="locked-banner" class="locked-banner">Terminal gesperrt: Das Terminal ist zurzeit gesperrt.</div>
 
-    <div id="notices"></div>
+    <div id="notices"></div>
 
-    <div class="app-grid" id="app-grid">
-      <div class="app" id="app-ziel" onclick="window.location.href='https://frederickoeller1207.github.io/ziele/'">
-        <img src="https://i.supaimg.com/5abf1dba-fcbb-472c-a9bc-3c15894c1bcb.png" alt="Ziel" loading="lazy" decoding="async" width="60" height="60">
-        <div class="title">Mein Ziel</div><div class="sub">Fortschritt ansehen</div>
-      </div>
-      <div class="app" id="app-ausleihe" onclick="openAusleihe()">
-        <img src="https://i.supaimg.com/dea106e1-18eb-4ae7-b2ea-ca3ded6e63c1.png" alt="Ausleihe" loading="lazy" decoding="async" width="60" height="60">
-        <div class="title">Spielzeug ausleihen</div><div class="sub">mit PIN</div>
-      </div>
-      <div class="app" id="app-checkout" onclick="openCheckout()">
-        <img src="https://i.supaimg.com/652a2719-c338-4a37-a712-7dd6d56945b5.png" alt="Checkout" loading="lazy" decoding="async" width="60" height="60">
-        <div class="title">Checkout</div><div class="sub">mit PIN</div>
-      </div>
-      <div class="app" id="app-malwettbewerb" onclick="window.location.href='malwettbewerb.html'">
-        <img src="https://i.supaimg.com/359b3d2b-2cc2-48dd-86b2-4f44ee584857.png" alt="Malwettbewerb" loading="lazy" decoding="async" width="60" height="60">
-        <div class="title">Malwettbewerb</div><div class="sub">Abgeben & abstimmen</div>
-      </div>
-      <div class="app" id="app-briefkasten" onclick="window.location.href='nachrichten.html'">
-        <img src="https://i.supaimg.com/965bbc7f-a8a5-43f8-a7d1-90ce44c21053.png" alt="Briefkasten" loading="lazy" decoding="async" width="60" height="60">
-        <div class="title">MausBriefkasten</div><div class="sub">Nachricht schreiben</div>
-      </div>
-    </div>
+    <div class="app-grid" id="app-grid">
+      <div class="app" id="app-ziel" onclick="window.location.href='https://frederickoeller1207.github.io/ziele/'">
+        <img src="https://i.supaimg.com/5abf1dba-fcbb-472c-a9bc-3c15894c1bcb.png" alt="Ziel" loading="lazy" decoding="async" width="60" height="60">
+        <div class="title">Mein Ziel</div><div class="sub">Fortschritt ansehen</div>
+      </div>
+      <div class="app" id="app-ausleihe" onclick="openAusleihe()">
+        <img src="https://i.supaimg.com/dea106e1-18eb-4ae7-b2ea-ca3ded6e63c1.png" alt="Ausleihe" loading="lazy" decoding="async" width="60" height="60">
+        <div class="title">Spielzeug ausleihen</div><div class="sub">mit PIN</div>
+      </div>
+      <div class="app" id="app-checkout" onclick="openCheckout()">
+        <img src="https://i.supaimg.com/652a2719-c338-4a37-a712-7dd6d56945b5.png" alt="Checkout" loading="lazy" decoding="async" width="60" height="60">
+        <div class="title">Checkout</div><div class="sub">mit PIN</div>
+      </div>
+      <div class="app" id="app-malwettbewerb" onclick="window.location.href='malwettbewerb.html'">
+        <img src="https://i.supaimg.com/359b3d2b-2cc2-48dd-86b2-4f44ee584857.png" alt="Malwettbewerb" loading="lazy" decoding="async" width="60" height="60">
+        <div class="title">Malwettbewerb</div><div class="sub">Abgeben & abstimmen</div>
+      </div>
+      <div class="app" id="app-briefkasten" onclick="window.location.href='nachrichten.html'">
+        <img src="https://i.supaimg.com/965bbc7f-a8a5-43f8-a7d1-90ce44c21053.png" alt="Briefkasten" loading="lazy" decoding="async" width="60" height="60">
+        <div class="title">MausBriefkasten</div><div class="sub">Nachricht schreiben</div>
+      </div>
 
-    <div id="menu" class="legacy-menu">
-      <button onclick="window.location.href='https://frederickoeller1207.github.io/ziele/'">Mein Ziel</button>
-      <button id="btn-ausleihe">Spielzeug Ausleihe</button>
-      <button id="btn-checkout">Checkout</button>
-    </div>
+            <div class="app" id="app-mouseria" onclick="window.location.href='https://frederickoeller1207.github.io/terminal/mouseria.html'">
+        <img src="https://i.supaimg.com/40902f5a-3375-45d3-82ff-88373b88d2f1.png" alt="Geschichtenbuch" loading="lazy" decoding="async" width="60" height="60">
+        <div class="title">Mouseria Geschichten</div><div class="sub">Neuigkeiten & Abenteuer</div>
+      </div>
+          </div>
 
-    <div id="home-btn">🏠 Zurück</div>
-    <div id="view"></div>
-  </div>
+    <div id="menu" class="legacy-menu">
+      <button onclick="window.location.href='https://frederickoeller1207.github.io/ziele/'">Mein Ziel</button>
+      <button id="btn-ausleihe">Spielzeug Ausleihe</button>
+      <button id="btn-checkout">Checkout</button>
+    </div>
 
-  <div id="lock-overlay"></div>
-  <div id="toast"></div>
+    <div id="home-btn">🏠 Zurück</div>
+    <div id="view"></div>
+  </div>
 
-  <div id="account-lock-popup" class="lock-popup-overlay" onclick="if(event.target === this) this.style.display='none';">
-    <div class="lock-popup-content">
-      <div class="lock-popup-title">Dein Konto wurde vorübergehend gesperrt</div>
-      <div class="lock-popup-reason">
-        <strong>Grund:</strong> <span id="lock-reason-text"></span>
-      </div>
-      <button onclick="document.getElementById('account-lock-popup').style.display='none'" style="margin-top: 15px;">Schließen</button>
-    </div>
-  </div>
+  <div id="lock-overlay"></div>
+  <div id="toast"></div>
 
-  <script type="module">
-    import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-    import { getDatabase as getDB1, ref as ref1, get as get1, onValue as onVal1, set as set1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
-    import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-    import { getDatabase as getDB2, ref as ref2, update as update2, onValue as onVal2, get as get2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+  <div id="account-lock-popup" class="lock-popup-overlay" onclick="if(event.target === this) this.style.display='none';">
+    <div class="lock-popup-content">
+      <div class="lock-popup-title">Dein Konto wurde vorübergehend gesperrt</div>
+      <div class="lock-popup-reason">
+        <strong>Grund:</strong> <span id="lock-reason-text"></span>
+      </div>
+      <button onclick="document.getElementById('account-lock-popup').style.display='none'" style="margin-top: 15px;">Schließen</button>
+    </div>
+  </div>
 
-    const config1={apiKey:"AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",authDomain:"gesamt-dae4e.firebaseapp.com",databaseURL:"https://gesamt-dae4e-default-rtdb.europe-west1.firebasedatabase.app",projectId:"gesamt-dae4e",storageBucket:"gesamt-dae4e.appspot.com",messagingSenderId:"844023612743",appId:"1:844023612743:web:0821aa894541f89a7df862"};
-    const config2={apiKey:"AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg",authDomain:"punkte-45c20.firebaseapp.com",databaseURL:"https://punkte-45c20-default-rtdb.europe-west1.firebasedatabase.app",projectId:"punkte-45c20",storageBucket:"punkte-45c20.appspot.com",messagingSenderId:"931713539549",appId:"1:931713539549:web:e348bf38369639f1906a34"};
+  <script type="module">
+    import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+    import { getDatabase as getDB1, ref as ref1, get as get1, onValue as onVal1, set as set1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+    import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+    import { getDatabase as getDB2, ref as ref2, update as update2, onValue as onVal2, get as get2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
 
-    const app1=initApp1(config1,"app1"); const db1=getDB1(app1);
-    const app2=initApp2(config2,"app2"); const db2=getDB2(app2);
+    const config1={apiKey:"AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",authDomain:"gesamt-dae4e.firebaseapp.com",databaseURL:"https://gesamt-dae4e-default-rtdb.europe-west1.firebasedatabase.app",projectId:"gesamt-dae4e",storageBucket:"gesamt-dae4e.appspot.com",messagingSenderId:"844023612743",appId:"1:844023612743:web:0821aa894541f89a7df862"};
+    const config2={apiKey:"AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg",authDomain:"punkte-45c20.firebaseapp.com",databaseURL:"https://punkte-45c20-default-rtdb.europe-west1.firebasedatabase.app",projectId:"punkte-45c20",storageBucket:"punkte-45c20.appspot.com",messagingSenderId:"931713539549",appId:"1:931713539549:web:e348bf38369639f1906a34"};
 
-    // HARD LOCK: sofortige Eingabesperre in Capture-Phase
-    let IS_LOCKED = true; // defensiv bis erste Mode-Antwort kommt
-    const _block = e => { if (IS_LOCKED) { e.stopImmediatePropagation(); e.preventDefault(); } };
-    ["click","touchstart","pointerdown","keydown","submit"].forEach(t=>document.addEventListener(t,_block,true));
+    const app1=initApp1(config1,"app1"); const db1=getDB1(app1);
+    const app2=initApp2(config2,"app2"); const db2=getDB2(app2);
 
-    const view=document.getElementById("view");
-    const homeBtn=document.getElementById("home-btn");
-    const noticesBox=document.getElementById('notices');
-    const modeBanner=document.getElementById('mode-banner');
-    const lockedBanner=document.getElementById('locked-banner');
-    const grid=document.getElementById('app-grid');
-    const lockOverlay=document.getElementById('lock-overlay');
-    const toast=document.getElementById('toast');
-    const lockPopup = document.getElementById('account-lock-popup');
-    const lockReasonText = document.getElementById('lock-reason-text');
+    // HARD LOCK: sofortige Eingabesperre in Capture-Phase
+    let IS_LOCKED = true; // defensiv bis erste Mode-Antwort kommt
+    const _block = e => { if (IS_LOCKED) { e.stopImmediatePropagation(); e.preventDefault(); } };
+    ["click","touchstart","pointerdown","keydown","submit"].forEach(t=>document.addEventListener(t,_block,true));
+
+    const view=document.getElementById("view");
+    const homeBtn=document.getElementById("home-btn");
+    const noticesBox=document.getElementById('notices');
+    const modeBanner=document.getElementById('mode-banner');
+    const lockedBanner=document.getElementById('locked-banner');
+    const grid=document.getElementById('app-grid');
+    const lockOverlay=document.getElementById('lock-overlay');
+    const toast=document.getElementById('toast');
+    const lockPopup = document.getElementById('account-lock-popup');
+    const lockReasonText = document.getElementById('lock-reason-text');
 
 
-    let IS_HOME=true;
-    let latestNotices=[];
-    let MODE="green";
+    let IS_HOME=true;
+    let latestNotices=[];
+    let MODE="green";
 
-    function showToast(msg, ms=3500){
-      toast.textContent=msg; toast.style.display='block';
-      clearTimeout(showToast._t); showToast._t=setTimeout(()=>{ toast.style.display='none'; }, ms);
-    }
+    function showToast(msg, ms=3500){
+      toast.textContent=msg; toast.style.display='block';
+      clearTimeout(showToast._t); showToast._t=setTimeout(()=>{ toast.style.display='none'; }, ms);
+    }
 
-    function showAccountLocked(grund){
-      lockReasonText.textContent = grund || 'Kein Grund angegeben.';
-      lockPopup.style.display = 'flex';
-    }
+    function showAccountLocked(grund){
+      lockReasonText.textContent = grund || 'Kein Grund angegeben.';
+      lockPopup.style.display = 'flex';
+    }
 
-    const resetView=()=>{
-      view.innerHTML=""; homeBtn.style.display="none";
-      document.getElementById("title").textContent="Mäusegruppe Terminal";
-      IS_HOME=true; applyModeToUI(); window.scrollTo({top:0,behavior:'instant'});
-    };
-    const openView=(title)=>{
-      view.innerHTML=""; homeBtn.style.display="flex";
-      document.getElementById("title").textContent=title;
-      grid.style.display='none'; IS_HOME=false; noticesBox.style.display='none';
-      modeBanner.style.display='none'; lockedBanner.style.display='none'; lockOverlay.style.display='none';
-    };
-    homeBtn.onclick=()=>{ resetView(); };
+    const resetView=()=>{
+      view.innerHTML=""; homeBtn.style.display="none";
+      document.getElementById("title").textContent="Mäusegruppe Terminal";
+      IS_HOME=true; applyModeToUI(); window.scrollTo({top:0,behavior:'instant'});
+    };
+    const openView=(title)=>{
+      view.innerHTML=""; homeBtn.style.display="flex";
+      document.getElementById("title").textContent=title;
+      grid.style.display='none'; IS_HOME=false; noticesBox.style.display='none';
+      modeBanner.style.display='none'; lockedBanner.style.display='none'; lockOverlay.style.display='none';
+    };
+    homeBtn.onclick=()=>{ resetView(); };
 
-    function colorToClass(c){ const m={blue:'n-blue',red:'n-red',green:'n-green',orange:'n-orange',purple:'n-purple',black:'n-black',grey:'n-gray',gray:'n-gray'}; return m[(c||'').toLowerCase()]||'n-blue'; }
-    function parseISO(s){ const d=new Date(s); return isNaN(d.getTime())?null:d; }
-    function renderNoticesList(items){
-      latestNotices=items||[];
-      if(!IS_HOME || !latestNotices.length){ noticesBox.style.display='none'; return; }
-      noticesBox.style.display='block';
-      noticesBox.innerHTML=latestNotices.map(n=>{
-        const cls=colorToClass(n.color); const title=(n.title&&n.title.trim())?n.title.trim():'Nachricht'; const text=(n.text||'');
-        return `<div class="notice ${cls}"><h3>${title}</h3><p>${text}</p></div>`;
-      }).join('');
-    }
-    function subscribeNotices(){
-      onVal1(ref1(db1,'kurznachrichten'),snap=>{
-        const now=new Date(); const list=[];
-        if(snap.exists()){
-          snap.forEach(ch=>{
-            const v=ch.val()||{}; const start=parseISO(v.startISO); const end=parseISO(v.endISO);
-            if(!start||!end) return; if(now>=start && now<=end){
-              list.push({id:ch.key,title:v.title||'',text:v.text||'',color:v.color||'blue',start, end, createdAt:Number(v.createdAt||0)});
-            }
-          });
-        }
-        list.sort((a,b)=> (b.createdAt||0)-(a.createdAt||0) || (b.start - a.start));
-        renderNoticesList(list);
-      });
-    }
+    function colorToClass(c){ const m={blue:'n-blue',red:'n-red',green:'n-green',orange:'n-orange',purple:'n-purple',black:'n-black',grey:'n-gray',gray:'n-gray'}; return m[(c||'').toLowerCase()]||'n-blue'; }
+    function parseISO(s){ const d=new Date(s); return isNaN(d.getTime())?null:d; }
+    function renderNoticesList(items){
+      latestNotices=items||[];
+      if(!IS_HOME || !latestNotices.length){ noticesBox.style.display='none'; return; }
+      noticesBox.style.display='block';
+      noticesBox.innerHTML=latestNotices.map(n=>{
+        const cls=colorToClass(n.color); const title=(n.title&&n.title.trim())?n.title.trim():'Nachricht'; const text=(n.text||'');
+        return `<div class="notice ${cls}"><h3>${title}</h3><p>${text}</p></div>`;
+      }).join('');
+    }
+    function subscribeNotices(){
+      onVal1(ref1(db1,'kurznachrichten'),snap=>{
+        const now=new Date(); const list=[];
+        if(snap.exists()){
+          snap.forEach(ch=>{
+            const v=ch.val()||{}; const start=parseISO(v.startISO); const end=parseISO(v.endISO);
+            if(!start||!end) return; if(now>=start && now<=end){
+              list.push({id:ch.key,title:v.title||'',text:v.text||'',color:v.color||'blue',start, end, createdAt:Number(v.createdAt||0)});
+            }
+          });
+        }
+        list.sort((a,b)=> (b.createdAt||0)-(a.createdAt||0) || (b.start - a.start));
+        renderNoticesList(list);
+      });
+    }
 
-    function subscribeMode(){
-      onVal1(ref1(db1,"systemmode/state"), snap=>{
-        const m = snap.exists() ? (snap.val().value||"green") : "green";
-        MODE = m;
-        if (m === "red"){
-          IS_LOCKED = true;
-          view.innerHTML="";
-          lockedBanner.style.display='block';
-          lockOverlay.style.display='block';
-          grid.style.display='none';
-          noticesBox.style.display='none';
-        } else {
-          IS_LOCKED = false;
-          lockedBanner.style.display='none';
-          lockOverlay.style.display='none';
-          resetView();
-        }
-        applyModeToUI();
-      });
-    }
+    function subscribeMode(){
+      onVal1(ref1(db1,"systemmode/state"), snap=>{
+        const m = snap.exists() ? (snap.val().value||"green") : "green";
+        MODE = m;
+        if (m === "red"){
+          IS_LOCKED = true;
+          view.innerHTML="";
+          lockedBanner.style.display='block';
+          lockOverlay.style.display='block';
+          grid.style.display='none';
+          noticesBox.style.display='none';
+        } else {
+          IS_LOCKED = false;
+          lockedBanner.style.display='none';
+          lockOverlay.style.display='none';
+          resetView();
+        }
+        applyModeToUI();
+      });
+    }
 
-    function applyModeToUI(){
-      if(IS_LOCKED){
-        grid.style.display='none'; noticesBox.style.display='none'; return;
-      }
-      if(!IS_HOME) return;
-      if(MODE==="green"){
-        modeBanner.style.display='none'; grid.style.display='grid'; renderNoticesList(latestNotices);
-        // alle Apps sichtbar
-        ["app-ziel","app-ausleihe","app-checkout","app-malwettbewerb","app-briefkasten"].forEach(id=>{
-          const el=document.getElementById(id); if(el) el.style.display='flex';
-        });
-      } else if(MODE==="yellow"){
-        modeBanner.style.display='block'; grid.style.display='grid';
-        // nur Checkout + Ziel
-        ["app-checkout","app-ziel"].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='flex'; });
-        ["app-ausleihe","app-malwettbewerb","app-briefkasten"].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
-        noticesBox.style.display='none';
-      }
-      // rot wird oben durch IS_LOCKED behandelt
-    }
+    function applyModeToUI(){
+      if(IS_LOCKED){
+        grid.style.display='none'; noticesBox.style.display='none'; return;
+      }
+      if(!IS_HOME) return;
+      if(MODE==="green"){
+        modeBanner.style.display='none'; grid.style.display='grid'; renderNoticesList(latestNotices);
+        // alle Apps sichtbar
+        ["app-ziel","app-ausleihe","app-checkout","app-malwettbewerb","app-briefkasten", "app-mouseria"].forEach(id=>{
+          const el=document.getElementById(id); if(el) el.style.display='flex';
+        });
+      } else if(MODE==="yellow"){
+        modeBanner.style.display='block'; grid.style.display='grid';
+        // nur Checkout + Ziel
+        ["app-checkout","app-ziel", "app-mouseria"].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='flex'; });
+        ["app-ausleihe","app-malwettbewerb","app-briefkasten"].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
+        noticesBox.style.display='none';
+      }
+      // rot wird oben durch IS_LOCKED behandelt
+    }
 
-    document.getElementById("btn-ausleihe").onclick = ()=>openAusleihe();
-    window.openAusleihe = ()=>{
-      if(IS_LOCKED || MODE!=="green"){ showToast("Eingeschränkter Modus: Diese Funktion ist derzeit deaktiviert."); return; }
-      openView("Spielzeug Ausleihe");
-      onVal1(ref1(db1,"kinder"), snapshot=>{
-        view.innerHTML="";
-        snapshot.forEach(childSnap=>{
-          const name=childSnap.key; const btn=document.createElement("button"); btn.textContent=name;
-          btn.onclick=()=>checkSicherheitscode(name,()=>ausleihen(name)); view.appendChild(btn);
-        });
-      });
-    };
-    function eingabeMitZahl(title,callback){
-      openView(title);
-      const input=document.createElement("input"); input.type="number"; input.inputMode="numeric"; input.autofocus=true;
-      const btn=document.createElement("button"); btn.textContent="OK";
-      btn.onclick=()=>{ const val=input.value.trim(); if(val) callback(val); };
-      view.appendChild(input); view.appendChild(btn); input.focus();
-    }
-    async function ausleihen(name){
-      if(IS_LOCKED || MODE!=="green"){ showToast("Eingeschränkter Modus: Diese Funktion ist derzeit deaktiviert."); return; }
-      const ausleiheSnap=await get1(ref1(db1,`ausleihen/${name}`));
-      if(ausleiheSnap.exists() && ausleiheSnap.val().bestätigt===false){ showToast("Bitte gib das ausgeliehene Spielzeug zurück."); return; }
-      frageSpielzeugnummer(name, async (nummer)=>{
-        const spielzeugeSnap=await get1(ref1(db1,"spielzeuge")); const spielzeuge=spielzeugeSnap.exists()?spielzeugeSnap.val():{};
-        if(spielzeuge[nummer]){
-          await set1(ref1(db1,`ausleihen/${name}`),{spielzeug:spielzeuge[nummer],nummer,zeit:new Date().toISOString(),bestätigt:false});
-          const popup=document.createElement("div");
-          popup.textContent=`${spielzeuge[nummer]} erfolgreich ausgeliehen.`;
-          popup.style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;color:#000;padding:16px 22px;border-radius:10px;font-size:16px;box-shadow:0 4px 12px rgba(0,0,0,.2);z-index:9999;text-align:center;";
-          document.body.appendChild(popup);
-          setTimeout(()=>{ popup.remove(); resetView(); },3000);
-        } else { showToast("Ungültige Nummer."); }
-      });
-    }
-    function frageSpielzeugnummer(name,cb){ eingabeMitZahl(`${name}, gib bitte die Spielzeugnummer ein:`, cb); }
+    document.getElementById("btn-ausleihe").onclick = ()=>openAusleihe();
+    window.openAusleihe = ()=>{
+      if(IS_LOCKED || MODE!=="green"){ showToast("Eingeschränkter Modus: Diese Funktion ist derzeit deaktiviert."); return; }
+      openView("Spielzeug Ausleihe");
+      onVal1(ref1(db1,"kinder"), snapshot=>{
+        view.innerHTML="";
+        snapshot.forEach(childSnap=>{
+          const name=childSnap.key; const btn=document.createElement("button"); btn.textContent=name;
+          btn.onclick=()=>checkSicherheitscode(name,()=>ausleihen(name)); view.appendChild(btn);
+        });
+      });
+    };
+    function eingabeMitZahl(title,callback){
+      openView(title);
+      const input=document.createElement("input"); input.type="number"; input.inputMode="numeric"; input.autofocus=true;
+      const btn=document.createElement("button"); btn.textContent="OK";
+      btn.onclick=()=>{ const val=input.value.trim(); if(val) callback(val); };
+      view.appendChild(input); view.appendChild(btn); input.focus();
+    }
+    async function ausleihen(name){
+      if(IS_LOCKED || MODE!=="green"){ showToast("Eingeschränkter Modus: Diese Funktion ist derzeit deaktiviert."); return; }
+      const ausleiheSnap=await get1(ref1(db1,`ausleihen/${name}`));
+      if(ausleiheSnap.exists() && ausleiheSnap.val().bestätigt===false){ showToast("Bitte gib das ausgeliehene Spielzeug zurück."); return; }
+      frageSpielzeugnummer(name, async (nummer)=>{
+        const spielzeugeSnap=await get1(ref1(db1,"spielzeuge")); const spielzeuge=spielzeugeSnap.exists()?spielzeugeSnap.val():{};
+        if(spielzeuge[nummer]){
+          await set1(ref1(db1,`ausleihen/${name}`),{spielzeug:spielzeuge[nummer],nummer,zeit:new Date().toISOString(),bestätigt:false});
+          const popup=document.createElement("div");
+          popup.textContent=`${spielzeuge[nummer]} erfolgreich ausgeliehen.`;
+          popup.style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;color:#000;padding:16px 22px;border-radius:10px;font-size:16px;box-shadow:0 4px 12px rgba(0,0,0,.2);z-index:9999;text-align:center;";
+          document.body.appendChild(popup);
+          setTimeout(()=>{ popup.remove(); resetView(); },3000);
+        } else { showToast("Ungültige Nummer."); }
+      });
+    }
+    function frageSpielzeugnummer(name,cb){ eingabeMitZahl(`${name}, gib bitte die Spielzeugnummer ein:`, cb); }
 
-    document.getElementById("btn-checkout").onclick = ()=>openCheckout();
-    window.openCheckout = ()=>{
-      if(IS_LOCKED || MODE==="red"){ showToast("Terminal gesperrt."); return; }
-      openView("Checkout");
-      onVal1(ref1(db1,"kinder"), snapshot=>{
-        view.innerHTML="";
-        snapshot.forEach(childSnap=>{
-          const name=childSnap.key; const link=childSnap.val().link;
-          const btn=document.createElement("button"); btn.textContent=name;
-          btn.onclick=()=>checkSicherheitscode(name,()=>{ if(link) window.location.href=link; else showToast("Kein Link hinterlegt."); });
-          view.appendChild(btn);
-        });
-      });
-    };
+    document.getElementById("btn-checkout").onclick = ()=>openCheckout();
+    window.openCheckout = ()=>{
+      if(IS_LOCKED || MODE==="red"){ showToast("Terminal gesperrt."); return; }
+      openView("Checkout");
+      onVal1(ref1(db1,"kinder"), snapshot=>{
+        view.innerHTML="";
+        snapshot.forEach(childSnap=>{
+          const name=childSnap.key; const link=childSnap.val().link;
+          const btn=document.createElement("button"); btn.textContent=name;
+          btn.onclick=()=>checkSicherheitscode(name,()=>{ if(link) window.location.href=link; else showToast("Kein Link hinterlegt."); });
+          view.appendChild(btn);
+        });
+      });
+    };
 
-    async function checkSicherheitscode(name,callback){
-      if(IS_LOCKED || MODE==="red"){ showToast("Terminal gesperrt."); return; }
+    async function checkSicherheitscode(name,callback){
+      if(IS_LOCKED || MODE==="red"){ showToast("Terminal gesperrt."); return; }
 
-      const snap=await get1(ref1(db1,`kinder/${name}`));
-      if(!snap.exists()){ showToast("Konto nicht gefunden."); return; }
-      const data = snap.val() || {};
+      const snap=await get1(ref1(db1,`kinder/${name}`));
+      if(!snap.exists()){ showToast("Konto nicht gefunden."); return; }
+      const data = snap.val() || {};
 
-      // PRÜFUNG: Ist das Konto gesperrt?
-      if (data.gesperrt === true) {
-          showAccountLocked(data.sperrGrund);
-          return; // Abbruch, wenn gesperrt
-      }
+      // PRÜFUNG: Ist das Konto gesperrt?
+      if (data.gesperrt === true) {
+          showAccountLocked(data.sperrGrund);
+          return; // Abbruch, wenn gesperrt
+      }
 
-      const code=data.code;
-      if(!code){ showToast("Kein Sicherheitscode hinterlegt."); return; }
+      const code=data.code;
+      if(!code){ showToast("Kein Sicherheitscode hinterlegt."); return; }
 
-      eingabeMitZahl(`Bitte Sicherheitscode für ${name} eingeben:`, (eingabe)=>{ 
-          if(eingabe===code) callback(); 
-          else showToast("Falscher Code."); 
-      });
-    }
+      eingabeMitZahl(`Bitte Sicherheitscode für ${name} eingeben:`, (eingabe)=>{ 
+          if(eingabe===code) callback(); 
+          else showToast("Falscher Code."); 
+      });
+    }
 
-    (function handleDeepLinks(){
-      const params=new URLSearchParams(location.search);
-      if(!params.has("action")) return;
-      const act=params.get("action");
-      onVal1(ref1(db1,"systemmode/state"), snap=>{
-        const m=snap.exists()?(snap.val().value||"green"):"green";
-        MODE=m;
-        if(m==="red"){
-          IS_LOCKED = true;
-          showToast("Die Funktion ist im gesperrten Modus deaktiviert.", 3500);
-          resetView();
-          lockedBanner.style.display='block';
-          lockOverlay.style.display='block';
-        } else if(m==="yellow"){
-          if(act==="checkout"){ openCheckout(); } else { resetView(); showToast("Eingeschränkter Modus: Nur Checkout und Mein Ziel sind verfügbar."); }
-        } else {
-          if(act==="checkout"){ openCheckout(); }
-        }
-      });
-    })();
+    (function handleDeepLinks(){
+      const params=new URLSearchParams(location.search);
+      if(!params.has("action")) return;
+      const act=params.get("action");
+      onVal1(ref1(db1,"systemmode/state"), snap=>{
+        const m=snap.exists()?(snap.val().value||"green"):"green";
+        MODE=m;
+        if(m==="red"){
+          IS_LOCKED = true;
+          showToast("Die Funktion ist im gesperrten Modus deaktiviert.", 3500);
+          resetView();
+          lockedBanner.style.display='block';
+          lockOverlay.style.display='block';
+        } else if(m==="yellow"){
+          if(act==="checkout"){ openCheckout(); } else { resetView(); showToast("Eingeschränkter Modus: Nur Checkout und Mein Ziel sind verfügbar."); }
+        } else {
+          if(act==="checkout"){ openCheckout(); }
+        }
+      });
+    })();
 
-    function init(){
-      resetView(); subscribeNotices(); subscribeMode();
-    }
-    init();
-  </script>
+    function init(){
+      resetView(); subscribeNotices(); subscribeMode();
+    }
+    init();
+  </script>
 
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(console.warn);
-    }
-  </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(console.warn);
+    }
+  </script>
 </body>
 </html>
