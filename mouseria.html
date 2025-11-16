@@ -25,12 +25,12 @@
             box-shadow: var(--box-shadow);
         }
         
+        /* Button Grid (für Übersicht) */
         .button-grid {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
             justify-content: center;
-            margin-bottom: 20px;
         }
         .story-button {
             background-color: var(--primary-color);
@@ -46,21 +46,41 @@
             min-width: 120px;
         }
         .story-button:hover { background-color: var(--primary-hover-color); }
-        .story-button.active { background-color: #005bb5; box-shadow: 0 0 0 3px #99ccff; }
 
-        .story-content {
+        /* Story View (für einzelne Geschichte) */
+        .story-view {
+            display: none; /* Am Anfang versteckt */
             border-top: 2px solid var(--primary-color);
             padding-top: 20px;
             margin-top: 20px;
-            white-space: pre-wrap; /* Behält Formatierung bei */
         }
-        .story-content h2 { 
+        .story-view h2 { 
             font-size: 24px; 
             color: #333; 
             margin-top: 0; 
             margin-bottom: 15px;
             text-align: center;
         }
+        .story-content-text {
+             white-space: pre-wrap; /* Behält Formatierung bei */
+        }
+        
+        /* Zurück-Button */
+        .back-button {
+            display: none; /* Am Anfang versteckt */
+            background-color: #555;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 15px;
+            width: 100%;
+            transition: background-color .2s;
+        }
+        .back-button:hover { background-color: #333; }
+
         .loading { text-align: center; color: #888; margin-top: 50px; }
     </style>
     <script type="module">
@@ -81,17 +101,50 @@
         const db = getDatabase(app);
         const storiesRef = ref(db, 'mouseria/geschichten');
 
-        let currentStoryKey = null;
         let allStories = {};
 
-        function renderStories() {
-            const buttonGrid = document.getElementById('button-grid');
-            const storyContentDiv = document.getElementById('story-content');
+        const buttonGrid = document.getElementById('button-grid');
+        const storyView = document.getElementById('story-view');
+        const storyTitle = document.getElementById('story-title');
+        const storyContentText = document.getElementById('story-content-text');
+        const backButton = document.getElementById('back-button');
+        const loading = document.getElementById('loading-text');
+
+        // Funktion, die die Button-Übersicht anzeigt
+        function showStoryList() {
+            buttonGrid.style.display = 'flex';
+            storyView.style.display = 'none';
+            backButton.style.display = 'none';
+            window.scrollTo(0, 0); // Nach oben scrollen
+            document.getElementById('main-title').textContent = '📚 Mouseria Geschichten';
+        }
+
+        // Funktion, die eine einzelne Geschichte anzeigt
+        function showSingleStory(key) {
+            const story = allStories[key];
+            if (story) {
+                // Titel der Seite ändern
+                document.getElementById('main-title').textContent = story.title || 'Geschichte';
+
+                // Story-Ansicht füllen
+                storyTitle.textContent = story.title || 'Ohne Titel';
+                storyContentText.textContent = story.content || 'Kein Inhalt.';
+                
+                // Elemente umschalten
+                buttonGrid.style.display = 'none';
+                storyView.style.display = 'block';
+                backButton.style.display = 'block';
+                window.scrollTo(0, 0); // Zum Anfang der Geschichte scrollen
+            } else {
+                showStoryList(); // Falls Key ungültig, zurück zur Liste
+            }
+        }
+
+        // Funktion zum Erstellen der Buttons und Initialisieren
+        function renderButtons() {
             buttonGrid.innerHTML = '';
-            storyContentDiv.innerHTML = '';
 
             const keys = Object.keys(allStories).sort((a, b) => {
-                // Versuche, numerisch zu sortieren, falle auf String-Sortierung zurück
                 const numA = parseInt(a);
                 const numB = parseInt(b);
                 if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
@@ -99,42 +152,29 @@
             });
 
             if (keys.length === 0) {
-                storyContentDiv.innerHTML = '<p style="text-align:center;">Keine Geschichten gefunden. Bitte den Admin-Bereich (admin.html) nutzen, um Geschichten hinzuzufügen.</p>';
+                buttonGrid.innerHTML = '<p style="text-align:center;">Keine Geschichten gefunden. Bitte den Admin-Bereich (admin.html) nutzen, um Geschichten hinzuzufügen.</p>';
                 return;
-            }
-
-            // Standardmäßig die erste Geschichte anzeigen, falls noch keine ausgewählt ist
-            if (!currentStoryKey || !allStories[currentStoryKey]) {
-                currentStoryKey = keys[0];
             }
 
             // Buttons erstellen
             keys.forEach(key => {
                 const story = allStories[key];
                 const button = document.createElement('button');
-                button.className = 'story-button' + (key === currentStoryKey ? ' active' : '');
+                button.className = 'story-button';
                 button.textContent = story.title || 'Ohne Titel';
                 button.addEventListener('click', () => {
-                    currentStoryKey = key;
-                    renderStories(); // Neu rendern, um den Inhalt zu aktualisieren
-                    window.scrollTo(0, 0); // Nach oben scrollen
+                    showSingleStory(key);
                 });
                 buttonGrid.appendChild(button);
             });
-
-            // Inhalt anzeigen
-            const activeStory = allStories[currentStoryKey];
-            if (activeStory) {
-                storyContentDiv.innerHTML = `
-                    <h2>${activeStory.title || 'Ohne Titel'}</h2>
-                    <div>${activeStory.content || 'Kein Inhalt.'}</div>
-                `;
-            }
         }
+
+        // Event Listener für den Zurück-Button
+        backButton.addEventListener('click', showStoryList);
+
 
         // Firebase Listener
         onValue(storiesRef, (snapshot) => {
-            const loading = document.getElementById('loading-text');
             if (loading) loading.style.display = 'none';
 
             if (snapshot.exists()) {
@@ -142,27 +182,32 @@
             } else {
                 allStories = {};
             }
-            renderStories();
+            renderButtons();
+            showStoryList(); // Stellt sicher, dass wir nach dem Laden auf der Button-Übersicht sind
         }, (error) => {
             console.error("Firebase Fehler:", error);
-            const contentDiv = document.getElementById('story-content');
-            contentDiv.innerHTML = '<p style="text-align:center; color: red;">Fehler beim Laden der Daten.</p>';
+            if (loading) loading.style.display = 'none';
+            buttonGrid.innerHTML = '<p style="text-align:center; color: red;">Fehler beim Laden der Daten.</p>';
         });
-
     </script>
 </head>
 <body>
     <div class="page-wrap">
-        <h1>📚 Mouseria Geschichten</h1>
+        <h1 id="main-title">📚 Mouseria Geschichten</h1>
 
         <div class="story-container">
+            <button id="back-button" class="back-button">← Zurück zur Übersicht</button>
+
             <div id="loading-text" class="loading">Wird geladen...</div>
             
             <div class="button-grid" id="button-grid">
                 </div>
             
-            <div class="story-content" id="story-content">
-                </div>
+            <div class="story-view" id="story-view">
+                <h2 id="story-title"></h2>
+                <div class="story-content-text" id="story-content-text">
+                    </div>
+            </div>
         </div>
     </div>
 </body>
