@@ -9,7 +9,7 @@
     :root{--bg:#f2f4f8;--ink:#1c1c1e;--muted:#6b7280;--card:#ffffff;--ring:#e5e7eb;--brand:#007aff;--shadow:0 10px 25px rgba(0,0,0,.08)}
     *,*::before,*::after{box-sizing:border-box}
     html,body{height:100%}
-    body{font-family:'SF Pro Display',sans-serif;background:linear-gradient(135deg,#e6f0ff 0%,#fef3f7 100%);min-height:100vh;margin:0;color:var(--ink);display:flex;flex-direction:column;overflow-x:hidden}
+    body{font-family:'SF Pro Display',sans-serif;background:linear-gradient(135deg,#e6f0ff 0%,#fef3f7 100%);min-height:10vh;margin:0;color:var(--ink);display:flex;flex-direction:column;overflow-x:hidden}
     .page{width:100%;max-width:420px;margin:0 auto;padding:12px}
     h1{margin:12px 0 8px;font-size:24px;font-weight:700;text-align:center}
     #home-btn{display:none;justify-content:center;font-size:16px;color:var(--brand);cursor:pointer;margin:6px 0 10px}
@@ -97,12 +97,11 @@
         <img src="https://i.supaimg.com/965bbc7f-a8a5-43f8-a7d1-90ce44c21053.png" alt="Briefkasten" loading="lazy" decoding="async" width="60" height="60">
         <div class="title">MausBriefkasten</div><div class="sub">Nachricht schreiben</div>
       </div>
-
-            <div class="app" id="app-mouseria" onclick="window.location.href='https://frederickoeller1207.github.io/terminal/mouseria.html'">
-        <img src="https://i.supaimg.com/50aac807-e69e-4704-a4cf-1296a34c0883.jpg" alt="Geschichtenbuch" loading="lazy" decoding="async" width="60" height="60">
-        <div class="title">Mouseria Geschichten</div><div class="sub">Neuigkeiten & Abenteuer</div>
+            <div class="app" id="app-mouseria" onclick="window.location.href='https://frederickoeller1207.github.io/terminal/mouseria.html'">
+        <img src="https://i.supaimg.com/50aac807-e69e-4704-a4cf-1296a34c0883.jpg" alt="Mouseria Geschichten" loading="lazy" decoding="async" width="60" height="60">
+        <div class="title">Mouseria Geschichten</div><div class="sub">Jetzt lesen</div>
       </div>
-          </div>
+    </div>
 
     <div id="menu" class="legacy-menu">
       <button onclick="window.location.href='https://frederickoeller1207.github.io/ziele/'">Mein Ziel</button>
@@ -124,7 +123,7 @@
         <strong>Grund:</strong> <span id="lock-reason-text"></span>
       </div>
       <button onclick="document.getElementById('account-lock-popup').style.display='none'" style="margin-top: 15px;">Schließen</button>
-      </div>
+    </div>
   </div>
 
   <script type="module">
@@ -238,15 +237,16 @@
       if(!IS_HOME) return;
       if(MODE==="green"){
         modeBanner.style.display='none'; grid.style.display='grid'; renderNoticesList(latestNotices);
-        // alle Apps sichtbar
-        ["app-ziel","app-ausleihe","app-checkout","app-malwettbewerb","app-briefkasten", "app-mouseria"].forEach(id=>{
+        // alle Apps sichtbar (einschließlich des neuen Buttons)
+        ["app-ziel","app-ausleihe","app-checkout","app-malwettbewerb","app-briefkasten","app-mouseria"].forEach(id=>{
           const el=document.getElementById(id); if(el) el.style.display='flex';
         });
       } else if(MODE==="yellow"){
         modeBanner.style.display='block'; grid.style.display='grid';
-        // nur Checkout + Ziel + Mouseria (passiv)
-        ["app-checkout","app-ziel", "app-mouseria"].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='flex'; });
-        ["app-ausleihe","app-malwettbewerb","app-briefkasten"].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
+        // nur Checkout + Ziel
+        ["app-checkout","app-ziel"].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='flex'; });
+        // Andere ausblenden
+        ["app-ausleihe","app-malwettbewerb","app-briefkasten","app-mouseria"].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
         noticesBox.style.display='none';
       }
       // rot wird oben durch IS_LOCKED behandelt
