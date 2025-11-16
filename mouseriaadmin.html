@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <title>Admin – Mouseria Geschichten</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* CSS aus dem Original-Code beibehalten, nur die spezifischen Admin-Styles */
+        :root {
+            --primary-color:#007aff; --primary-hover-color:#005bb5;
+            --background-color:#f4f4f4; --card-background-color:#fff;
+            --text-color:#333; --border-radius:12px; --box-shadow:0 4px 10px rgba(0,0,0,.08);
+            --font-size-small:14px; --font-size-medium:16px;
+            --page-width: 600px; /* Breite für Admin etwas erhöht */
+        }
+        body{font-family:'SF Pro Display',sans-serif;padding:15px 12px;background:var(--background-color);color:var(--text-color);font-size:var(--font-size-medium);line-height:1.6; display: flex; flex-direction: column; align-items: center;}
+        .page-wrap { width: 100%; max-width: var(--page-width); }
+        h1{font-size:26px;font-weight:600;color:#cc0000;margin-bottom:20px;text-align:center}
+        h2{font-size:18px;margin:0 0 15px;font-weight:600}
+        input[type="text"],textarea{padding:8px;border:1px solid #ddd;border-radius:8px;font-size:var(--font-size-small);width:100%;box-sizing:border-box}
+        textarea{resize:vertical;min-height:150px}
+        button{padding:8px 14px;font-size:var(--font-size-small);background:var(--primary-color);color:#fff;border:none;border-radius:10px;cursor:pointer;transition:background-color .2s;font-weight:600;white-space:nowrap}
+        button:hover{background:var(--primary-hover-color)}
+        .section{background:var(--card-background-color);padding:15px;margin-bottom:20px;border-radius:var(--border-radius);box-shadow:var(--box-shadow); width: 100%;}
+        .form-group{margin-bottom:15px}
+        .form-group label{display:block;margin-bottom:5px;font-weight:600;font-size:var(--font-size-small)}
+        .story-entry{padding:15px;border:1px solid #eee;border-radius:8px;margin-bottom:10px}
+        .story-entry h3{margin-top:0;font-size:16px;display:flex;justify-content:space-between;align-items:center}
+        .story-entry h3 span{font-weight:normal;color:#999;font-size:var(--font-size-small)}
+        .action-button.red{background:#ef4444}
+        .action-button.red:hover{background:#b91c1c}
+        .success-message { color: green; margin-top: 10px; text-align: center; }
+        .flex-buttons { display: flex; gap: 5px; margin-top: 15px; justify-content: flex-end; }
+        .flex-buttons button { flex-grow: 1; }
+        .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px; width: 100%;}
+        .title{font-size:22px;font-weight:600;color:#cc0000;margin-left:auto}
+
+    </style>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+        import { getDatabase, ref, onValue, set, push, remove } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+
+        // Die Firebase-Konfiguration von db1
+        const firebaseConfig = {
+            apiKey:"AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",
+            authDomain:"gesamt-dae4e.firebaseapp.com",
+            databaseURL:"https://gesamt-dae4e-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId:"gesamt-dae4e",
+            storageBucket:"gesamt-dae4e.appspot.com",
+            messagingSenderId:"844023612743",
+            appId:"1:844023612743:web:0821aa894541f89a7df862"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const storiesRef = ref(db, 'mouseria/geschichten');
+        const editorContainer = document.getElementById('editor-container');
+        const newTitleInput = document.getElementById('new-title-input');
+        const newContentInput = document.getElementById('new-content-input');
+        const addStoryButton = document.getElementById('add-story-btn');
+
+        // Funktion zum Speichern einer Story
+        window.saveStory = async (key) => {
+            const titleInput = document.getElementById(`title-input-${key}`);
+            const contentInput = document.getElementById(`content-input-${key}`);
+
+            const storyData = {
+                title: titleInput.value.trim() || 'Ohne Titel',
+                content: contentInput.value.trim() || 'Kein Inhalt'
+            };
+
+            const storyRef = ref(db, `mouseria/geschichten/${key}`);
+            await set(storyRef, storyData);
+            displayMessage('Story gespeichert!', 'success');
+        };
+
+        // Funktion zum Löschen einer Story
+        window.deleteStory = async (key, title) => {
+            if (confirm(`Bist du sicher, die Geschichte "${title}" unwiderruflich zu löschen?`)) {
+                const storyRef = ref(db, `mouseria/geschichten/${key}`);
+                await remove(storyRef);
+                displayMessage('Story gelöscht!', 'success');
+            }
+        };
+
+        // Funktion zum Erstellen eines Editor-Elements
+        function createEditor(key, story) {
+            const editorDiv = document.createElement('div');
+            editorDiv.className = 'story-entry';
+            const title = story.title || 'Ohne Titel';
+
+            editorDiv.innerHTML = `
+                <h3>${title} <span>(Key: ${key})</span></h3>
+                <div class="form-group">
+                    <label for="title-input-${key}">Button-Titel:</label>
+                    <input type="text" id="title-input-${key}" value="${title.replace(/"/g, '&quot;')}" />
+                </div>
+                <div class="form-group">
+                    <label for="content-input-${key}">Inhalt der Geschichte:</label>
+                    <textarea id="content-input-${key}">${story.content || ''}</textarea>
+                </div>
+                <div class="flex-buttons">
+                    <button onclick="saveStory('${key}')">Speichern</button>
+                    <button class="action-button red" onclick="deleteStory('${key}', '${title.replace(/'/g, "\\'")}')">Löschen</button>
+                </div>
+            `;
+            return editorDiv;
+        }
+
+        // Funktion zum Anzeigen einer kurzen Nachricht
+        function displayMessage(text, type) {
+            const msgElement = document.getElementById('admin-message');
+            if (msgElement) {
+                msgElement.textContent = text;
+                msgElement.className = `${type}-message`;
+                setTimeout(() => { msgElement.textContent = ''; }, 3000);
+            }
+        }
+
+        // Firebase Listener zum Rendern der Editoren
+        onValue(storiesRef, (snapshot) => {
+            editorContainer.innerHTML = '';
+            const stories = snapshot.val();
+            if (stories) {
+                const keys = Object.keys(stories).sort((a, b) => {
+                    const numA = parseInt(a);
+                    const numB = parseInt(b);
+                    if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+                    return a.localeCompare(b);
+                });
+                keys.forEach(key => {
+                    editorContainer.appendChild(createEditor(key, stories[key]));
+                });
+            } else {
+                editorContainer.innerHTML = '<p style="text-align:center;">Noch keine Geschichten vorhanden.</p>';
+            }
+        });
+
+        // Event-Handler für "Neue Geschichte hinzufügen"
+        addStoryButton.addEventListener('click', async () => {
+            const title = newTitleInput.value.trim() || 'Neue Geschichte';
+            const content = newContentInput.value.trim() || 'Hier kommt der neue Inhalt hin.';
+            
+            if (!title || !content) {
+                displayMessage('Titel und Inhalt dürfen nicht leer sein!', 'error');
+                return;
+            }
+
+            // Neue Story in Firebase erstellen (push() generiert einen eindeutigen Key)
+            await push(storiesRef, { title: title, content: content });
+
+            // Felder zurücksetzen
+            newTitleInput.value = '';
+            newContentInput.value = '';
+            displayMessage('Neue Story erfolgreich erstellt!', 'success');
+        });
+    </script>
+</head>
+<body>
+    <div class="page-wrap">
+        <div class="topbar">
+            <div class="title">Admin Mouseria</div>
+        </div>
+
+        <div id="admin-message" class="success-message"></div>
+
+        <div class="section">
+            <h2>Neue Geschichte hinzufügen</h2>
+            <div class="form-group">
+                <label for="new-title-input">Button-Titel:</label>
+                <input id="new-title-input" type="text" placeholder="Z.B. Geschichte 3: Der Waldweg" />
+            </div>
+            <div class="form-group">
+                <label for="new-content-input">Inhalt der Geschichte:</label>
+                <textarea id="new-content-input" placeholder="Der detaillierte Inhalt der Geschichte..."></textarea>
+            </div>
+            <button id="add-story-btn" class="action-button full">Geschichte erstellen</button>
+        </div>
+
+        <div class="section">
+            <h2>Bestehende Geschichten bearbeiten</h2>
+            <div id="editor-container">
+                <p style="text-align:center; color:#888;">Wird geladen...</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
