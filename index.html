@@ -99,7 +99,7 @@
       </div>
 
             <div class="app" id="app-mouseria" onclick="window.location.href='https://frederickoeller1207.github.io/terminal/mouseria.html'">
-        <img src="https://i.supaimg.com/40902f5a-3375-45d3-82ff-88373b88d2f1.png" alt="Geschichtenbuch" loading="lazy" decoding="async" width="60" height="60">
+        <img src="https://i.supaimg.com/50aac807-e69e-4704-a4cf-1296a34c0883.jpg" alt="Geschichtenbuch" loading="lazy" decoding="async" width="60" height="60">
         <div class="title">Mouseria Geschichten</div><div class="sub">Neuigkeiten & Abenteuer</div>
       </div>
           </div>
@@ -124,7 +124,7 @@
         <strong>Grund:</strong> <span id="lock-reason-text"></span>
       </div>
       <button onclick="document.getElementById('account-lock-popup').style.display='none'" style="margin-top: 15px;">Schließen</button>
-    </div>
+      </div>
   </div>
 
   <script type="module">
@@ -244,7 +244,7 @@
         });
       } else if(MODE==="yellow"){
         modeBanner.style.display='block'; grid.style.display='grid';
-        // nur Checkout + Ziel
+        // nur Checkout + Ziel + Mouseria (passiv)
         ["app-checkout","app-ziel", "app-mouseria"].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='flex'; });
         ["app-ausleihe","app-malwettbewerb","app-briefkasten"].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
         noticesBox.style.display='none';
