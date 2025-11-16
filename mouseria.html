@@ -1,1 +1,169 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <title>Mouseria – Geschichten</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color:#007aff; --primary-hover-color:#005bb5;
+            --background-color:#f4f4f4; --card-background-color:#fff;
+            --text-color:#333; --border-radius:12px; --box-shadow:0 4px 10px rgba(0,0,0,.08);
+            --font-size-medium:16px;
+            --page-width: 600px;
+        }
+        body{font-family:'SF Pro Display',sans-serif;padding:20px 15px;background:var(--background-color);color:var(--text-color);font-size:var(--font-size-medium);line-height:1.6; display: flex; flex-direction: column; align-items: center;}
+        .page-wrap { width: 100%; max-width: var(--page-width); }
+        h1{font-size:32px;font-weight:600;color:var(--primary-color);text-align:center;margin-bottom:20px}
+        
+        .story-container {
+            width: 100%;
+            background: var(--card-background-color);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+        
+        .button-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .story-button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color .2s;
+            flex-grow: 1;
+            min-width: 120px;
+        }
+        .story-button:hover { background-color: var(--primary-hover-color); }
+        .story-button.active { background-color: #005bb5; box-shadow: 0 0 0 3px #99ccff; }
 
+        .story-content {
+            border-top: 2px solid var(--primary-color);
+            padding-top: 20px;
+            margin-top: 20px;
+            white-space: pre-wrap; /* Behält Formatierung bei */
+        }
+        .story-content h2 { 
+            font-size: 24px; 
+            color: #333; 
+            margin-top: 0; 
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .loading { text-align: center; color: #888; margin-top: 50px; }
+    </style>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+
+        // Die Firebase-Konfiguration von db1
+        const firebaseConfig = {
+            apiKey:"AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",
+            authDomain:"gesamt-dae4e.firebaseapp.com",
+            databaseURL:"https://gesamt-dae4e-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId:"gesamt-dae4e",
+            storageBucket:"gesamt-dae4e.appspot.com",
+            messagingSenderId:"844023612743",
+            appId:"1:844023612743:web:0821aa894541f89a7df862"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const storiesRef = ref(db, 'mouseria/geschichten');
+
+        let currentStoryKey = null;
+        let allStories = {};
+
+        function renderStories() {
+            const buttonGrid = document.getElementById('button-grid');
+            const storyContentDiv = document.getElementById('story-content');
+            buttonGrid.innerHTML = '';
+            storyContentDiv.innerHTML = '';
+
+            const keys = Object.keys(allStories).sort((a, b) => {
+                // Versuche, numerisch zu sortieren, falle auf String-Sortierung zurück
+                const numA = parseInt(a);
+                const numB = parseInt(b);
+                if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+                return a.localeCompare(b);
+            });
+
+            if (keys.length === 0) {
+                storyContentDiv.innerHTML = '<p style="text-align:center;">Keine Geschichten gefunden. Bitte den Admin-Bereich (admin.html) nutzen, um Geschichten hinzuzufügen.</p>';
+                return;
+            }
+
+            // Standardmäßig die erste Geschichte anzeigen, falls noch keine ausgewählt ist
+            if (!currentStoryKey || !allStories[currentStoryKey]) {
+                currentStoryKey = keys[0];
+            }
+
+            // Buttons erstellen
+            keys.forEach(key => {
+                const story = allStories[key];
+                const button = document.createElement('button');
+                button.className = 'story-button' + (key === currentStoryKey ? ' active' : '');
+                button.textContent = story.title || 'Ohne Titel';
+                button.addEventListener('click', () => {
+                    currentStoryKey = key;
+                    renderStories(); // Neu rendern, um den Inhalt zu aktualisieren
+                    window.scrollTo(0, 0); // Nach oben scrollen
+                });
+                buttonGrid.appendChild(button);
+            });
+
+            // Inhalt anzeigen
+            const activeStory = allStories[currentStoryKey];
+            if (activeStory) {
+                storyContentDiv.innerHTML = `
+                    <h2>${activeStory.title || 'Ohne Titel'}</h2>
+                    <div>${activeStory.content || 'Kein Inhalt.'}</div>
+                `;
+            }
+        }
+
+        // Firebase Listener
+        onValue(storiesRef, (snapshot) => {
+            const loading = document.getElementById('loading-text');
+            if (loading) loading.style.display = 'none';
+
+            if (snapshot.exists()) {
+                allStories = snapshot.val();
+            } else {
+                allStories = {};
+            }
+            renderStories();
+        }, (error) => {
+            console.error("Firebase Fehler:", error);
+            const contentDiv = document.getElementById('story-content');
+            contentDiv.innerHTML = '<p style="text-align:center; color: red;">Fehler beim Laden der Daten.</p>';
+        });
+
+    </script>
+</head>
+<body>
+    <div class="page-wrap">
+        <h1>📚 Mouseria Geschichten</h1>
+
+        <div class="story-container">
+            <div id="loading-text" class="loading">Wird geladen...</div>
+            
+            <div class="button-grid" id="button-grid">
+                </div>
+            
+            <div class="story-content" id="story-content">
+                </div>
+        </div>
+    </div>
+</body>
+</html>
