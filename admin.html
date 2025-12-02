@@ -98,6 +98,11 @@
     .history-detail-list h4{margin:5px 0 8px; font-size:16px; font-weight:600;}
     /* Formatierung für Historie (kleiner und kompakter) */
     .history-detail-list .entry{font-size:12px; margin-bottom: 5px; padding-left: 10px; border-left: 2px solid #ccc; white-space: pre-wrap;}
+    
+    /* Nachricht Button Style */
+    .msg-btn { background: #f0f0f0; color: #333; border: 1px solid #ccc; margin-left: 5px; font-size: 14px; padding: 4px 8px; }
+    .msg-btn:hover { background: #e0e0e0; }
+    .has-msg { border: 2px solid #007aff; color: #007aff; background: #e6f0ff; }
   </style>
 
   <script type="module">
@@ -282,7 +287,7 @@
     function ladeKinderKonten(){
       const bereich=document.getElementById("mauscity-konten-liste");
       const eigeneKinder=new Map();
-      // Listener für db1/kinder (Zugangsdaten, Link, Code, Sperrstatus)
+      // Listener für db1/kinder (Zugangsdaten, Link, Code, Sperrstatus, NACHRICHTEN)
       onValue(ref1(db1,"kinder"),(snapshot)=>{
         eigeneKinder.clear(); snapshot.forEach(childSnap=>{ eigeneKinder.set(childSnap.key, childSnap.val() || {}); });
         // Listener für db2/kinder (Punkte, Farbe, Progress)
@@ -295,6 +300,7 @@
             if(!data1) return;
 
             const isLocked = data1.gesperrt === true;
+            const hasMessage = data1.message && data1.message.length > 0;
             
             const zeile=document.createElement("div"); zeile.className="flex account-item";
             // Klick auf die Zeile öffnet das Modal
@@ -326,6 +332,25 @@
                 const btn=document.createElement("button"); btn.textContent=f; btn.className="color-button"; btn.title="Farbe setzen";
                 btn.onclick=(e)=>{ e.stopPropagation(); update2(ref2(db2,`kinder/${name}`),{farbe:f}); }; farbButtons.appendChild(btn);
               });
+              
+              /* --- NEUER BUTTON: NACHRICHT SENDEN --- */
+              const msgBtn = document.createElement("button");
+              msgBtn.innerHTML = "✉️";
+              msgBtn.className = "small-button msg-btn" + (hasMessage ? " has-msg" : "");
+              msgBtn.title = hasMessage ? "Nachricht liegt vor (Klicken zum Ändern)" : "Nachricht senden";
+              msgBtn.onclick = async (e) => {
+                e.stopPropagation();
+                const currentMsg = data1.message || "";
+                const newMsg = prompt(`Nachricht für ${name}:`, currentMsg);
+                if (newMsg !== null) { // Wenn nicht Abbrechen gedrückt wurde
+                    await update(ref1(db1, `kinder/${name}`), { message: newMsg.trim() || null });
+                    if(newMsg.trim()) alert("Nachricht gespeichert.");
+                    else alert("Nachricht gelöscht.");
+                }
+              };
+              farbButtons.appendChild(msgBtn);
+              /* -------------------------------------- */
+
               zeile.appendChild(farbButtons);
             }
             bereich.appendChild(zeile);
@@ -605,177 +630,162 @@
                     box.innerHTML += `<div class="entry">• <b>${eintrag.kind}</b>: von ${von} bis ${bis} <span class="delete" onclick="loescheHistorie('${eintrag.kind}','${eintrag.key}')">x</span></div>`;
                 });
                 elements.push(box);
-            });
+            })
         }
         
+        // Elemente in den DOM einfügen
         elements.forEach(el => liste.appendChild(el));
     }
+
+    async function ladeHistorie() {
+        await ladeHistorieDaten();
+        renderHistorieListe(HISTORY_MODE);
+    }
+
+    window.loescheHistorie = async (kind, key) => {
+        if(confirm("Eintrag wirklich löschen?")) {
+            await remove(ref1(db1, `historie/${kind}/${key}`));
+            ladeHistorie();
+        }
+    };
     
-    window.switchHistoryMode = (mode) => {
+    // Historie Tabs umschalten
+    window.setHistoryMode = (mode) => {
         HISTORY_MODE = mode;
-        document.getElementById('tab-kind').classList.toggle('active', mode === 'kind');
-        document.getElementById('tab-spielzeug').classList.toggle('active', mode === 'spielzeug');
+        document.getElementById('btn-hist-kind').className = mode === 'kind' ? 'active' : '';
+        document.getElementById('btn-hist-spielzeug').className = mode === 'spielzeug' ? 'active' : '';
         renderHistorieListe(mode);
     };
 
-    function ladeHistorie() {
-      // Listener, der den Cache ungültig macht und neu lädt, wenn sich die Historie ändert
-      onValue(ref1(db1, "historie"), async () => {
-          GESAMTE_HISTORIE_CACHE = null; 
-          await ladeHistorieDaten();
-          switchHistoryMode(HISTORY_MODE);
-      });
-    }
-
-    window.loescheHistorie=function(name,key){ 
-        if(confirm(`Eintrag von ${name} wirklich löschen?`)){ 
-            remove(ref1(db1,`historie/${name}/${key}`)); 
-        } 
-    };
-    
-    function ladeKurznachrichten(){ /* Implementierung fehlt im Original, daher leer */ }
-
-
     window.addEventListener("DOMContentLoaded",()=>{
-      // Firebase-Aktionen (keine Notwendigkeit, sie zu warten, da die onValue-Listener sie aktualisieren)
-      ladeAktuelleAusleihen();
-      ladeKinderKonten();
-      document.getElementById('durchfuehren-btn')?.addEventListener('click', async ()=>{ await durchfuehren(); });
-      document.getElementById('alle-gruen-btn')?.addEventListener('click', alleAufGruen);
-      document.getElementById('alle-weiss-btn')?.addEventListener('click', alleAufWeiss);
-      renderAbschluesse();
-      ladeKinderHinzufuegen(); 
-      ladeSpielzeugeHinzufuegen(); 
-      ladeHistorie(); 
-      switchHistoryMode('kind');
-      ladeKurznachrichten();
+      ladeKinderKonten(); ladeAktuelleAusleihen(); ladeKinderHinzufuegen(); ladeSpielzeugeHinzufuegen(); ladeHistorie();
+      document.getElementById("tages-reset-btn").addEventListener("click",async()=>{
+         if(confirm("ACHTUNG: Dies führt den täglichen Reset durch!\n\n1. Alle Farben werden je nach aktueller Farbe angepasst.\n2. Punkte werden berechnet.\n3. Ziele werden geprüft.\n\nFortfahren?")){
+            await durchfuehren(); alert("Tages-Reset abgeschlossen.");
+         }
+      });
+      document.getElementById("alle-gruen-btn").addEventListener("click",async()=>{
+         if(confirm("Alle Konten auf GRÜN setzen?")){ await alleAufGruen(); alert("Alle auf Grün gesetzt."); }
+      });
+      document.getElementById("alle-weiss-btn").addEventListener("click",async()=>{
+         if(confirm("Alle Konten auf WEISS (Reset) setzen?")){ await alleAufWeiss(); alert("Alle auf Weiß gesetzt."); }
+      });
+      // Initial render der Historie Tabs
+      window.setHistoryMode('kind');
     });
   </script>
 </head>
 <body>
-  <div id="account-manager-modal" class="modal-overlay" onclick="if(event.target === this) closeModal()">
-    <div class="modal-content">
-      <span class="close-btn" onclick="closeModal()">&times;</span> 
-      <h3 id="modal-title">Konto: [Name]</h3>
-      <div id="modal-status" class="kontostatus">Status: Aktiv</div>
-
-      <div id="modal-locked-info" class="modal-locked-info" style="display:none">
-        <p><strong>Dieses Konto ist gesperrt.</strong></p>
-        <p>Grund: <span id="locked-reason-text">Nicht angegeben.</span></p>
+  <div class="page-wrap">
+    
+    <div class="topbar">
+      <div class="mode-wrap">
+        <div id="mode-cycle" class="mode-cycle">
+          <div id="mode-dot" class="mode-dot dot-green"></div>
+          <div id="mode-text" class="mode-text">Grün · Normal</div>
+        </div>
       </div>
-      
+      <div class="title">Admin</div>
+    </div>
+
+    <div class="section" id="abschluss-section" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;">
+      <h3 style="margin-top:0;color:#166534">🎉 Ziel erreicht!</h3>
+      <div id="abschluss-wartend" class="liste" style="border:none;margin:0;padding:0"></div>
+    </div>
+
+    <div class="section">
+      <h2>Aktuelle Ausleihen</h2>
+      <div id="ausleihen-liste" class="liste">Lade Ausleihen...</div>
+    </div>
+
+    <div class="section">
+      <div class="shop-admin-header">
+        <h2>Kontenverwaltung</h2>
+        <div class="action-buttons">
+          <button id="tages-reset-btn" class="action-button execute" title="Berechnet Punkte & Farben neu">Tages-Reset</button>
+        </div>
+      </div>
+      <div class="row">
+         <button id="alle-gruen-btn" class="action-button green">Alle auf Grün</button>
+         <button id="alle-weiss-btn" class="action-button white">Alle auf Weiß</button>
+      </div>
+      <div id="mauscity-konten-liste" class="liste">Lade Konten...</div>
+    </div>
+
+    <div class="section">
+      <h2>Historie</h2>
+      <div class="history-tabs">
+          <button id="btn-hist-kind" onclick="setHistoryMode('kind')">Nach Kind</button>
+          <button id="btn-hist-spielzeug" onclick="setHistoryMode('spielzeug')">Nach Spielzeug</button>
+      </div>
+      <div id="historie-detail-list" class="history-detail-list liste" style="max-height: 300px; overflow-y: auto;">
+          Lade Historie...
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Neues Kind hinzufügen</h2>
+      <div class="row">
+        <input type="text" id="kind-name" placeholder="Name">
+        <input type="text" id="checkout-link" placeholder="Checkout-Link (optional)">
+        <input type="number" id="security-code" placeholder="Sicherheitscode (PIN)" inputmode="numeric">
+      </div>
+      <div style="margin-top:10px;display:flex;gap:15px;align-items:center;">
+          <label style="display:flex;align-items:center;gap:5px;font-size:14px;"><input type="checkbox" id="ist-gruppen"> Gruppenkonto (mit Punkten/Zielen)</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:14px;"><input type="checkbox" id="ist-gast"> Gastkonto (Punkte, keine Ziele)</label>
+      </div>
+      <button id="add-kind-btn" style="margin-top:10px;width:100%">Kind hinzufügen</button>
+    </div>
+    
+    <div class="section">
+      <h2>Spielzeugverwaltung</h2>
+      <div class="row">
+        <input type="number" id="spielzeug-nummer" placeholder="Nr.">
+        <input type="text" id="spielzeug-name" placeholder="Bezeichnung">
+      </div>
+      <button id="add-spielzeug-btn" style="margin-top:10px;width:100%">Spielzeug speichern</button>
+      <div id="spielzeug-liste" class="liste">Lade Spielzeuge...</div>
+    </div>
+
+  </div>
+
+  <div id="account-manager-modal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="close-btn" onclick="closeModal()">×</div>
+      <h3 id="modal-title">Konto verwalten</h3>
+      <div id="modal-status" class="kontostatus aktiv">Status: Aktiv</div>
+
+      <div id="modal-locked-info" class="modal-locked-info" style="display:none;">
+          <p>Dieses Konto ist derzeit <strong>gesperrt</strong>.</p>
+          <p>Grund: <strong id="locked-reason-text">...</strong></p>
+      </div>
+
       <div id="modal-edit-section">
           <div class="form-group">
-            <label for="modal-link-input">Checkout-Link</label>
-            <input id="modal-link-input" type="text" placeholder="Checkout-Link" />
+            <label>Checkout-Link</label>
+            <input type="text" id="modal-link-input" placeholder="https://...">
           </div>
           <div class="form-group">
-            <label for="modal-code-input">Sicherheitscode (PIN)</label>
-            <input id="modal-code-input" type="text" placeholder="3-stelliger Code" maxlength="3" />
+            <label>Sicherheitscode</label>
+            <input type="number" id="modal-code-input" placeholder="1234" inputmode="numeric">
           </div>
-
-          <button id="save-link-code-btn" class="action-button full">Link & Code speichern</button>
+          <div class="modal-actions">
+            <button id="save-link-code-btn" class="action-button execute full">Speichern</button>
+          </div>
           
-          <hr style="margin: 15px 0; border: none; border-top: 1px solid #eee;">
+          <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
 
           <div class="form-group">
-            <label for="modal-sperr-grund" id="sperr-grund-label">Grund für Sperrung (optional)</label>
-            <textarea id="modal-sperr-grund" placeholder="Grund für die Sperrung"></textarea>
+              <label>Konto sperren</label>
+              <textarea id="modal-sperr-grund" placeholder="Grund für die Sperrung angeben (wird dem Kind angezeigt)..." rows="3"></textarea>
           </div>
       </div>
-      
-      <div class="modal-actions">
-        <button id="modal-sperr-btn" class="action-button"></button>
-        <button id="modal-delete-btn" class="red">Dauerhaft löschen</button>
-      </div>
-      
-      <button class="secondary full" onclick="closeModal()" style="margin-top: 10px;">Abbrechen</button>
-    </div>
-  </div>
 
-<div class="page-wrap">
-  <div class="topbar">
-    <div class="mode-wrap">
-      <button id="mode-cycle" class="mode-cycle" title="Modus wechseln">
-        <span id="mode-dot" class="mode-dot dot-green"></span>
-        <span id="mode-text" class="mode-text">Grün · Normal</span>
-      </button>
-    </div>
-    <div class="title">Adminbereich</div>
-  </div>
-
-  <div class="section">
-    <h2>Aktuelle Ausleihen</h2>
-    <div class="liste" id="ausleihen-liste"></div>
-  </div>
-
-  <div class="section" id="abschluss-section" style="display:none">
-    <h2>Abschlüsse warten auf Freigabe</h2>
-    <div class="liste callout" id="abschluss-wartend"></div>
-  </div>
-
-  <div class="section">
-    <div class="shop-admin-header"> 
-      <h2>Konten</h2>
-      <div class="action-buttons">
-        <button id="durchfuehren-btn" class="action-button execute" title="Farben → Ziel-Fortschritt anwenden">✔️</button>
-        <button id="alle-gruen-btn" class="action-button green" title="Alle auf Grün setzen">Alle</button>
-        <button id="alle-weiss-btn" class="action-button white" title="Alle auf Weiß setzen">Alle</button>
+      <div class="modal-actions" style="flex-direction: column; gap: 10px;">
+        <button id="modal-sperr-btn" class="action-button red">Konto sperren</button>
+        <button id="modal-delete-btn" class="action-button white" style="border-color:#ff3b30;color:#ff3b30;margin-top:10px">Konto dauerhaft löschen</button>
       </div>
     </div>
-    <div class="liste" id="mauscity-konten-liste"></div>
   </div>
-
-  <div class="section">
-    <h2>Kurznachrichten</h2>
-    <div class="row">
-      <input id="notice-title" type="text" placeholder="Titel (optional, z. B. Nachricht)" />
-      <input id="notice-text" type="text" placeholder="Nachrichtentext" />
-    </div>
-    <div class="row">
-      <select id="notice-color" aria-label="Farbe">
-        <option value="blue">Blau</option><option value="red">Rot</option><option value="green">Grün</option>
-        <option value="orange">Orange</option><option value="purple">Lila</option><option value="black">Schwarz</option><option value="gray">Grau</option>
-      </select>
-      <input id="notice-start" type="datetime-local" aria-label="Start" />
-      <input id="notice-end" type="datetime-local" aria-label="Ende" />
-    </div>
-    <button id="add-notice-btn">Neue Kurznachricht hinzufügen</button>
-    <div class="liste" id="kurznachrichten-liste"></div>
-  </div>
-
-  <div class="section">
-    <h2>Kinder hinzufügen</h2>
-    <div class="form-group">
-      <input id="kind-name" type="text" placeholder="Name des Kindes" />
-      <input id="checkout-link" type="text" placeholder="Checkout-Link (optional)" />
-      <input id="security-code" type="text" placeholder="3-stelliger Code" />
-    </div>
-    <div class="checkboxes">
-      <label><input type="checkbox" id="ist-gruppen"> Gruppenkonto hinzufügen</label>
-      <label><input type="checkbox" id="ist-gast"> Gastkonto hinzufügen</label>
-    </div>
-    <button id="add-kind-btn">Hinzufügen</button>
-  </div>
-
-  <div class="section">
-    <h2>Spielzeuge hinzufügen</h2>
-    <div class="form-group inline">
-      <input id="spielzeug-nummer" type="text" placeholder="Nummer" style="width: 100px;"/>
-      <input id="spielzeug-name" type="text" placeholder="Spielzeugname" style="flex-grow: 1;"/>
-      <button id="add-spielzeug-btn">Hinzufügen</button>
-    </div>
-    <div class="liste" id="spielzeug-liste"></div>
-  </div>
-
-  <div class="section">
-    <h2>Ausleih-Historie</h2>
-    <div class="history-tabs">
-        <button id="tab-kind" class="active" onclick="switchHistoryMode('kind')">Nach Kind auswählen</button>
-        <button id="tab-spielzeug" onclick="switchHistoryMode('spielzeug')">Nach Spielzeug auswählen</button>
-    </div>
-    <div class="history-detail-list" id="historie-detail-list"></div>
-  </div>
-</div>
 </body>
 </html>
