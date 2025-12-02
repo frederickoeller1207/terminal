@@ -65,6 +65,23 @@
       border: 1px solid #eee; padding: 10px; border-radius: 8px;
     }
     .lock-popup-reason strong { color: #111827; }
+
+    /* --- NEU: Private Nachricht Popup --- */
+    .msg-popup-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none;
+      justify-content: center; align-items: center; z-index: 100000;
+      backdrop-filter: blur(2px);
+    }
+    .msg-popup-content {
+      background: #fff; border-radius: 16px; padding: 24px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.2); width: 90%; max-width: 380px; text-align: center;
+      animation: popIn 0.3s ease;
+    }
+    @keyframes popIn { from{transform:scale(0.9);opacity:0} to{transform:scale(1);opacity:1} }
+    .msg-popup-header { font-size: 20px; font-weight: 700; margin-bottom: 15px; color: #007aff; }
+    .msg-popup-text { font-size: 16px; line-height: 1.5; color: #333; margin-bottom: 25px; white-space: pre-wrap; background: #f9f9f9; padding: 15px; border-radius: 12px; }
+    .msg-popup-btn { background: #007aff; color: white; border: none; font-size: 16px; padding: 12px 20px; border-radius: 10px; width: 100%; font-weight: 600; cursor: pointer; }
+    .msg-popup-btn:hover { background: #005bb5; }
   </style>
 </head>
 <body>
@@ -97,7 +114,6 @@
         <img src="https://i.supaimg.com/965bbc7f-a8a5-43f8-a7d1-90ce44c21053.png" alt="Briefkasten" loading="lazy" decoding="async" width="60" height="60">
         <div class="title">MausBriefkasten</div><div class="sub">Nachricht schreiben</div>
       </div>
-      <!-- NEUER BUTTON: Mouseria Geschichten -->
       <div class="app" id="app-mouseria" onclick="window.location.href='https://frederickoeller1207.github.io/terminal/mouseria.html'">
         <img src="https://i.supaimg.com/50aac807-e69e-4704-a4cf-1296a34c0883.jpg" alt="Mouseria" loading="lazy" decoding="async" width="60" height="60">
         <div class="title">Mouseria geschichten</div><div class="sub">Geschichten ansehen</div>
@@ -127,9 +143,17 @@
     </div>
   </div>
 
+  <div id="msg-popup" class="msg-popup-overlay">
+    <div class="msg-popup-content">
+      <div class="msg-popup-header">📬 Neue Nachricht</div>
+      <div id="msg-popup-text" class="msg-popup-text"></div>
+      <button id="msg-read-btn" class="msg-popup-btn">Nachricht gelesen</button>
+    </div>
+  </div>
+
   <script type="module">
     import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-    import { getDatabase as getDB1, ref as ref1, get as get1, onValue as onVal1, set as set1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+    import { getDatabase as getDB1, ref as ref1, get as get1, onValue as onVal1, set as set1, update as update1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
     import { initializeApp as initApp2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
     import { getDatabase as getDB2, ref as ref2, update as update2, onValue as onVal2, get as get2 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
 
@@ -155,6 +179,10 @@
     const lockPopup = document.getElementById('account-lock-popup');
     const lockReasonText = document.getElementById('lock-reason-text');
 
+    // Message Popup Elements
+    const msgPopup = document.getElementById('msg-popup');
+    const msgText = document.getElementById('msg-popup-text');
+    const msgBtn = document.getElementById('msg-read-btn');
 
     let IS_HOME=true;
     let latestNotices=[];
@@ -321,8 +349,29 @@
       if(!code){ showToast("Kein Sicherheitscode hinterlegt."); return; }
 
       eingabeMitZahl(`Bitte Sicherheitscode für ${name} eingeben:`, (eingabe)=>{ 
-          if(eingabe===code) callback(); 
-          else showToast("Falscher Code."); 
+          if(eingabe===code) {
+              // --- NEU: Nachricht überprüfen ---
+              if (data.message) {
+                  // Nachricht anzeigen
+                  msgText.textContent = data.message;
+                  msgPopup.style.display = 'flex';
+                  
+                  // Einmal-Eventlistener für den Button
+                  msgBtn.onclick = async () => {
+                      // Nachricht aus DB löschen (auf null setzen)
+                      await update1(ref1(db1, `kinder/${name}`), { message: null });
+                      // Popup schließen
+                      msgPopup.style.display = 'none';
+                      // Callback ausführen (ursprüngliche Aktion)
+                      callback();
+                  };
+              } else {
+                  // Keine Nachricht, direkt weitermachen
+                  callback(); 
+              }
+          } else {
+              showToast("Falscher Code."); 
+          }
       });
     }
 
