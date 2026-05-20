@@ -66,7 +66,7 @@
     }
     .lock-popup-reason strong { color: #111827; }
 
-    /* --- NEU: Private Nachricht Popup --- */
+    /* Nachricht Popup & Freischaltung Popup */
     .msg-popup-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none;
       justify-content: center; align-items: center; z-index: 100000;
@@ -151,6 +151,15 @@
     </div>
   </div>
 
+  <!-- NEU: Globales Freischaltungs-Popup für das Terminal -->
+  <div id="global-popup-overlay" class="msg-popup-overlay">
+    <div class="msg-popup-content" style="border: 3px solid #48bb78; background: #ebf8f5;">
+      <div class="msg-popup-header" style="color: #38a169;">ℹ️ Information</div>
+      <div id="global-popup-text" class="msg-popup-text" style="color: #2f855a; font-weight: bold; font-size: 20px; background: transparent; padding: 0;"></div>
+      <button class="msg-popup-btn" style="background: #38a169;" onclick="document.getElementById('global-popup-overlay').style.display='none'">OK, verstanden</button>
+    </div>
+  </div>
+
   <script type="module">
     import { initializeApp as initApp1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
     import { getDatabase as getDB1, ref as ref1, get as get1, onValue as onVal1, set as set1, update as update1 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
@@ -159,9 +168,13 @@
 
     const config1={apiKey:"AIzaSyAQaNKUa-RKvUcwlPpWnEyKxcVjYV6cZuU",authDomain:"gesamt-dae4e.firebaseapp.com",databaseURL:"https://gesamt-dae4e-default-rtdb.europe-west1.firebasedatabase.app",projectId:"gesamt-dae4e",storageBucket:"gesamt-dae4e.appspot.com",messagingSenderId:"844023612743",appId:"1:844023612743:web:0821aa894541f89a7df862"};
     const config2={apiKey:"AIzaSyAdPN2duh89Fx5rmYlFshdf0juhYNX_7fg",authDomain:"punkte-45c20.firebaseapp.com",databaseURL:"https://punkte-45c20-default-rtdb.europe-west1.firebasedatabase.app",projectId:"punkte-45c20",storageBucket:"punkte-45c20.appspot.com",messagingSenderId:"931713539549",appId:"1:931713539549:web:e348bf38369639f1906a34"};
+    
+    // NEU: Konfiguration für die Abhol-Datenbank (um das globale Popup zu empfangen)
+    const configAbhol={apiKey:"AIzaSyA9TnOd0oTD0tTNEqMi_7PHU-p0av-XjM0",databaseURL:"https://abab-58a5f-default-rtdb.europe-west1.firebasedatabase.app"};
 
     const app1=initApp1(config1,"app1"); const db1=getDB1(app1);
     const app2=initApp2(config2,"app2"); const db2=getDB2(app2);
+    const appAbhol=initApp1(configAbhol,"appAbhol"); const dbAbhol=getDB1(appAbhol); // Verbindung zur Abhol DB herstellen
 
     // HARD LOCK: sofortige Eingabesperre in Capture-Phase
     let IS_LOCKED = true; // defensiv bis erste Mode-Antwort kommt
@@ -222,6 +235,7 @@
         return `<div class="notice ${cls}"><h3>${title}</h3><p>${text}</p></div>`;
       }).join('');
     }
+    
     function subscribeNotices(){
       onVal1(ref1(db1,'kurznachrichten'),snap=>{
         const now=new Date(); const list=[];
@@ -266,18 +280,15 @@
       if(!IS_HOME) return;
       if(MODE==="green"){
         modeBanner.style.display='none'; grid.style.display='grid'; renderNoticesList(latestNotices);
-        // alle Apps sichtbar
         ["app-ziel","app-ausleihe","app-checkout","app-malwettbewerb","app-briefkasten","app-mouseria"].forEach(id=>{
           const el=document.getElementById(id); if(el) el.style.display='flex';
         });
       } else if(MODE==="yellow"){
         modeBanner.style.display='block'; grid.style.display='grid';
-        // nur Checkout + Ziel
         ["app-checkout","app-ziel"].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='flex'; });
         ["app-ausleihe","app-malwettbewerb","app-briefkasten","app-mouseria"].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
         noticesBox.style.display='none';
       }
-      // rot wird oben durch IS_LOCKED behandelt
     }
 
     document.getElementById("btn-ausleihe").onclick = ()=>openAusleihe();
@@ -339,10 +350,9 @@
       if(!snap.exists()){ showToast("Konto nicht gefunden."); return; }
       const data = snap.val() || {};
 
-      // PRÜFUNG: Ist das Konto gesperrt?
       if (data.gesperrt === true) {
           showAccountLocked(data.sperrGrund);
-          return; // Abbruch, wenn gesperrt
+          return;
       }
 
       const code=data.code;
@@ -350,23 +360,16 @@
 
       eingabeMitZahl(`Bitte Sicherheitscode für ${name} eingeben:`, (eingabe)=>{ 
           if(eingabe===code) {
-              // --- NEU: Nachricht überprüfen ---
               if (data.message) {
-                  // Nachricht anzeigen
                   msgText.textContent = data.message;
                   msgPopup.style.display = 'flex';
                   
-                  // Einmal-Eventlistener für den Button
                   msgBtn.onclick = async () => {
-                      // Nachricht aus DB löschen (auf null setzen)
                       await update1(ref1(db1, `kinder/${name}`), { message: null });
-                      // Popup schließen
                       msgPopup.style.display = 'none';
-                      // Callback ausführen (ursprüngliche Aktion)
                       callback();
                   };
               } else {
-                  // Keine Nachricht, direkt weitermachen
                   callback(); 
               }
           } else {
@@ -374,6 +377,19 @@
           }
       });
     }
+    
+    /* === NEU: Listener für globale Popups (Freischaltung Abholzeit) === */
+    const initLoadTime = Date.now();
+    onVal1(ref1(dbAbhol, "globalPopup"), snap => {
+      const data = snap.val();
+      if (data && data.timestamp > initLoadTime) {
+        document.getElementById("global-popup-text").textContent = data.message;
+        document.getElementById("global-popup-overlay").style.display = "flex";
+        
+        // Popup verschwindet automatisch nach 8 Sekunden
+        setTimeout(() => { document.getElementById("global-popup-overlay").style.display = "none"; }, 8000);
+      }
+    });
 
     (function handleDeepLinks(){
       const params=new URLSearchParams(location.search);
