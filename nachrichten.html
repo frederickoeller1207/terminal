@@ -17,6 +17,95 @@
   p.lead{font-size:18px;line-height:1.5;margin:0 0 14px}
   .btn{appearance:none;border:0;border-radius:12px;padding:14px 18px;font-weight:800;font-size:18px;cursor:pointer;color:#fff;background:#111;box-shadow:0 6px 18px rgba(0,0,0,.18)}
   .btn:active{transform:translateY(1px)}
+
+  /* Admin-Regler oben links */
+  .adminSwitchBox{
+    position:fixed;
+    top:12px;
+    left:12px;
+    z-index:100;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:rgba(255,255,255,.92);
+    padding:8px 10px;
+    border-radius:14px;
+    box-shadow:0 8px 24px rgba(0,0,0,.18);
+    font-weight:800;
+    font-size:14px;
+  }
+
+  .switch{
+    width:58px;
+    height:30px;
+    border-radius:999px;
+    border:0;
+    padding:3px;
+    cursor:pointer;
+    background:#22c55e;
+    position:relative;
+    transition:background .2s;
+  }
+
+  .switch::after{
+    content:"";
+    position:absolute;
+    width:24px;
+    height:24px;
+    top:3px;
+    left:31px;
+    border-radius:50%;
+    background:#fff;
+    box-shadow:0 2px 7px rgba(0,0,0,.25);
+    transition:left .2s;
+  }
+
+  .switch.locked{
+    background:#ef4444;
+  }
+
+  .switch.locked::after{
+    left:3px;
+  }
+
+  .switchText{
+    min-width:84px;
+  }
+
+  /* Komplett weißer Sperrbildschirm */
+  .lockedScreen{
+    position:fixed;
+    inset:0;
+    background:#fff;
+    z-index:90;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:24px;
+  }
+
+  .lockedScreen h2{
+    margin:0;
+    color:#dc2626;
+    font-size:30px;
+    font-weight:800;
+  }
+
+  /* Unsichtbarer Admin-Klickbereich oben links */
+  .hiddenAdminUnlock{
+    position:fixed;
+    top:0;
+    left:0;
+    width:90px;
+    height:90px;
+    z-index:120;
+    background:transparent;
+    border:0;
+    display:none;
+    cursor:pointer;
+  }
+
   /* Modal */
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:50}
   .dialog{background:#fff;border-radius:16px;max-width:520px;width:calc(100% - 24px);padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
@@ -26,8 +115,9 @@
   textarea{min-height:140px;resize:vertical}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .btnRow{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-top:6px}
+
   /* Toast */
-  .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#111;color:#fff;padding:12px 16px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:80}
+  .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#111;color:#fff;padding:12px 16px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:150}
   .toast.show{opacity:1}
 
   /* Mobile-Fixes */
@@ -37,6 +127,25 @@
     .btnRow{justify-content:stretch}
     .btnRow .btn{flex:1;width:100%}
     input,select,textarea{font-size:16px}
+
+    .adminSwitchBox{
+      top:8px;
+      left:8px;
+      font-size:12px;
+      padding:7px 8px;
+    }
+
+    .switchText{
+      min-width:70px;
+    }
+
+    header{
+      margin-top:52px;
+    }
+
+    .lockedScreen h2{
+      font-size:24px;
+    }
   }
 </style>
 <script type="module">
@@ -60,9 +169,69 @@
 
   const $ = (q)=>document.querySelector(q);
 
+  const ADMIN_CODE = "404012";
+  let nachrichtenFreigegeben = true;
+
   const accounts = new Map(); // name -> {punkte, type}
   onValue(ref2(dbPunkte,"kinder"), s => mergeAccounts(s,"kinder"));
   onValue(ref2(dbPunkte,"auslandskonten"), s => mergeAccounts(s,"auslandskonten"));
+
+  // Status vom Briefkasten laden
+  onValue(ref2(dbPunkte,"briefkasten/status/freigegeben"), snap => {
+    if(snap.exists()){
+      nachrichtenFreigegeben = snap.val() === true;
+    } else {
+      nachrichtenFreigegeben = true;
+      set(ref2(dbPunkte,"briefkasten/status/freigegeben"), true);
+    }
+    updateLockView();
+  });
+
+  function updateLockView(){
+    const switchBtn = $("#adminSwitch");
+    const switchText = $("#switchText");
+    const adminSwitchBox = $(".adminSwitchBox");
+    const lockedScreen = $("#lockedScreen");
+    const hiddenAdminUnlock = $("#hiddenAdminUnlock");
+
+    if(!switchBtn || !switchText || !adminSwitchBox || !lockedScreen || !hiddenAdminUnlock) return;
+
+    if(nachrichtenFreigegeben){
+      switchBtn.classList.remove("locked");
+      switchText.textContent = "Freigegeben";
+
+      adminSwitchBox.style.display = "flex";
+      lockedScreen.style.display = "none";
+      hiddenAdminUnlock.style.display = "none";
+    } else {
+      switchBtn.classList.add("locked");
+      switchText.textContent = "Gesperrt";
+
+      adminSwitchBox.style.display = "none";
+      lockedScreen.style.display = "flex";
+      hiddenAdminUnlock.style.display = "block";
+      $("#compose").style.display = "none";
+    }
+  }
+
+  window.toggleNachrichtenStatus = async ()=>{
+    const code = prompt("Admin-Code eingeben:");
+    if(code === null) return;
+
+    if(code.trim() !== ADMIN_CODE){
+      toast("Falscher Admin-Code.");
+      return;
+    }
+
+    const neuerStatus = !nachrichtenFreigegeben;
+    await set(ref2(dbPunkte,"briefkasten/status/freigegeben"), neuerStatus);
+
+    if(neuerStatus){
+      toast("Nachrichten freigegeben.");
+    } else {
+      toast("Nachrichten App ist momentan gesperrt.");
+    }
+  };
 
   function mergeAccounts(snap,type){
     const val = snap.exists()? snap.val(): {};
@@ -79,16 +248,31 @@
   }
 
   function toast(msg){
-    const t = $("#toast"); t.textContent=msg; t.classList.add("show");
+    const t = $("#toast"); 
+    t.textContent=msg; 
+    t.classList.add("show");
     setTimeout(()=>t.classList.remove("show"), 1800);
   }
 
   // Modal öffnen
   window.openCompose = ()=>{
+    if(!nachrichtenFreigegeben){
+      toast("Nachrichten App ist momentan gesperrt.");
+      return;
+    }
+
     $("#compose").style.display="flex";
+
     // Namen füllen
-    const sel = $("#nameSel"); sel.innerHTML="";
-    sortedNames().forEach(n=>{ const o=document.createElement("option"); o.value=n; o.textContent=n; sel.appendChild(o); });
+    const sel = $("#nameSel"); 
+    sel.innerHTML="";
+    sortedNames().forEach(n=>{
+      const o=document.createElement("option"); 
+      o.value=n; 
+      o.textContent=n; 
+      sel.appendChild(o); 
+    });
+
     $("#pin").value="";
     $("#topic").value="Wünsche";
     $("#topicCustomWrap").style.display="none";
@@ -104,6 +288,12 @@
 
   // Senden
   window.sendMsg = async ()=>{
+    if(!nachrichtenFreigegeben){
+      $("#compose").style.display="none";
+      toast("Nachrichten App ist momentan gesperrt.");
+      return;
+    }
+
     const name = $("#nameSel").value;
     const pinEntered = ($("#pin").value||"").trim();
     const topic = $("#topic").value;
@@ -129,6 +319,7 @@
       text,
       zeit: now
     };
+
     const ref = push(ref2(dbPunkte, "briefkasten/nachrichten"));
     await set(ref, data);
 
@@ -137,10 +328,19 @@
   };
 
   // Modal schließen
-  window.closeCompose = ()=>{ $("#compose").style.display="none"; };
+  window.closeCompose = ()=>{
+    $("#compose").style.display="none"; 
+  };
 </script>
 </head>
 <body>
+
+  <!-- Sichtbarer Admin-Regler, aber nur wenn Nachrichten freigegeben sind -->
+  <div class="adminSwitchBox">
+    <button id="adminSwitch" class="switch" onclick="toggleNachrichtenStatus()" aria-label="Nachrichten sperren oder freigeben"></button>
+    <span id="switchText" class="switchText">Freigegeben</span>
+  </div>
+
   <div class="wrap">
     <header>
       <svg class="mail" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -150,7 +350,7 @@
       <h1>MausBriefkasten</h1>
     </header>
 
-    <div class="card">
+    <div id="mainCard" class="card">
       <p class="lead">
         Hier kannst du etwas in den <b>digitalen Briefkasten</b> einwerfen und eine Nachricht an
         <b>Herr Köller</b> und <b>Frau Stanojevic</b> schreiben.
@@ -204,6 +404,14 @@
       </div>
     </div>
   </div>
+
+  <!-- Weißer Sperrbildschirm -->
+  <div id="lockedScreen" class="lockedScreen">
+    <h2>Nachrichten App ist momentan gesperrt.</h2>
+  </div>
+
+  <!-- Unsichtbarer Admin-Bereich zum Entsperren oben links -->
+  <button id="hiddenAdminUnlock" class="hiddenAdminUnlock" onclick="toggleNachrichtenStatus()" aria-label="Admin Entsperren"></button>
 
   <div id="toast" class="toast">Hinweis</div>
 </body>
